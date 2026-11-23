@@ -1,6 +1,6 @@
-import { watch } from "node:fs";
+import { existsSync, watch } from "node:fs";
 
-const watchTargets = ["app", "crates", "assets", "Cargo.toml", "Cargo.lock"];
+const watchTargets = ["crates", "assets", "locales", "Cargo.toml", "Cargo.lock"].filter(existsSync);
 const watchers = [];
 
 let child;
