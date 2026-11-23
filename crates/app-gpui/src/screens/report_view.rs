@@ -37,7 +37,10 @@ impl ReportViewScreen {
             .flex_1()
             .h_full()
             .overflow_y_scroll()
-            .p(px(24.0))
+            .pt(px(24.0))
+            .pb(px(24.0) + state.safe_area.total_bottom_px())
+            .pl(px(24.0) + state.safe_area.left_px())
+            .pr(px(24.0) + state.safe_area.right_px())
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
             // Header
@@ -87,7 +90,7 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
-                                    .child("💬 WhatsApp Share"),
+                                    .child("WhatsApp Share"),
                             )
                             .child(
                                 div()
@@ -102,7 +105,7 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
-                                    .child("🔗 Magic Link"),
+                                    .child("Magic Link"),
                             ),
                     ),
             )
@@ -220,7 +223,6 @@ impl ReportViewScreen {
                                             .flex()
                                             .items_center()
                                             .gap(px(8.0))
-                                            .child(div().text_sm().child("👤"))
                                             .child(
                                                 div()
                                                     .text_sm()
@@ -274,7 +276,7 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .text_color(theme.text_muted)
                                     .cursor_pointer()
-                                    .child("📋 Copy Text"),
+                                    .child("Copy Text"),
                             ),
                     )
                     .child(

@@ -19,7 +19,10 @@ impl SettingsScreen {
             .id(id)
             .flex_1()
             .h_full()
-            .p(px(24.0))
+            .pt(px(24.0))
+            .pb(px(24.0) + state.safe_area.total_bottom_px())
+            .pl(px(24.0) + state.safe_area.left_px())
+            .pr(px(24.0) + state.safe_area.right_px())
             .overflow_y_scroll()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
@@ -83,7 +86,7 @@ impl SettingsScreen {
                                         div()
                                             .font_weight(gpui_kit::FontWeight::BOLD)
                                             .text_sm()
-                                            .child("☀️ Light Mode (Umucyo)"),
+                                            .child("Light Mode (Umucyo)"),
                                     )
                                     .child(
                                         div()
@@ -107,7 +110,7 @@ impl SettingsScreen {
                                         div()
                                             .font_weight(gpui_kit::FontWeight::BOLD)
                                             .text_sm()
-                                            .child("🌙 Dark Mode (Umwijima)"),
+                                            .child("Dark Mode (Umwijima)"),
                                     )
                                     .child(
                                         div()
@@ -236,7 +239,7 @@ impl SettingsScreen {
                                 div()
                                     .text_xs()
                                     .text_color(theme.accent_secondary)
-                                    .child("🇷🇼 Built with Rust, GPUI, Actix-web, SQLite & Next.js"),
+                                    .child("Built with Rust, GPUI, Actix-web, SQLite & Next.js"),
                             ),
                     ),
             )

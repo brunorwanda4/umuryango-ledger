@@ -20,7 +20,10 @@ impl MembersScreen {
             .id(id)
             .flex_1()
             .h_full()
-            .p(px(24.0))
+            .pt(px(24.0))
+            .pb(px(24.0) + state.safe_area.total_bottom_px())
+            .pl(px(24.0) + state.safe_area.left_px())
+            .pr(px(24.0) + state.safe_area.right_px())
             .overflow_y_scroll()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
@@ -85,7 +88,7 @@ impl MembersScreen {
                                     .text_xs()
                                     .text_color(theme.bg_canvas)
                                     .cursor_pointer()
-                                    .child("📋 Copy"),
+                                    .child("Copy"),
                             ),
                     ),
             )
@@ -165,6 +168,8 @@ impl MembersScreen {
             }
         };
 
+        let initial = name.chars().next().unwrap_or('M').to_uppercase().to_string();
+
         div()
             .flex()
             .flex_row()
@@ -190,7 +195,9 @@ impl MembersScreen {
                             .items_center()
                             .justify_center()
                             .text_sm()
-                            .child("👤"),
+                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .text_color(theme.accent_primary)
+                            .child(initial),
                     )
                     .child(
                         div()

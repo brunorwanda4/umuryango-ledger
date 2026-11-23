@@ -20,7 +20,10 @@ impl FuturePlansScreen {
             .id(id)
             .flex_1()
             .h_full()
-            .p(px(24.0))
+            .pt(px(24.0))
+            .pb(px(24.0) + state.safe_area.total_bottom_px())
+            .pl(px(24.0) + state.safe_area.left_px())
+            .pr(px(24.0) + state.safe_area.right_px())
             .overflow_y_scroll()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
@@ -73,9 +76,9 @@ impl FuturePlansScreen {
         theme: &SemanticTheme,
     ) -> impl IntoElement {
         let status_badge = if plan.is_achieved {
-            ("✓ Byagezweho / Achieved", theme.income_color)
+            ("Byagezweho / Achieved", theme.income_color)
         } else {
-            ("⏳ Biracyategerejwe / Planned", theme.text_muted)
+            ("Biracyategerejwe / Planned", theme.text_muted)
         };
 
         div()

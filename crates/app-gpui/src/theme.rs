@@ -65,6 +65,10 @@ impl From<&UserThemePrefs> for ThemeConfig {
 }
 
 impl ThemeConfig {
+    pub fn from_prefs(p: &UserThemePrefs) -> Self {
+        Self::from(p)
+    }
+
     pub fn to_prefs(&self, mode: ThemeMode) -> UserThemePrefs {
         UserThemePrefs {
             theme_mode: match mode {

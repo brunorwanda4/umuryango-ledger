@@ -32,7 +32,10 @@ impl LoansScreen {
             .id(id)
             .flex_1()
             .h_full()
-            .p(px(24.0))
+            .pt(px(24.0))
+            .pb(px(24.0) + state.safe_area.total_bottom_px())
+            .pl(px(24.0) + state.safe_area.left_px())
+            .pr(px(24.0) + state.safe_area.right_px())
             .overflow_y_scroll()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
@@ -79,9 +82,9 @@ impl LoansScreen {
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
                             .child(if state.locale == Locale::Rw {
-                                "🤝 Ayo Twagurije Abandi (Lent Out)"
+                                "Ayo Twagurije Abandi (Lent Out)"
                             } else {
-                                "🤝 Money Lent Out"
+                                "Money Lent Out"
                             }),
                     )
                     .child(
@@ -102,9 +105,9 @@ impl LoansScreen {
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
                             .child(if state.locale == Locale::Rw {
-                                "📥 Ayo Twagujije (Money Borrowed)"
+                                "Ayo Twagujije (Money Borrowed)"
                             } else {
-                                "📥 Money Borrowed"
+                                "Money Borrowed"
                             }),
                     )
                     .child(

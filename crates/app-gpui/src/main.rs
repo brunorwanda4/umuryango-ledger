@@ -1,11 +1,13 @@
 mod components;
 mod mobile;
+mod safe_area;
 mod screens;
 mod state;
 mod theme;
 
 use gpui_kit::prelude::*;
 use gpui_kit::{div, px, Context, IntoElement, ParentElement, Render, Styled, Window};
+pub use safe_area::SafeAreaInsets;
 use state::{AppState, Screen};
 use theme::archivo_font_bytes;
 use umuryango_api_client::{RealtimeClient, RealtimeHandle};
@@ -56,6 +58,8 @@ impl Render for RootView {
             }
         };
 
+        let top_safe_area = self.state.safe_area.top_px();
+
         div()
             .flex()
             .flex_row()
@@ -63,13 +67,13 @@ impl Render for RootView {
             .h_full()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
-            // Sidebar Navigation
+            // Desktop Sidebar Navigation
             .child(components::Sidebar::render(
                 "app-sidebar",
                 &self.state,
                 &theme,
             ))
-            // Active Screen Content Area with Floating Toast
+            // Active Screen Content Area with Floating Toast respecting Top Safe Area
             .child(
                 div()
                     .flex_1()
@@ -90,7 +94,7 @@ impl Render for RootView {
                         Some(
                             div()
                                 .absolute()
-                                .top(px(16.0))
+                                .top(px(16.0) + top_safe_area)
                                 .right(px(16.0))
                                 .p(px(12.0))
                                 .rounded(px(8.0))
@@ -100,7 +104,7 @@ impl Render for RootView {
                                 .text_xs()
                                 .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                 .text_color(theme.text_primary)
-                                .child(format!("🔔 {}", msg)),
+                                .child(format!("[Notice] {}", msg)),
                         )
                     } else {
                         None
@@ -130,7 +134,7 @@ pub fn spawn_realtime_listener(
 }
 
 fn main() {
-    println!("🇷🇼 Initializing Umuryango Ledger GPUI desktop/mobile application...");
+    println!("Initializing Umuryango Ledger GPUI desktop/mobile application...");
     let db =
         LocalDatabase::open_default().unwrap_or_else(|_| LocalDatabase::open_in_memory().unwrap());
     let mut state = AppState::default();

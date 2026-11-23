@@ -41,3 +41,12 @@ When a user opens any screen in `umuryango-ledger`, they must instantly discern 
 A frequent point of family conflict is misinterpreting a cash handover as an expense.
 - **Expense (Outflow):** Displayed in Crimson (`text-brand-crimson`) with a negative sign (`-45,000 RWF`). Indicates funds permanently left family custody (e.g., market food).
 - **Handover (Custody Transfer):** Displayed in Steel Blue (`text-brand-steel-blue`) with an exchange arrow (`↔ 100,000 RWF`). Indicates money simply moved from MoMo to Papa's wallet without diminishing family wealth.
+
+---
+
+## 5. Zero-Clipping & Hardware Safe Areas
+
+Never let UI elements get cut off or obstructed by device hardware:
+- Never place interactive buttons or vital totals under the system status bar, camera notch, 3-button navigation bar, or gesture pill.
+- Ensure every scrollable view provides total bottom padding that clears the navigation bar and software keyboard (IME).
+- Buttons and touch targets must measure at least 44x44dp on mobile to eliminate accidental misclicks.

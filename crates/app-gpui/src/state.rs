@@ -14,6 +14,7 @@ use umuryango_storage_local::{
 };
 use uuid::Uuid;
 
+use crate::safe_area::SafeAreaInsets;
 use crate::theme::{SemanticTheme, ThemeConfig, ThemeMode};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -85,6 +86,9 @@ pub struct AppState {
     pub show_notifications_drawer: bool,
     pub notifications: Vec<NotificationItem>,
     pub unread_notifications_count: usize,
+
+    // Safe Area Insets (status bar, navigation bar, cutouts, IME)
+    pub safe_area: SafeAreaInsets,
 }
 
 impl Default for AppState {
@@ -94,6 +98,7 @@ impl Default for AppState {
         let theme_config = ThemeConfig::default();
         let theme_mode = ThemeMode::Light;
         let theme = SemanticTheme::from_config(&theme_config, theme_mode);
+        let safe_area = crate::safe_area::platform::query_system_window_insets();
 
         Self {
             user_id,
@@ -121,6 +126,8 @@ impl Default for AppState {
             show_notifications_drawer: false,
             notifications: Vec::new(),
             unread_notifications_count: 0,
+
+            safe_area,
         }
     }
 }
@@ -133,47 +140,65 @@ impl AppState {
         state
     }
 
+    /// Update safe area insets dynamically upon window resize, orientation change, or nav bar toggle
+    pub fn update_safe_area(&mut self, insets: SafeAreaInsets) {
+        self.safe_area = insets;
+    }
+
+    /// Update software keyboard (IME) height
+    pub fn update_ime_height(&mut self, height: f32) {
+        self.safe_area.ime_height = height;
+    }
+
     /// Load cached state and theme preferences from the local offline SQLite database
     pub fn load_from_db(&mut self, db: &LocalDatabase) {
         let repo = CacheRepository::new(db);
         let queue = SyncQueueRepository::new(db);
 
-        // 1. Theme prefs
+        // Load theme preferences
         if let Ok(Some(prefs)) = repo.get_theme_prefs(self.user_id) {
-            let mode = if prefs.theme_mode.eq_ignore_ascii_case("dark") {
+            self.theme_config = ThemeConfig::from_prefs(&prefs);
+            self.theme_mode = if prefs.theme_mode == "dark" {
                 ThemeMode::Dark
             } else {
                 ThemeMode::Light
             };
-            self.theme_mode = mode;
-            self.theme_config = ThemeConfig::from(&prefs);
             self.theme = SemanticTheme::from_config(&self.theme_config, self.theme_mode);
+            crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
         }
 
-        // 2. Wallets & Transactions
-        if let Ok(wallets) = repo.list_wallets(&self.active_scope) {
-            self.wallets = wallets;
-        }
-        if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
-            self.transactions = txs;
+        // Load sync status
+        if let Ok(st) = queue.sync_status(true) {
+            self.sync_status = st;
         }
 
-        // 3. Projects, Loans, Plans
-        if let LedgerScope::Family { family_id } = self.active_scope {
-            if let Ok(projects) = repo.list_projects(family_id) {
-                self.projects = projects;
+        // Load cached wallets & transactions matching active scope
+        match self.active_scope {
+            LedgerScope::Personal { .. } => {
+                if let Ok(w) = repo.list_wallets(&self.active_scope) {
+                    self.wallets = w;
+                }
+                if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
+                    self.transactions = txs;
+                }
             }
-        }
-        if let Ok(loans) = repo.list_loans(&self.active_scope) {
-            self.loans = loans;
-        }
-        if let Ok(plans) = repo.list_future_plans(&self.active_scope) {
-            self.future_plans = plans;
-        }
-
-        // 4. Sync queue status
-        if let Ok(status) = queue.sync_status(true) {
-            self.sync_status = status;
+            LedgerScope::Family { family_id } => {
+                if let Ok(w) = repo.list_wallets(&self.active_scope) {
+                    self.wallets = w;
+                }
+                if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
+                    self.transactions = txs;
+                }
+                if let Ok(projects) = repo.list_projects(family_id) {
+                    self.projects = projects;
+                }
+                if let Ok(loans) = repo.list_loans(&self.active_scope) {
+                    self.loans = loans;
+                }
+                if let Ok(plans) = repo.list_future_plans(&self.active_scope) {
+                    self.future_plans = plans;
+                }
+            }
         }
     }
 
@@ -200,6 +225,7 @@ impl AppState {
     pub fn toggle_theme(&mut self, db: Option<&LocalDatabase>) {
         self.theme_mode = self.theme_mode.toggle();
         self.theme = SemanticTheme::from_config(&self.theme_config, self.theme_mode);
+        crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
         if let Some(database) = db {
             let repo = CacheRepository::new(database);
@@ -211,6 +237,7 @@ impl AppState {
     pub fn set_theme_config(&mut self, config: ThemeConfig, db: Option<&LocalDatabase>) {
         self.theme_config = config;
         self.theme = SemanticTheme::from_config(&self.theme_config, self.theme_mode);
+        crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
         if let Some(database) = db {
             let repo = CacheRepository::new(database);
@@ -238,12 +265,18 @@ impl AppState {
         self.unread_notifications_count = 0;
     }
 
-    /// Handles an incoming RealtimeEvent from the WebSocket connection:
-    /// - Updates matching wallet balances locally and in SQLite cache.
-    /// - Formats localized notification string in user's active locale.
-    /// - Adds unread notification item to drawer list.
-    /// - Triggers instant toast message.
+    /// Process an incoming real-time event received from the WebSocket broadcast hub
     pub fn apply_realtime_event(&mut self, event: RealtimeEvent, db: Option<&LocalDatabase>) {
+        let formatted = event.format_notification(self.locale);
+        let item = NotificationItem {
+            id: Uuid::new_v4(),
+            event: event.clone(),
+            message: formatted.clone(),
+            timestamp: Utc::now(),
+            is_read: false,
+        };
+
+        // Update in-memory wallet balances directly
         match &event {
             RealtimeEvent::IncomeAdded {
                 wallet_id,
@@ -258,26 +291,17 @@ impl AppState {
                 if let Some(w) = self.wallets.iter_mut().find(|w| w.id == *wallet_id) {
                     w.balance = *new_wallet_balance;
                 }
-                if let Some(database) = db {
-                    let repo = CacheRepository::new(database);
-                    let _ = repo.update_wallet_balance(*wallet_id, *new_wallet_balance);
-                }
             }
             _ => {}
         }
 
-        let formatted = event.format_notification(self.locale);
-        let item = NotificationItem {
-            id: Uuid::new_v4(),
-            event,
-            message: formatted.clone(),
-            timestamp: Utc::now(),
-            is_read: false,
-        };
-
         self.notifications.insert(0, item);
         self.unread_notifications_count += 1;
         self.set_toast(formatted, false);
+
+        if let Some(database) = db {
+            self.load_from_db(database);
+        }
     }
 
     /// Logs a transaction offline: validates invariants via core-domain, applies balance updates,
@@ -423,5 +447,15 @@ mod tests {
         state.mark_all_notifications_as_read();
         assert_eq!(state.unread_notifications_count, 0);
         assert!(state.notifications[0].is_read);
+    }
+
+    #[test]
+    fn test_safe_area_insets_state() {
+        let mut state = AppState::default();
+        assert_eq!(state.safe_area.top, 0.0);
+        let insets = SafeAreaInsets::new(32.0, 48.0, 0.0, 0.0).with_ime(200.0);
+        state.update_safe_area(insets);
+        assert_eq!(state.safe_area.top, 32.0);
+        assert_eq!(state.safe_area.total_bottom(), 200.0);
     }
 }

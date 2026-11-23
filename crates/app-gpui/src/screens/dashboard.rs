@@ -30,7 +30,10 @@ impl DashboardScreen {
             .id(id)
             .flex_1()
             .h_full()
-            .p(px(24.0))
+            .pt(px(24.0))
+            .pb(px(24.0) + state.safe_area.total_bottom_px())
+            .pl(px(24.0) + state.safe_area.left_px())
+            .pr(px(24.0) + state.safe_area.right_px())
             .overflow_y_scroll()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
@@ -231,25 +234,25 @@ impl DashboardScreen {
                                     .flex_col()
                                     .gap(px(8.0))
                                     .child(Self::render_donut_row(
-                                        "🥗 Food / Ibiribwa",
+                                        "Food / Ibiribwa",
                                         "45%",
                                         theme.expense_color,
                                         theme,
                                     ))
                                     .child(Self::render_donut_row(
-                                        "💡 Utilities / Imirasire",
+                                        "Utilities / Imirasire",
                                         "25%",
                                         theme.accent_primary,
                                         theme,
                                     ))
                                     .child(Self::render_donut_row(
-                                        "🏥 Health / Ubuzima",
+                                        "Health / Ubuzima",
                                         "15%",
                                         theme.income_color,
                                         theme,
                                     ))
                                     .child(Self::render_donut_row(
-                                        "📦 Others / Ibindi",
+                                        "Others / Ibindi",
                                         "15%",
                                         theme.text_muted,
                                         theme,

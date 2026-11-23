@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { ShieldCheck, Globe } from "lucide-react";
 import { MothersReportCard } from "@/components/MothersReportCard";
 import { LocalizedReportData } from "@/lib/api";
 
@@ -36,21 +37,23 @@ export default async function ZeroLoginReportPage({
   };
 
   return (
-    <div className="py-6 space-y-6">
+    <div className="py-6 space-y-6 pt-safe pb-safe pl-safe pr-safe">
       {/* Top Banner with Token info & Lang toggle */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-2xl mx-auto px-4 no-print">
         <div className="flex items-center space-x-2">
-          <span className="inline-block px-3 py-1 bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream border border-brand-cream dark:border-slate-700 rounded-full text-xs font-bold">
-            🔒 {isRw ? "Ihuza ry'Umutekano ryizewe (Zero-Login)" : "Secure Zero-Login Link"}
+          <span className="inline-flex items-center px-3 py-1 bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream border border-brand-cream dark:border-slate-700 rounded-full text-xs font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+            {isRw ? "Ihuza ry'Umutekano ryizewe (Zero-Login)" : "Secure Zero-Login Link"}
           </span>
           <span className="text-xs text-slate-400">Token: {token}</span>
         </div>
 
         <Link
           href={`/${otherLocale}/report/${token}`}
-          className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-brand-active-crimson transition shadow-sm"
+          className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-brand-active-crimson transition shadow-sm"
         >
-          🌐 {isRw ? "Switch to English" : "Hindura mu Kinyarwanda"}
+          <Globe className="w-3.5 h-3.5 mr-1 text-slate-500" />
+          {isRw ? "Switch to English" : "Hindura mu Kinyarwanda"}
         </Link>
       </div>
 

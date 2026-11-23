@@ -55,3 +55,24 @@ We use a disciplined 4px / 8px scale:
 - KPI cards stack cleanly in 1 column or 2 compact columns.
 - Modals slide up as bottom sheets (`animate-in slide-in-from-bottom`).
 - Tables collapse into clean card rows displaying actor, amount, and wallet badge.
+
+---
+
+## 4. Mobile Safe Area & Window Insets (Android & iOS)
+
+### System Insets Architecture
+Edge-to-edge rendering requires handling system intrusions gracefully:
+- **Top Inset (`safe-area-inset-top`):** Accommodates the Android status bar (clock, battery, signal), camera notches, and dynamic island cutouts (typically 24dp - 48dp).
+- **Bottom Inset (`safe-area-inset-bottom`):** Accommodates the Android system navigation bar (3-button navigation bar 48dp - 56dp, or gesture navigation bar 16dp - 24dp) and soft keyboard (IME: 240dp - 300dp).
+- **Horizontal Insets (`safe-area-inset-left / right`):** Accommodates landscape display cutouts.
+
+### Implementation Guidelines
+1. **Rust GPUI (`crates/app-gpui`):**
+   - `SafeAreaInsets` struct in `src/safe_area.rs` encapsulates top, bottom, left, right, and IME insets.
+   - `SafeAreaView` in `src/components/safe_area.rs` provides a declarative padding wrapper.
+   - Screen root containers apply `.pb(px(24.0) + state.safe_area.total_bottom_px())` so lists and action buttons are never obscured by Android navigation bars.
+   - Android edge-to-edge system bars contrast is updated dynamically via `set_system_bars_contrast(is_light)`.
+2. **Next.js Web (`web/`):**
+   - `viewportFit: "cover"` in `web/src/app/layout.tsx`.
+   - Utility classes `.pt-safe`, `.pb-safe`, `.pl-safe`, `.pr-safe`, `.mt-safe`, `.mb-safe` in `web/src/app/globals.css`.
+   - Headers use `.pt-safe` and mobile sheets/footers use `.pb-safe`.

@@ -1,6 +1,17 @@
 "use client";
 
 import React from "react";
+import {
+  Calendar,
+  MapPin,
+  Building2,
+  Smartphone,
+  Banknote,
+  Hammer,
+  AlertTriangle,
+  Share2,
+  Printer,
+} from "lucide-react";
 import { LocalizedReportData } from "@/lib/api";
 
 interface ExtendedReportData extends LocalizedReportData {
@@ -40,8 +51,8 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
 
   const handleWhatsAppShare = () => {
     const text = isRw
-      ? `*${data.title}*\n📅 Itariki: ${data.generated_date}\n🏛️ Umuryango: ${data.family_name || "Umuryango"}\n\n💰 *Umutungo Wose:* ${data.total_assets_value} RWF\n📱 MoMo: ${data.momo_value}\n💵 Mu Ntoki (Cash): ${data.cash_value}\n🏦 Muri Banki: ${data.bank_value}\n⚠️ Amadeni: ${data.liabilities_value} RWF\n\n_Reba incamake yose hano:_ ${window.location.href}`
-      : `*${data.title}*\n📅 Date: ${data.generated_date}\n🏛️ Family: ${data.family_name || "Family"}\n\n💰 *Total Balance:* ${data.total_assets_value} RWF\n📱 MoMo: ${data.momo_value}\n💵 Cash in Hand: ${data.cash_value}\n🏦 Bank: ${data.bank_value}\n⚠️ Liabilities: ${data.liabilities_value} RWF\n\n_View full summary here:_ ${window.location.href}`;
+      ? `*${data.title}*\nItariki: ${data.generated_date}\nUmuryango: ${data.family_name || "Umuryango"}\n\n*Umutungo Wose:* ${data.total_assets_value} RWF\nMoMo: ${data.momo_value}\nMu Ntoki (Cash): ${data.cash_value}\nMuri Banki: ${data.bank_value}\nAmadeni: ${data.liabilities_value} RWF\n\nReba incamake yose hano: ${window.location.href}`
+      : `*${data.title}*\nDate: ${data.generated_date}\nFamily: ${data.family_name || "Family"}\n\n*Total Balance:* ${data.total_assets_value} RWF\nMoMo: ${data.momo_value}\nCash in Hand: ${data.cash_value}\nBank: ${data.bank_value}\nLiabilities: ${data.liabilities_value} RWF\n\nView full summary here: ${window.location.href}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
@@ -70,7 +81,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         </p>
 
         <div className="mt-4 flex items-center space-x-2 text-xs text-brand-cream/80 bg-white/10 px-3 py-1 rounded-full">
-          <span>📅</span>
+          <Calendar className="w-3.5 h-3.5" />
           <span>{data.generated_date}</span>
         </div>
       </div>
@@ -81,7 +92,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           <span className="text-xs font-extrabold uppercase tracking-widest text-brand-dark dark:text-brand-cream">
             {data.total_assets_label}
           </span>
-          <div className="text-4xl sm:text-5xl font-black text-brand-dark dark:text-white mt-2 tracking-tight">
+          <div className="text-4xl sm:text-5xl font-black text-brand-dark dark:white mt-2 tracking-tight">
             {data.total_assets_value}{" "}
             <span className="text-xl sm:text-2xl font-bold text-slate-500">RWF</span>
           </div>
@@ -101,7 +112,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         {/* Where is the cash? (Custody breakdown) */}
         <div>
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center space-x-1.5">
-            <span>📍</span>
+            <MapPin className="w-3.5 h-3.5 text-brand-steel-blue" />
             <span>
               {isRw ? "Aho Amafaranga Ari (Mu Ntoki & Konti)" : "Where the Funds Are Held"}
             </span>
@@ -109,7 +120,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
-              <span className="text-2xl block mb-1">🏦</span>
+              <Building2 className="w-6 h-6 mx-auto mb-1 text-slate-600 dark:text-slate-300" />
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">
                 {data.bank_label}
               </span>
@@ -122,7 +133,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
             </div>
 
             <div className="p-4 bg-amber-50/70 dark:bg-slate-800 rounded-2xl border border-amber-200 dark:border-slate-700 text-center">
-              <span className="text-2xl block mb-1">📱</span>
+              <Smartphone className="w-6 h-6 mx-auto mb-1 text-amber-700 dark:text-amber-400" />
               <span className="text-xs text-amber-900 dark:text-amber-300 font-medium block">
                 {data.momo_label}
               </span>
@@ -135,7 +146,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
             </div>
 
             <div className="p-4 bg-rose-50/70 dark:bg-slate-800 rounded-2xl border border-rose-200 dark:border-slate-700 text-center">
-              <span className="text-2xl block mb-1">💵</span>
+              <Banknote className="w-6 h-6 mx-auto mb-1 text-brand-crimson dark:text-rose-400" />
               <span className="text-xs text-rose-900 dark:text-rose-300 font-medium block">
                 {data.cash_label}
               </span>
@@ -152,7 +163,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         {/* Active Projects Checklist */}
         <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
-            <span>🏗️</span>
+            <Hammer className="w-3.5 h-3.5 text-brand-steel-blue" />
             <span>{isRw ? "Imishinga y'Umuryango Iri Gukorwa" : "Active Family Projects"}</span>
           </h4>
           <div className="space-y-3">
@@ -171,7 +182,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         {/* Liabilities / Outstanding Loans */}
         <div className="p-4 bg-rose-50/80 dark:bg-rose-950/20 rounded-2xl border border-rose-200 dark:border-rose-900 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <span className="text-xl">⚠️</span>
+            <AlertTriangle className="w-5 h-5 text-rose-600" />
             <div>
               <span className="text-xs font-extrabold uppercase tracking-wider text-rose-900 dark:text-rose-300 block">
                 {data.liabilities_label}
@@ -193,7 +204,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
             onClick={handleWhatsAppShare}
             className="w-full py-3 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
           >
-            <span>💬</span>
+            <Share2 className="w-4 h-4" />
             <span>{isRw ? "Sangiza kuri WhatsApp" : "Share to WhatsApp"}</span>
           </button>
 
@@ -202,7 +213,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
             onClick={handlePrint}
             className="w-full py-3 rounded-2xl bg-brand-dark dark:bg-slate-700 hover:bg-brand-dark/90 text-brand-cream dark:text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
           >
-            <span>📄</span>
+            <Printer className="w-4 h-4" />
             <span>{isRw ? "Koporora / Shyira muri PDF" : "Download / Print PDF"}</span>
           </button>
         </div>
