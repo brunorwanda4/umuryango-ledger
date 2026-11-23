@@ -1,0 +1,147 @@
+use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::str::FromStr;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Locale {
+    #[default]
+    Rw,
+    En,
+}
+
+impl Locale {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Locale::Rw => "rw",
+            Locale::En => "en",
+        }
+    }
+
+    /// Parse an HTTP `Accept-Language` header (e.g., "rw-RW,rw;q=0.9,en;q=0.8")
+    /// Defaults to `Locale::Rw` if header is missing or unparseable.
+    pub fn from_header(header: Option<&str>) -> Self {
+        let Some(raw) = header else {
+            return Locale::Rw;
+        };
+
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            return Locale::Rw;
+        }
+
+        // Parse list of comma-separated items with optional weights
+        // e.g. "rw,en;q=0.8" or "en-US,en;q=0.9,rw;q=0.7"
+        let mut best_locale = Locale::Rw;
+        let mut max_q: f32 = -1.0;
+
+        for part in trimmed.split(',') {
+            let mut subparts = part.trim().split(';');
+            let tag = subparts.next().unwrap_or("").trim().to_lowercase();
+            let mut q: f32 = 1.0;
+
+            for param in subparts {
+                let param = param.trim();
+                if let Some(val_str) = param.strip_prefix("q=") {
+                    if let Ok(parsed_q) = val_str.parse::<f32>() {
+                        q = parsed_q;
+                    }
+                }
+            }
+
+            if tag.starts_with("rw") {
+                if q > max_q {
+                    max_q = q;
+                    best_locale = Locale::Rw;
+                }
+            } else if tag.starts_with("en") {
+                if q > max_q {
+                    max_q = q;
+                    best_locale = Locale::En;
+                }
+            }
+        }
+
+        if max_q >= 0.0 {
+            best_locale
+        } else {
+            Locale::Rw
+        }
+    }
+}
+
+impl fmt::Display for Locale {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl FromStr for Locale {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let clean = s.trim().to_lowercase();
+        if clean.starts_with("en") {
+            Ok(Locale::En)
+        } else if clean.starts_with("rw") {
+            Ok(Locale::Rw)
+        } else {
+            Ok(Locale::Rw)
+        }
+    }
+}
+
+pub mod terms {
+    pub const APP_NAME: &str = "app-name";
+    pub const TAGLINE: &str = "tagline";
+
+    pub const NAV_DASHBOARD: &str = "nav-dashboard";
+    pub const NAV_TRANSACTIONS: &str = "nav-transactions";
+    pub const NAV_WALLETS: &str = "nav-wallets";
+    pub const NAV_PROJECTS: &str = "nav-projects";
+    pub const NAV_LOANS: &str = "nav-loans";
+    pub const NAV_PLANS: &str = "nav-plans";
+    pub const NAV_REPORTS: &str = "nav-reports";
+    pub const NAV_MEMBERS: &str = "nav-members";
+
+    pub const PERSONAL_SCOPE: &str = "personal-scope";
+    pub const FAMILY_SCOPE: &str = "family-scope";
+    pub const ROLE_HEAD: &str = "role-head";
+    pub const ROLE_CUSTODIAN: &str = "role-custodian";
+    pub const ROLE_MEMBER: &str = "role-member";
+
+    pub const INCOME: &str = "income";
+    pub const EXPENSE: &str = "expense";
+    pub const HANDOVER: &str = "handover";
+    pub const CUSTODIAN: &str = "custodian";
+    pub const OPENING_BALANCE: &str = "opening-balance";
+    pub const CLOSING_BALANCE: &str = "closing-balance";
+    pub const HELD_BY: &str = "held-by";
+    pub const AUTHORIZED_BY: &str = "authorized-by";
+    pub const PAID_TO: &str = "paid-to";
+
+    pub const CHANNEL_BANK: &str = "channel-bank";
+    pub const CHANNEL_MOMO: &str = "channel-momo";
+    pub const CHANNEL_CASH: &str = "channel-cash";
+
+    pub const MOTHERS_REPORT_TITLE: &str = "mothers-report-title";
+    pub const TOTAL_INCOME: &str = "total-income";
+    pub const TOTAL_EXPENSES: &str = "total-expenses";
+    pub const CASH_CUSTODY_BREAKDOWN: &str = "cash-custody-breakdown";
+    pub const ACTIVE_PROJECTS: &str = "active-projects";
+    pub const LOANS_SUMMARY: &str = "loans-summary";
+    pub const FUTURE_PLANS: &str = "future-plans";
+
+    pub const NOTIF_INCOME_ADDED: &str = "notif-income-added";
+    pub const NOTIF_EXPENSE_LOGGED: &str = "notif-expense-logged";
+    pub const NOTIF_HANDOVER_COMPLETED: &str = "notif-handover-completed";
+    pub const NOTIF_PROJECT_LOAN_UPDATED: &str = "notif-project-loan-updated";
+
+    pub const ERR_INSUFFICIENT_CUSTODY: &str = "error-insufficient-custody";
+    pub const ERR_UNAUTHORIZED_ROLE: &str = "error-unauthorized-role";
+    pub const ERR_INVALID_HANDOVER: &str = "error-invalid-handover";
+    pub const ERR_SCOPE_MISMATCH: &str = "error-scope-mismatch";
+    pub const ERR_INVALID_AMOUNT: &str = "error-invalid-amount";
+    pub const ERR_NOT_FOUND: &str = "error-not-found";
+    pub const ERR_VALIDATION: &str = "error-validation";
+}

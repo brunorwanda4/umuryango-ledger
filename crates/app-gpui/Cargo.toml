@@ -1,0 +1,20 @@
+[package]
+name = "app-gpui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+umuryango-core-domain = { workspace = true }
+umuryango-i18n = { workspace = true }
+umuryango-storage-local = { workspace = true }
+umuryango-api-client = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+gpui-kit = { version = "0.10.0", features = ["component"] }
