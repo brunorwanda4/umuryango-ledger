@@ -1,7 +1,14 @@
-export default async function ProjectsPage({ params }: { params: Promise<{ locale: string }> }) {
-  const resolvedParams = await params;
+"use client";
+
+import React, { use } from "react";
+import { useLedger } from "@/lib/LedgerContext";
+
+export default function ProjectsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const resolvedParams = use(params);
   const locale = resolvedParams.locale === "en" ? "en" : "rw";
   const isRw = locale === "rw";
+
+  const { scope } = useLedger();
 
   const projects = [
     {
@@ -32,10 +39,19 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <div className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream mb-1">
+            {scope === "family"
+              ? isRw
+                ? "🏛️ Imishinga y'Umuryango"
+                : "🏛️ Family Projects"
+              : isRw
+                ? "🔒 Imishinga Bwite"
+                : "🔒 Personal Goals"}
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {isRw ? "Imishinga y'Umuryango" : "Family Projects"}
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             {isRw
               ? "Guhuza imbaraga n'umusanzu mu bikorwa by'iterambere ry'umuryango"
               : "Pooled contributions and progress tracking for shared goals"}
@@ -44,9 +60,9 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
 
         <button
           type="button"
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-sm transition"
+          className="px-4 py-2 bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs rounded-xl shadow-md transition"
         >
-          {isRw ? "+ Tangiza Umushinga Gishya" : "+ Start New Project"}
+          {isRw ? "+ Tangiza Umushinga Mushya" : "+ Start New Project"}
         </button>
       </div>
 
@@ -54,18 +70,20 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
         {projects.map((proj) => (
           <div
             key={proj.id}
-            className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-4"
+            className="p-6 bg-white dark:bg-brand-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 transition-colors"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-bold text-lg text-slate-900">{proj.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">{proj.description}</p>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">{proj.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {proj.description}
+                </p>
               </div>
               <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                className={`px-3 py-1 rounded-full text-[11px] font-bold ${
                   proj.percentage === 100
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-blue-100 text-blue-800"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                    : "bg-brand-cream/80 text-brand-dark dark:bg-slate-800 dark:text-brand-cream"
                 }`}
               >
                 {proj.status}
@@ -74,16 +92,16 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
 
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-slate-500">
+                <span className="text-slate-500 dark:text-slate-400">
                   {isRw ? "Amafaranga amaze kuboneka" : "Progress"}
                 </span>
-                <span className="text-slate-900">
+                <span className="text-slate-900 dark:text-white font-bold">
                   {proj.raised} / {proj.target} ({proj.percentage}%)
                 </span>
               </div>
-              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-emerald-600 h-2.5 rounded-full transition-all"
+                  className="bg-brand-steel-blue h-3 rounded-full transition-all duration-500"
                   style={{ width: `${proj.percentage}%` }}
                 />
               </div>

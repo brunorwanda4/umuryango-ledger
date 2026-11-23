@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-dark: #003049;
+  --accent-cream: #fdf0d5;
+  --primary-crimson: #780000;
+  --active-crimson: #c1121f;
+  --steel-blue: #669bbc;
+
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+}
+
+.dark {
+  --bg-main: #001e2e;
+  --bg-card: #003049;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #0b4566;
+}
+
+body {
+  font-family: var(--font-archivo), system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Print layout for Mom's Report */
+@media print {
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .print-card {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+}

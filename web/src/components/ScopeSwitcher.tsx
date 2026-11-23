@@ -1,52 +1,45 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
+import { useLedger, ScopeType } from "@/lib/LedgerContext";
 
 interface ScopeSwitcherProps {
-  currentScope?: "personal" | "family";
   locale?: "rw" | "en";
-  onScopeChange?: (scope: "personal" | "family") => void;
 }
 
-export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({
-  currentScope = "family",
-  locale = "rw",
-  onScopeChange,
-}) => {
-  const [scope, setScope] = useState<"personal" | "family">(currentScope);
+export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({ locale = "rw" }) => {
+  const { scope, setScope } = useLedger();
 
-  const handleToggle = (nextScope: "personal" | "family") => {
-    setScope(nextScope);
-    onScopeChange?.(nextScope);
-  };
-
-  const personalLabel = locale === "rw" ? "Imari Yanjye Bwite" : "Personal Finances";
-  const familyLabel = locale === "rw" ? "Igitabo cy'Umuryango" : "Family Ledger";
+  const isRw = locale === "rw";
+  const personalLabel = isRw ? "Imari Yanjye" : "Personal";
+  const familyLabel = isRw ? "Igitabo cy'Umuryango" : "Family Ledger";
 
   return (
-    <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200">
+    <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
       <button
         type="button"
-        onClick={() => handleToggle("family")}
-        className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+        onClick={() => setScope("family")}
+        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 ${
           scope === "family"
-            ? "bg-emerald-600 text-white shadow-sm"
-            : "text-slate-600 hover:text-slate-900"
+            ? "bg-brand-dark text-brand-cream shadow-md"
+            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
         }`}
       >
-        🏛️ {familyLabel}
+        <span>🏛️</span>
+        <span>{familyLabel}</span>
       </button>
 
       <button
         type="button"
-        onClick={() => handleToggle("personal")}
-        className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+        onClick={() => setScope("personal")}
+        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 ${
           scope === "personal"
-            ? "bg-slate-800 text-white shadow-sm"
-            : "text-slate-600 hover:text-slate-900"
+            ? "bg-brand-crimson text-white shadow-md"
+            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
         }`}
       >
-        🔒 {personalLabel}
+        <span>🔒</span>
+        <span>{personalLabel}</span>
       </button>
     </div>
   );
