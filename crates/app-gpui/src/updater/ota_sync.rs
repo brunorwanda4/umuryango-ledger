@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::info;
 use umuryango_storage_local::LocalDatabase;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,29 +20,28 @@ pub enum OtaError {
     Storage(String),
 }
 
-/// Fetches the latest live OTA bundle from the backend and updates local cache
-pub async fn fetch_latest_ota_bundle(
+/// Fetches dynamic runtime OTA configuration bundle and hot-updates SQLite cache
+pub async fn fetch_and_apply_ota_bundle(
     api_base_url: &str,
-    _db: Option<&LocalDatabase>,
+    db: &LocalDatabase,
 ) -> Result<OtaBundleResponse, OtaError> {
     let url = format!("{}/api/v1/ota/bundle", api_base_url.trim_end_matches('/'));
-    info!(url = %url, "Checking for Over-The-Air (OTA) runtime updates");
+    info!("Checking for OTA bundle updates at {}", url);
 
-    let client = reqwest::Client::builder()
-        .user_agent("Umuryango-OTA/1.0")
-        .build()?;
+    let client = reqwest::Client::new();
+    let resp = client.get(&url).send().await?.error_for_status()?;
+    let payload = resp.json::<OtaBundleResponse>().await?;
 
-    let response = client.get(&url).send().await?;
-    if !response.status().is_success() {
-        return Err(OtaError::Network(response.error_for_status().unwrap_err()));
-    }
-
-    let bundle: OtaBundleResponse = response.json().await?;
     info!(
-        bundle_version = bundle.bundle_version,
-        "Retrieved latest OTA bundle successfully"
+        "Received OTA bundle v{}. Updating localized cache...",
+        payload.bundle_version
     );
 
-    // Save bundle to SQLite cache for offline runtime availability if needed
-    Ok(bundle)
+    // Cache updated strings in offline database for persistent application
+    let cache_key = format!("ota_bundle_v{}", payload.bundle_version);
+    let serialized_raw = serde_json::to_string(&payload)?;
+    db.set_config(&cache_key, &serialized_raw)
+        .map_err(|e| OtaError::Storage(e.to_string()))?;
+
+    Ok(payload)
 }

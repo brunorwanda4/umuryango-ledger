@@ -40,6 +40,28 @@ impl LocalDatabase {
         &mut self.conn
     }
 
+    pub fn set_config(&self, key: &str, value: &str) -> Result<()> {
+        let now = chrono::Utc::now().to_rfc3339();
+        self.conn.execute(
+            "INSERT INTO app_config (key, value, updated_at) VALUES (?1, ?2, ?3)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+            rusqlite::params![key, value, now],
+        )?;
+        Ok(())
+    }
+
+    pub fn get_config(&self, key: &str) -> Result<Option<String>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT value FROM app_config WHERE key = ?1")?;
+        let mut rows = stmt.query(rusqlite::params![key])?;
+        if let Some(row) = rows.next()? {
+            Ok(Some(row.get(0)?))
+        } else {
+            Ok(None)
+        }
+    }
+
     fn init_schema(&self) -> Result<()> {
         self.conn.execute_batch(
             r#"
@@ -147,6 +169,13 @@ impl LocalDatabase {
                 cream_warm TEXT NOT NULL DEFAULT '#fdf0d5',
                 prussian_navy TEXT NOT NULL DEFAULT '#003049',
                 steel_blue TEXT NOT NULL DEFAULT '#669bbc',
+                updated_at TEXT NOT NULL
+            );
+
+            -- App Config Key-Value Store
+            CREATE TABLE IF NOT EXISTS app_config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
 

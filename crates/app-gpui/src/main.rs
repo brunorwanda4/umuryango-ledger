@@ -7,7 +7,7 @@ mod theme;
 pub mod updater;
 
 use components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use gpui_kit::{Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
+use gpui_kit::{AppContext, Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
 pub use safe_area::SafeAreaInsets;
 use state::{AppState, Screen};
 use theme::archivo_font_bytes;
@@ -166,11 +166,22 @@ fn main() {
     let mut state = AppState::default();
     state.load_from_db(&db);
 
-    // Verify Archivo font family loading
-    let _ = archivo_font_bytes();
-
     println!(
         "Application ready. Active scope: {:?}, Locale: {:?}",
         state.active_scope, state.locale
     );
+
+    let app = gpui_kit::application();
+    app.run(move |cx| {
+        if let Err(e) = cx.text_system().add_fonts(archivo_font_bytes()) {
+            eprintln!("Warning: Failed to load bundled Archivo fonts: {:?}", e);
+        }
+
+        let mut options = gpui_kit::WindowOptions::default();
+        options.titlebar = Some(gpui_kit::TitlebarOptions {
+            title: Some("Umuryango Ledger".into()),
+            ..Default::default()
+        });
+        let _ = cx.open_window(options, |_window, cx| cx.new(|_| RootView { state }));
+    });
 }
