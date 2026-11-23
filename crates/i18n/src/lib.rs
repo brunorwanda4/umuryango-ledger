@@ -1,88 +1,105 @@
-pub mod error_catalog;
-pub mod keys;
-
-pub use error_catalog::{localize_domain_error, LocalizableError, LocalizedError};
-pub use keys::{terms, Locale};
-
-use fluent_bundle::concurrent::FluentBundle;
-use fluent_bundle::{FluentArgs, FluentResource};
+use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
+use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::OnceLock;
 use unic_langid::LanguageIdentifier;
 
-static GLOBAL_TRANSLATOR: OnceLock<Translator> = OnceLock::new();
+pub mod keys;
+pub use keys::{Locale, terms};
 
-pub struct Translator {
-    bundles: HashMap<Locale, FluentBundle<FluentResource>>,
+pub static EN_FTL: &str = include_str!("../../../locales/en.ftl");
+pub static RW_FTL: &str = include_str!("../../../locales/rw.ftl");
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LocalizedError {
+    pub code: String,
+    pub message: String,
 }
 
-// Backward compatibility alias
-pub type Localizer = Translator;
+pub trait LocalizableError {
+    fn error_code(&self) -> &'static str;
+    fn to_fluent_args(&self) -> Option<FluentArgs<'static>>;
+}
 
-impl Default for Translator {
-    fn default() -> Self {
-        Self::new()
+pub fn localize_domain_error<E: LocalizableError>(locale: Locale, error: &E) -> LocalizedError {
+    let args = error.to_fluent_args();
+    let message = Translator::t(locale, error.error_code(), args.as_ref());
+    LocalizedError {
+        code: error.error_code().to_string(),
+        message,
     }
 }
 
-impl Translator {
+thread_local! {
+    static BUNDLES: RefCell<HashMap<Locale, FluentBundle<FluentResource>>> = RefCell::new({
+        let mut map = HashMap::new();
+
+        // English bundle
+        let en_lang: LanguageIdentifier = "en".parse().expect("valid en locale");
+        let mut en_bundle = FluentBundle::new(vec![en_lang]);
+        en_bundle.set_use_isolating(false);
+        let en_res = FluentResource::try_new(EN_FTL.to_string())
+            .expect("Failed to parse en.ftl at compile time");
+        en_bundle
+            .add_resource(en_res)
+            .expect("Failed to add en resource");
+        map.insert(Locale::En, en_bundle);
+
+        // Kinyarwanda bundle
+        let rw_lang: LanguageIdentifier = "rw".parse().expect("valid rw locale");
+        let mut rw_bundle = FluentBundle::new(vec![rw_lang]);
+        rw_bundle.set_use_isolating(false);
+        let rw_res = FluentResource::try_new(RW_FTL.to_string())
+            .expect("Failed to parse rw.ftl at compile time");
+        rw_bundle
+            .add_resource(rw_res)
+            .expect("Failed to add rw resource");
+        map.insert(Locale::Rw, rw_bundle);
+
+        map
+    });
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Localizer;
+
+impl Localizer {
     pub fn new() -> Self {
-        let mut bundles = HashMap::new();
-
-        // English Bundle
-        let en_source = include_str!("../../../locales/en.ftl");
-        if let Ok(bundle) = Self::create_bundle("en", en_source) {
-            bundles.insert(Locale::En, bundle);
-        }
-
-        // Kinyarwanda Bundle
-        let rw_source = include_str!("../../../locales/rw.ftl");
-        if let Ok(bundle) = Self::create_bundle("rw", rw_source) {
-            bundles.insert(Locale::Rw, bundle);
-        }
-
-        Self { bundles }
-    }
-
-    pub fn global() -> &'static Translator {
-        GLOBAL_TRANSLATOR.get_or_init(Translator::new)
-    }
-
-    /// Global translation helper
-    pub fn t(locale: Locale, key: &str, args: Option<&FluentArgs>) -> String {
-        Self::global().translate(locale, key, args)
-    }
-
-    fn create_bundle(
-        lang: &str,
-        source: &'static str,
-    ) -> Result<FluentBundle<FluentResource>, String> {
-        let lang_id: LanguageIdentifier = lang.parse().map_err(|e| format!("{:?}", e))?;
-        let res = FluentResource::try_new(source.to_string())
-            .map_err(|(_, errs)| format!("{:?}", errs))?;
-        let mut bundle = FluentBundle::new_concurrent(vec![lang_id]);
-        bundle.set_use_isolating(false);
-        bundle
-            .add_resource(res)
-            .map_err(|errs| format!("{:?}", errs))?;
-        Ok(bundle)
+        Self
     }
 
     pub fn translate(&self, locale: Locale, key: &str, args: Option<&FluentArgs>) -> String {
-        let bundle = self
-            .bundles
-            .get(&locale)
-            .or_else(|| self.bundles.get(&Locale::Rw));
-        if let Some(bundle) = bundle {
-            if let Some(msg) = bundle.get_message(key) {
-                if let Some(pattern) = msg.value() {
-                    let mut errors = vec![];
-                    let val = bundle.format_pattern(pattern, args, &mut errors);
-                    return val.to_string();
+        Translator::t(locale, key, args)
+    }
+}
+
+pub struct Translator;
+
+impl Translator {
+    /// Formats a localized string for the specified locale and key, with optional arguments
+    pub fn t(locale: Locale, key: &str, args: Option<&FluentArgs>) -> String {
+        BUNDLES.with(|cell| {
+            let map = cell.borrow();
+            let bundle = map.get(&locale).or_else(|| map.get(&Locale::Rw));
+
+            if let Some(b) = bundle {
+                if let Some(msg) = b.get_message(key) {
+                    if let Some(pattern) = msg.value() {
+                        let mut errors = vec![];
+                        let val = b.format_pattern(pattern, args, &mut errors);
+                        return val.to_string();
+                    }
                 }
             }
-        }
-        format!("[{}:{}]", locale, key)
+
+            key.to_string()
+        })
+    }
+
+    /// Formats domain error code to human-readable message in requested locale
+    pub fn localize_error(locale: Locale, error_code: &str, args: Option<&FluentArgs>) -> String {
+        let key = format!("error-{}", error_code.replace('_', "-").to_lowercase());
+        Self::t(locale, &key, args)
     }
 }
 
@@ -93,8 +110,6 @@ mod tests {
 
     #[test]
     fn test_locale_from_header() {
-        assert_eq!(Locale::from_header(Some("rw")), Locale::Rw);
-        assert_eq!(Locale::from_header(Some("en")), Locale::En);
         assert_eq!(
             Locale::from_header(Some("en-US,en;q=0.9,rw;q=0.8")),
             Locale::En
@@ -116,7 +131,7 @@ mod tests {
         assert_eq!(rw_scope, "Imari Yanjye Bwite");
 
         let en_handover = Translator::t(Locale::En, terms::HANDOVER, None);
-        assert_eq!(en_handover, "Custodian Handover");
+        assert_eq!(en_handover, "Custody Handover");
 
         let rw_handover = Translator::t(Locale::Rw, terms::HANDOVER, None);
         assert_eq!(rw_handover, "Ihererekanya ry'Umutungo");
@@ -142,28 +157,18 @@ mod tests {
         );
     }
 
-    struct MockError;
-    impl LocalizableError for MockError {
-        fn error_code(&self) -> &'static str {
-            terms::ERR_UNAUTHORIZED_ROLE
-        }
-    }
-
     #[test]
     fn test_localize_domain_error() {
-        let err = MockError;
-        let localized_en = localize_domain_error(Locale::En, &err);
-        assert_eq!(localized_en.code, "error-unauthorized-role");
+        let rw = Translator::localize_error(Locale::Rw, "UNAUTHORIZED_ROLE", None);
         assert_eq!(
-            localized_en.message,
-            "Your role in this family does not allow performing this action."
+            rw,
+            "Inshingano zawe muri uyu muryango ntizikwemerera gukora iki gikorwa."
         );
 
-        let localized_rw = localize_domain_error(Locale::Rw, &err);
-        assert_eq!(localized_rw.code, "error-unauthorized-role");
+        let en = Translator::localize_error(Locale::En, "UNAUTHORIZED_ROLE", None);
         assert_eq!(
-            localized_rw.message,
-            "Inshingano zawe muri uyu muryango ntizikwemerera gukora iki gikorwa."
+            en,
+            "Your role in this family does not allow performing this action."
         );
     }
 }

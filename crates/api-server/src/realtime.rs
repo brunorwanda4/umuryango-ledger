@@ -44,6 +44,12 @@ impl FamilyHub {
             let _ = entry.send(event);
         }
     }
+
+    pub fn broadcast_all(&self, event: RealtimeEvent) {
+        for entry in self.channels.iter() {
+            let _ = entry.value().send(event.clone());
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -101,85 +107,91 @@ pub async fn ws_handler(
         user_id, family_ids
     );
 
-    // 3. Initiate WebSocket session
+    // 3. Initiate Actix-web WebSocket session
     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
 
-    // 4. Multiplex all family channels into an mpsc queue
-    let (event_tx, mut event_rx) = mpsc::unbounded_channel::<RealtimeEvent>();
+    // Channel for forwarding broadcasted events to this client's writer
+    let (event_tx, mut event_rx) = mpsc::channel::<RealtimeEvent>(128);
 
+    // Subscribe to each family's broadcast channel
     for fid in family_ids {
         let mut rx = data.family_hub.subscribe(fid);
-        let tx = event_tx.clone();
-        actix_web::rt::spawn(async move {
+        let event_tx_clone = event_tx.clone();
+
+        tokio::spawn(async move {
             while let Ok(event) = rx.recv().await {
-                if tx.send(event).is_err() {
+                if event_tx_clone.send(event).await.is_err() {
                     break;
                 }
             }
         });
     }
 
-    // 5. Run connection event loop with keepalive heartbeat
-    actix_web::rt::spawn(async move {
-        let mut heartbeat = interval(Duration::from_secs(15));
+    // Ping interval to maintain connectivity through carrier timeouts
+    let mut ping_interval = interval(Duration::from_secs(30));
 
+    // Spawn async background pump task on Actix runtime
+    actix_web::rt::spawn(async move {
         loop {
             tokio::select! {
-                // Heartbeat ping
-                _ = heartbeat.tick() => {
-                    if session.ping(b"heartbeat").await.is_err() {
-                        debug!("WebSocket heartbeat failed, terminating session for user={}", user_id);
-                        break;
-                    }
-                }
-
-                // Incoming broadcast event from family hub
+                // Outgoing: Send realtime events received on internal channel to client
                 Some(event) = event_rx.recv() => {
                     match serde_json::to_string(&event) {
                         Ok(json) => {
                             if session.text(json).await.is_err() {
-                                warn!("Failed to deliver event to user={}", user_id);
+                                debug!("Failed to send text frame to WS client; closing connection.");
                                 break;
                             }
                         }
                         Err(e) => {
-                            error!("Failed to serialize RealtimeEvent: {:?}", e);
+                            error!("Failed to serialize RealtimeEvent for WS: {}", e);
                         }
                     }
                 }
 
-                // Incoming WebSocket frames from client
-                msg = msg_stream.next() => {
+                // Heartbeat: Send periodic Ping to keep carrier connection alive
+                _ = ping_interval.tick() => {
+                    if session.ping(b"heartbeat").await.is_err() {
+                        debug!("Failed to send ping to WS client; connection lost.");
+                        break;
+                    }
+                }
+
+                // Incoming: Receive client frames (Pong / close / text)
+                Some(msg) = msg_stream.next() => {
                     match msg {
-                        Some(Ok(actix_ws::Message::Ping(bytes))) => {
+                        Ok(actix_ws::Message::Ping(bytes)) => {
                             if session.pong(&bytes).await.is_err() {
                                 break;
                             }
                         }
-                        Some(Ok(actix_ws::Message::Pong(_))) => {
-                            // Client replied to heartbeat
+                        Ok(actix_ws::Message::Pong(_)) => {
+                            debug!("Received pong from client user_id={}", user_id);
                         }
-                        Some(Ok(actix_ws::Message::Close(reason))) => {
+                        Ok(actix_ws::Message::Close(reason)) => {
+                            info!("WebSocket client closed connection: {:?}", reason);
                             let _ = session.clone().close(reason).await;
                             break;
                         }
-                        Some(Ok(actix_ws::Message::Text(_))) => {
-                            // Client messages (can be extended for bidirectional interactions)
+                        Ok(actix_ws::Message::Text(text)) => {
+                            debug!("Received text frame from WS client: {}", text);
                         }
-                        Some(Ok(actix_ws::Message::Binary(_))) => {}
-                        Some(Ok(actix_ws::Message::Nop)) | Some(Ok(actix_ws::Message::Continuation(_))) => {}
-                        Some(Err(e)) => {
-                            warn!("WebSocket stream error for user={}: {:?}", user_id, e);
+                        Ok(actix_ws::Message::Binary(_)) => {}
+                        Ok(actix_ws::Message::Nop) => {}
+                        Ok(_) => {}
+                        Err(e) => {
+                            warn!("WebSocket error for user_id={}: {:?}", user_id, e);
                             break;
                         }
-                        None => break,
                     }
                 }
+
+                else => break,
             }
         }
 
         let _ = session.close(None).await;
-        debug!("WebSocket connection closed for user={}", user_id);
+        info!("WebSocket session finished for user_id={}", user_id);
     });
 
     Ok(response)

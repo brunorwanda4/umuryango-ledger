@@ -6,7 +6,9 @@ use std::str::FromStr;
 #[serde(rename_all = "lowercase")]
 pub enum Locale {
     #[default]
+    #[serde(rename = "rw")]
     Rw,
+    #[serde(rename = "en")]
     En,
 }
 
@@ -18,33 +20,26 @@ impl Locale {
         }
     }
 
-    /// Parse an HTTP `Accept-Language` header (e.g., "rw-RW,rw;q=0.9,en;q=0.8")
-    /// Defaults to `Locale::Rw` if header is missing or unparseable.
     pub fn from_header(header: Option<&str>) -> Self {
-        let Some(raw) = header else {
-            return Locale::Rw;
-        };
+        header
+            .map(|h| Self::from_accept_language(h))
+            .unwrap_or(Locale::Rw)
+    }
 
-        let trimmed = raw.trim();
-        if trimmed.is_empty() {
-            return Locale::Rw;
-        }
-
-        // Parse list of comma-separated items with optional weights
-        // e.g. "rw,en;q=0.8" or "en-US,en;q=0.9,rw;q=0.7"
+    pub fn from_accept_language(header: &str) -> Self {
         let mut best_locale = Locale::Rw;
-        let mut max_q: f32 = -1.0;
+        let mut max_q = -1.0;
 
-        for part in trimmed.split(',') {
-            let mut subparts = part.trim().split(';');
-            let tag = subparts.next().unwrap_or("").trim().to_lowercase();
-            let mut q: f32 = 1.0;
+        for part in header.split(',') {
+            let mut items = part.trim().split(';');
+            let tag = items.next().unwrap_or("").trim().to_lowercase();
+            let mut q = 1.0;
 
-            for param in subparts {
-                let param = param.trim();
-                if let Some(val_str) = param.strip_prefix("q=") {
-                    if let Ok(parsed_q) = val_str.parse::<f32>() {
-                        q = parsed_q;
+            if let Some(q_part) = items.next() {
+                let q_part = q_part.trim();
+                if q_part.starts_with("q=") {
+                    if let Ok(val) = q_part[2..].parse::<f32>() {
+                        q = val;
                     }
                 }
             }
@@ -136,6 +131,13 @@ pub mod terms {
     pub const NOTIF_EXPENSE_LOGGED: &str = "notif-expense-logged";
     pub const NOTIF_HANDOVER_COMPLETED: &str = "notif-handover-completed";
     pub const NOTIF_PROJECT_LOAN_UPDATED: &str = "notif-project-loan-updated";
+    pub const NOTIF_APP_UPDATE_AVAILABLE: &str = "notif-app-update-available";
+    pub const NOTIF_APP_UPDATE_MANDATORY: &str = "notif-app-update-mandatory";
+
+    pub const UPDATE_READY_BANNER: &str = "update-ready-banner";
+    pub const UPDATE_DOWNLOADING: &str = "update-downloading";
+    pub const UPDATE_MANDATORY_TITLE: &str = "update-mandatory-title";
+    pub const UPDATE_RESTART_NOW: &str = "update-restart-now";
 
     pub const ERR_INSUFFICIENT_CUSTODY: &str = "error-insufficient-custody";
     pub const ERR_UNAUTHORIZED_ROLE: &str = "error-unauthorized-role";

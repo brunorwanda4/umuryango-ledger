@@ -18,6 +18,11 @@ rust_decimal = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 gpui-kit = { version = "0.10.0", features = ["component"] }
+semver = { workspace = true }
+sha2 = { workspace = true }
+reqwest = { workspace = true }
+self-replace = { workspace = true }
+thiserror = { workspace = true }
 
 [build-dependencies]
 image = { version = "0.25", default-features = false, features = ["png"] }

@@ -1,0 +1,204 @@
+name: Release and Publish OTA
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g. v0.2.0)'
+        required: true
+        default: 'v0.2.0'
+      is_mandatory:
+        description: 'Mandatory update (force user upgrade)'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Build Binary (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: WINDOWS
+            artifact_name: umuryango-ledger-windows-x64.exe
+            binary_path: target/release/umuryango-ledger.exe
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: LINUX
+            artifact_name: umuryango-ledger-linux-x64
+            binary_path: target/release/umuryango-ledger
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            platform: MACOS
+            artifact_name: umuryango-ledger-macos-arm64
+            binary_path: target/release/umuryango-ledger
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Install Linux build dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxkbcommon-dev libwayland-dev libxcursor-dev libxrandr-dev libxi-dev libasound2-dev libssl-dev
+
+      - name: Build release binary
+        run: cargo build --release --bin umuryango-ledger
+
+      - name: Copy and rename artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp "${{ matrix.binary_path }}" "dist/${{ matrix.artifact_name }}"
+          cd dist
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${{ matrix.artifact_name }}" > "${{ matrix.artifact_name }}.sha256"
+          else
+            shasum -a 256 "${{ matrix.artifact_name }}" > "${{ matrix.artifact_name }}.sha256"
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+
+      - name: Install cargo-apk
+        run: cargo install cargo-apk
+
+      - name: Build Android APK
+        run: |
+          mkdir -p dist
+          cargo apk build --release
+          find target/release/apk -name "*.apk" -exec cp {} dist/umuryango-ledger-android.apk \;
+          cd dist
+          sha256sum umuryango-ledger-android.apk > umuryango-ledger-android.apk.sha256
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: umuryango-ledger-android.apk
+          path: dist/*
+
+  publish-release:
+    name: Create GitHub Release & Notify API
+    needs: [build-binaries, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release_artifacts
+          merge-multiple: true
+
+      - name: Generate Checksums and Release Notes
+        id: release_meta
+        run: |
+          VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ] || [[ "$VERSION" == *"pull"* ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          # Strip leading v
+          CLEAN_VERSION="${VERSION#v}"
+          echo "version=${CLEAN_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release_artifacts/*
+          tag_name: ${{ github.ref_name || github.event.inputs.version }}
+          name: Release ${{ github.ref_name || github.event.inputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      - name: Publish Release to Umuryango Backend
+        env:
+          API_URL: ${{ secrets.UMURYANGO_API_URL || 'https://api.umuryango.rw' }}
+          ADMIN_KEY: ${{ secrets.ADMIN_SECRET }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          IS_MANDATORY: ${{ github.event.inputs.is_mandatory || false }}
+        run: |
+          if [ -z "$ADMIN_KEY" ]; then
+            echo "ADMIN_SECRET not set, skipping API manifest notification."
+            exit 0
+          fi
+
+          declare -A PLATFORMS=(
+            ["WINDOWS"]="umuryango-ledger-windows-x64.exe"
+            ["LINUX"]="umuryango-ledger-linux-x64"
+            ["MACOS"]="umuryango-ledger-macos-arm64"
+            ["ANDROID"]="umuryango-ledger-android.apk"
+          )
+
+          for PLATFORM in "${!PLATFORMS[@]}"; do
+            FILE="${PLATFORMS[$PLATFORM]}"
+            if [ -f "release_artifacts/$FILE" ]; then
+              CHECKSUM=$(cut -d ' ' -f 1 "release_artifacts/${FILE}.sha256")
+              DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name || github.event.inputs.version }}/${FILE}"
+
+              echo "Registering $PLATFORM release $VERSION with backend..."
+              curl -s -X POST "${API_URL}/api/v1/releases/publish" \
+                -H "Content-Type: application/json" \
+                -H "X-Admin-Key: ${ADMIN_KEY}" \
+                -d @- <<EOF
+          {
+            "version": "${VERSION}",
+            "platform": "${PLATFORM}",
+            "download_url": "${DOWNLOAD_URL}",
+            "sha256_checksum": "${CHECKSUM}",
+            "release_notes_en": "Umuryango Ledger version ${VERSION} with performance improvements and offline sync enhancements.",
+            "release_notes_rw": "Umuryango Ledger verisiyo ${VERSION} irimo ibintu bishya no kwihutisha ihuza ry'amakuru.",
+            "is_mandatory": ${IS_MANDATORY}
+          }
+          EOF
+            fi
+          done

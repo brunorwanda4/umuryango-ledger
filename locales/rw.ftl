@@ -51,6 +51,14 @@ notif-income-added = {$actor} yongeye {$amount} RWF kuri konti '{$wallet}' ({$so
 notif-expense-logged = {$actor} yakoresheje {$amount} RWF kuri konti '{$wallet}' ({$category}).
 notif-handover-completed = {$actor} yohereje {$amount} RWF kuva kuri '{$from_wallet}' ajya kuri '{$to_wallet}'.
 notif-project-loan-updated = {$entity_type} '{$title}' yavuguruwe.
+notif-app-update-available = Verisiyo nshya ({$version}) irabonetse. Kanda hano uvugurure.
+notif-app-update-mandatory = Amavugurura ategetswe ({$version}) arateguwe. Vugurura ubu kugira ngo ukomeze.
+
+# Amavugurura ya Porogaramu n'Iby'Ako Kanya (OTA)
+update-ready-banner = Verisiyo nshya ({$version}) yateguwe. Kanda hano uvugurure.
+update-downloading = Birimo gukururwa ({$progress}%)...
+update-mandatory-title = Amavugurura Ategetswe
+update-restart-now = Funga Wongere Ufungure Ubu
 
 # Urutonde rw'Amakosa (Domain & Localized API Errors)
 error-insufficient-custody = Konti '{$wallet}' ifite {$available} RWF gusa; ntihagije ngo ukoreshe {$requested} RWF.

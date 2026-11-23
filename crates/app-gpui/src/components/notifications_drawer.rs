@@ -1,5 +1,5 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_i18n::Locale;
 
@@ -45,108 +45,67 @@ impl NotificationsDrawer {
                     .border_b_1()
                     .border_color(theme.border_subtle)
                     .flex()
-                    .flex_col()
-                    .gap(px(10.0))
+                    .flex_row()
+                    .justify_between()
+                    .items_center()
                     .child(
                         div()
                             .flex()
                             .flex_row()
                             .items_center()
-                            .justify_between()
+                            .gap(px(8.0))
                             .child(
                                 div()
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(8.0))
-                                    .child(
-                                        div()
-                                            .text_base()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.text_primary)
-                                            .child(format!("🔔 {}", title)),
-                                    )
-                                    .children(if state.unread_notifications_count > 0 {
-                                        Some(
-                                            div()
-                                                .px(px(8.0))
-                                                .py(px(2.0))
-                                                .rounded(px(10.0))
-                                                .bg(theme.accent_primary)
-                                                .text_xs()
-                                                .font_weight(gpui_kit::FontWeight::BOLD)
-                                                .text_color(theme.bg_canvas)
-                                                .child(
-                                                    state.unread_notifications_count.to_string(),
-                                                ),
-                                        )
-                                    } else {
-                                        None
-                                    }),
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_base()
+                                    .text_color(theme.text_primary)
+                                    .child(title),
                             )
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .text_color(theme.text_muted)
-                                    .cursor_pointer()
-                                    .child("✕"),
-                            ),
-                    )
-                    // Subheader actions
-                    .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .justify_between()
-                            .child(div().text_xs().text_color(theme.text_muted).child(
-                                match state.locale {
-                                    Locale::Rw => {
-                                        format!("Byose: {}", state.notifications.len())
-                                    }
-                                    Locale::En => {
-                                        format!("Total: {}", state.notifications.len())
-                                    }
-                                },
-                            ))
                             .children(if state.unread_notifications_count > 0 {
                                 Some(
                                     div()
+                                        .px(px(6.0))
+                                        .py(px(2.0))
+                                        .rounded_full()
+                                        .bg(theme.accent_primary)
                                         .text_xs()
-                                        .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                        .text_color(theme.accent_secondary)
-                                        .cursor_pointer()
-                                        .child(mark_all_label),
+                                        .font_weight(gpui_kit::FontWeight::BOLD)
+                                        .text_color(theme.bg_canvas)
+                                        .child(state.unread_notifications_count.to_string()),
                                 )
                             } else {
                                 None
                             }),
+                    )
+                    .child(
+                        div()
+                            .cursor_pointer()
+                            .text_xs()
+                            .font_weight(gpui_kit::FontWeight::MEDIUM)
+                            .text_color(theme.income_color)
+                            .child(mark_all_label),
                     ),
             )
-            // Drawer Content / Notification List
+            // Notifications List
             .child(
                 div()
+                    .id("notifications-scroll-area")
                     .flex_1()
+                    .overflow_y_scroll()
                     .p(px(16.0))
                     .flex()
                     .flex_col()
-                    .gap(px(8.0))
-                    .overflow_hidden()
+                    .gap(px(12.0))
                     .children(if state.notifications.is_empty() {
-                        vec![div()
-                            .flex()
-                            .flex_col()
-                            .items_center()
-                            .justify_center()
-                            .py(px(40.0))
-                            .gap(px(8.0))
-                            .child(div().text_xl().child("📭"))
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(empty_text),
-                            )
-                            .into_any_element()]
+                        vec![
+                            div()
+                                .py(px(40.0))
+                                .text_center()
+                                .text_sm()
+                                .text_color(theme.text_muted)
+                                .child(empty_text)
+                                .into_any_element(),
+                        ]
                     } else {
                         state
                             .notifications
@@ -178,7 +137,7 @@ impl NotificationsDrawer {
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(theme.income_color)
-                            .child("⚡ Live"),
+                            .child("Live"),
                     ),
             )
     }
@@ -188,13 +147,20 @@ impl NotificationsDrawer {
         theme: &SemanticTheme,
     ) -> impl IntoElement {
         let (icon, icon_bg, icon_color) = match &item.event {
-            RealtimeEvent::IncomeAdded { .. } => ("💰", theme.bg_elevated, theme.income_color),
-            RealtimeEvent::ExpenseLogged { .. } => ("🛒", theme.bg_elevated, theme.expense_color),
+            RealtimeEvent::IncomeAdded { .. } => ("+", theme.bg_elevated, theme.income_color),
+            RealtimeEvent::ExpenseLogged { .. } => ("-", theme.bg_elevated, theme.expense_color),
             RealtimeEvent::HandoverCompleted { .. } => {
-                ("🤝", theme.bg_elevated, theme.handover_color)
+                ("->", theme.bg_elevated, theme.handover_color)
             }
             RealtimeEvent::ProjectOrLoanUpdated { .. } => {
-                ("📋", theme.bg_elevated, theme.accent_secondary)
+                ("#", theme.bg_elevated, theme.accent_secondary)
+            }
+            RealtimeEvent::AppUpdateAvailable { is_mandatory, .. } => {
+                if *is_mandatory {
+                    ("!", theme.bg_elevated, theme.expense_color)
+                } else {
+                    ("^", theme.bg_elevated, theme.income_color)
+                }
             }
         };
 
@@ -231,6 +197,7 @@ impl NotificationsDrawer {
                     .rounded(px(6.0))
                     .bg(icon_bg)
                     .text_sm()
+                    .font_weight(gpui_kit::FontWeight::BOLD)
                     .text_color(icon_color)
                     .child(icon),
             )
@@ -240,7 +207,7 @@ impl NotificationsDrawer {
                     .flex_1()
                     .flex()
                     .flex_col()
-                    .gap(px(2.0))
+                    .gap(px(4.0))
                     .child(
                         div()
                             .text_xs()
@@ -259,18 +226,5 @@ impl NotificationsDrawer {
                             .child(formatted_time),
                     ),
             )
-            // Unread dot
-            .children(if !item.is_read {
-                Some(
-                    div()
-                        .w(px(8.0))
-                        .h(px(8.0))
-                        .mt(px(4.0))
-                        .rounded(px(4.0))
-                        .bg(theme.accent_primary),
-                )
-            } else {
-                None
-            })
     }
 }

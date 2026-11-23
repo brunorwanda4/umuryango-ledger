@@ -72,6 +72,16 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
                         .route("/summary", web::get().to(handlers::reports::get_summary_report))
                         .route("/share", web::post().to(handlers::reports::create_share_link))
                         .route("/public/{token}", web::get().to(handlers::reports::get_public_report)),
+                )
+                .service(
+                    web::scope("/releases")
+                        .route("/check", web::get().to(handlers::releases::check_release))
+                        .route("/publish", web::post().to(handlers::releases::publish_release)),
+                )
+                .service(
+                    web::scope("/ota")
+                        .route("/bundle", web::get().to(handlers::releases::get_ota_bundle))
+                        .route("/publish", web::post().to(handlers::releases::publish_ota_bundle)),
                 ),
         );
 }

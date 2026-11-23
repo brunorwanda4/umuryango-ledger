@@ -16,6 +16,7 @@ use uuid::Uuid;
 
 use crate::safe_area::SafeAreaInsets;
 use crate::theme::{SemanticTheme, ThemeConfig, ThemeMode};
+use crate::updater::AppUpdater;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Screen {
@@ -89,6 +90,9 @@ pub struct AppState {
 
     // Safe Area Insets (status bar, navigation bar, cutouts, IME)
     pub safe_area: SafeAreaInsets,
+
+    // Automatic Self-Updating and OTA Engine
+    pub updater: AppUpdater,
 }
 
 impl Default for AppState {
@@ -128,6 +132,7 @@ impl Default for AppState {
             unread_notifications_count: 0,
 
             safe_area,
+            updater: AppUpdater::new("0.1.0"),
         }
     }
 }
@@ -275,6 +280,9 @@ impl AppState {
             timestamp: Utc::now(),
             is_read: false,
         };
+
+        // Notify updater if this is an app update announcement
+        self.updater.handle_realtime_event(&event);
 
         // Update in-memory wallet balances directly
         match &event {
@@ -457,5 +465,24 @@ mod tests {
         state.update_safe_area(insets);
         assert_eq!(state.safe_area.top, 32.0);
         assert_eq!(state.safe_area.total_bottom(), 200.0);
+    }
+
+    #[test]
+    fn test_app_update_realtime_handling() {
+        let mut state = AppState::default();
+        let event = RealtimeEvent::AppUpdateAvailable {
+            version: "0.2.0".to_string(),
+            platform: "WINDOWS".to_string(),
+            is_mandatory: false,
+        };
+        state.apply_realtime_event(event, None);
+        if cfg!(windows) {
+            match state.updater.status {
+                crate::updater::UpdateStatus::Available { version, .. } => {
+                    assert_eq!(version, "0.2.0");
+                }
+                _ => panic!("Expected update available"),
+            }
+        }
     }
 }

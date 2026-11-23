@@ -16,8 +16,8 @@ impl LangToggle {
 
     pub fn display_badge(current: Locale) -> &'static str {
         match current {
-            Locale::Rw => "🇷🇼 RW",
-            Locale::En => "🇬🇧 EN",
+            Locale::Rw => "RW",
+            Locale::En => "EN",
         }
     }
 

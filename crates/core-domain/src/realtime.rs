@@ -44,15 +44,21 @@ pub enum RealtimeEvent {
         entity_type: String, // "project" or "loan"
         title: String,
     },
+    AppUpdateAvailable {
+        version: String,
+        platform: String,
+        is_mandatory: bool,
+    },
 }
 
 impl RealtimeEvent {
-    pub fn family_id(&self) -> Uuid {
+    pub fn family_id(&self) -> Option<Uuid> {
         match self {
-            RealtimeEvent::IncomeAdded { family_id, .. } => *family_id,
-            RealtimeEvent::ExpenseLogged { family_id, .. } => *family_id,
-            RealtimeEvent::HandoverCompleted { family_id, .. } => *family_id,
-            RealtimeEvent::ProjectOrLoanUpdated { family_id, .. } => *family_id,
+            RealtimeEvent::IncomeAdded { family_id, .. } => Some(*family_id),
+            RealtimeEvent::ExpenseLogged { family_id, .. } => Some(*family_id),
+            RealtimeEvent::HandoverCompleted { family_id, .. } => Some(*family_id),
+            RealtimeEvent::ProjectOrLoanUpdated { family_id, .. } => Some(*family_id),
+            RealtimeEvent::AppUpdateAvailable { .. } => None,
         }
     }
 
@@ -105,6 +111,19 @@ impl RealtimeEvent {
                 args.set("title", FluentValue::from(title.as_str()));
                 Translator::t(locale, terms::NOTIF_PROJECT_LOAN_UPDATED, Some(&args))
             }
+            RealtimeEvent::AppUpdateAvailable {
+                version,
+                is_mandatory,
+                ..
+            } => {
+                args.set("version", FluentValue::from(version.as_str()));
+                let term = if *is_mandatory {
+                    terms::NOTIF_APP_UPDATE_MANDATORY
+                } else {
+                    terms::NOTIF_APP_UPDATE_AVAILABLE
+                };
+                Translator::t(locale, term, Some(&args))
+            }
         }
     }
 }
@@ -121,8 +140,8 @@ mod tests {
             wallet_name: "MoMo Main".to_string(),
             amount: Decimal::new(50000, 0),
             currency: "RWF".to_string(),
-            added_by_name: "Alice".to_string(),
-            source_description: "Salary Contribution".to_string(),
+            added_by_name: "Keza".to_string(),
+            source_description: "Agribusiness".to_string(),
             new_wallet_balance: Decimal::new(150000, 0),
             occurred_at: Utc::now(),
         };
@@ -130,13 +149,21 @@ mod tests {
         let en_str = event.format_notification(Locale::En);
         assert_eq!(
             en_str,
-            "Alice added 50000 RWF to MoMo Main (Salary Contribution)."
+            "Keza added 50000 RWF to MoMo Main (Agribusiness)."
         );
 
         let rw_str = event.format_notification(Locale::Rw);
         assert_eq!(
             rw_str,
-            "Alice yongeye 50000 RWF kuri konti 'MoMo Main' (Salary Contribution)."
+            "Keza yongeye 50000 RWF kuri konti 'MoMo Main' (Agribusiness)."
         );
+
+        let update_event = RealtimeEvent::AppUpdateAvailable {
+            version: "0.2.0".to_string(),
+            platform: "WINDOWS".to_string(),
+            is_mandatory: false,
+        };
+        assert!(update_event.format_notification(Locale::En).contains("0.2.0"));
+        assert!(update_event.format_notification(Locale::Rw).contains("0.2.0"));
     }
 }

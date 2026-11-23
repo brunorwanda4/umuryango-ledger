@@ -4,6 +4,7 @@ mod safe_area;
 mod screens;
 mod state;
 mod theme;
+pub mod updater;
 
 use gpui_kit::prelude::*;
 use gpui_kit::{div, px, Context, IntoElement, ParentElement, Render, Styled, Window};
@@ -73,13 +74,21 @@ impl Render for RootView {
                 &self.state,
                 &theme,
             ))
-            // Active Screen Content Area with Floating Toast respecting Top Safe Area
+            // Active Screen Content Area with Update Banner & Floating Toast
             .child(
                 div()
                     .flex_1()
                     .h_full()
+                    .flex()
+                    .flex_col()
                     .relative()
-                    .child(screen_element)
+                    .children(updater::update_banner::UpdateBanner::render(
+                        "app-update-banner",
+                        &self.state.updater.status,
+                        self.state.locale,
+                        &theme,
+                    ))
+                    .child(div().flex_1().w_full().h_full().child(screen_element))
                     .children(if let Some((msg, is_error)) = &self.state.toast_message {
                         let bg = if *is_error {
                             theme.expense_color
