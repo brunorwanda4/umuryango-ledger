@@ -1,7 +1,7 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
-use umuryango_i18n::{Locale, Translator, terms};
+use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
@@ -67,11 +67,7 @@ impl DashboardScreen {
                                     }),
                             )
                             .child(div().text_xs().text_color(theme.text_muted).child(
-                                if state.locale == Locale::Rw {
-                                    "Incamake y'umutungo n'ibikorwa biheruka"
-                                } else {
-                                    "Financial overview & recent movements"
-                                },
+                                umuryango_i18n::t(state.locale, "dashboard.overview_subtitle"),
                             )),
                     )
                     .child(
@@ -97,11 +93,7 @@ impl DashboardScreen {
                                 IconTone::OnPrimaryButton,
                                 theme,
                             ))
-                            .child(if state.locale == Locale::Rw {
-                                "Andika Igikorwa"
-                            } else {
-                                "Log Transaction"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "dashboard.quick_log_btn")),
                     ),
             )
             // Row 1: KPI Cards Grid
@@ -202,11 +194,7 @@ impl DashboardScreen {
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .mb(px(12.0))
-                                    .child(if state.locale == Locale::Rw {
-                                        "Ibyinjijwe n'Ibyasohotse (Bar Chart)"
-                                    } else {
-                                        "Income vs Expenses (Bar Chart)"
-                                    }),
+                                    .child(umuryango_i18n::t(state.locale, "dashboard.inflow_outflow_chart")),
                             )
                             .child(
                                 div()
@@ -244,11 +232,7 @@ impl DashboardScreen {
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .mb(px(12.0))
-                                    .child(if state.locale == Locale::Rw {
-                                        "Ibyiciro by'Amakoreshereze (Donut)"
-                                    } else {
-                                        "Spending by Category (Donut)"
-                                    }),
+                                    .child(umuryango_i18n::t(state.locale, "dashboard.categories_chart")),
                             )
                             // Visual Donut Chart Breakdown
                             .child(
@@ -294,11 +278,7 @@ impl DashboardScreen {
                             .text_base()
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
-                            .child(if state.locale == Locale::Rw {
-                                "Ibyakozwe vuba"
-                            } else {
-                                "Recent Activity"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "dashboard.recent_activity")),
                     )
                     .child(
                         div().flex().flex_col().gap(px(8.0)).children(
@@ -312,11 +292,7 @@ impl DashboardScreen {
                                         .border_color(theme.border_subtle)
                                         .text_xs()
                                         .text_color(theme.text_muted)
-                                        .child(if state.locale == Locale::Rw {
-                                            "Nta bikorwa biheruka birandikwa. Kanda kuri 'Andika Igikorwa' hejuru utangire."
-                                        } else {
-                                            "No recent movements yet. Click 'Log Transaction' above to record your first entry."
-                                        })
+                                        .child(umuryango_i18n::t(state.locale, "dashboard.no_recent_activity"))
                                         .into_any_element(),
                                 ]
                             } else {

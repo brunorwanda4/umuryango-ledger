@@ -68,11 +68,7 @@ impl QuickEntryDialog {
             .find(|w| Some(w.id) == form.source_wallet_id)
             .map(|w| format!("{} ({} RWF)", w.name, w.balance))
             .unwrap_or_else(|| {
-                if locale == Locale::Rw {
-                    "Hitamo Konti".to_string()
-                } else {
-                    "Select Wallet".to_string()
-                }
+                umuryango_i18n::t(locale, "wallets.select_wallet_placeholder")
             });
 
         div()
@@ -110,11 +106,7 @@ impl QuickEntryDialog {
                                     .text_lg()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if locale == Locale::Rw {
-                                        "Andika Igikorwa Gishya"
-                                    } else {
-                                        "Log New Transaction"
-                                    }),
+                                    .child(umuryango_i18n::t(locale, "transactions.log_new_transaction")),
                             ),
                     )
                     .child(
@@ -478,11 +470,7 @@ impl QuickEntryDialog {
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.close_quick_entry(cx);
                             }))
-                            .child(if locale == Locale::Rw {
-                                "Hagarika"
-                            } else {
-                                "Cancel"
-                            }),
+                            .child(umuryango_i18n::t(locale, "common.cancel")),
                     )
                     .child(
                         div()
@@ -508,11 +496,7 @@ impl QuickEntryDialog {
                                 IconTone::OnPrimaryButton,
                                 theme,
                             ))
-                            .child(if locale == Locale::Rw {
-                                "Emeza Igikorwa"
-                            } else {
-                                "Confirm"
-                            }),
+                            .child(umuryango_i18n::t(locale, "common.confirm")),
                     ),
             )
     }

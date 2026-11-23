@@ -93,11 +93,7 @@ pub async fn list_wallets(
 
     if scope_str == "family" {
         let Some(family_id) = query.family_id else {
-            let msg = if user.locale == umuryango_i18n::Locale::Rw {
-                "Ugomba gutanga family_id igihe ushaka amakonti y'umuryango."
-            } else {
-                "family_id is required when querying family wallets."
-            };
+            let msg = umuryango_i18n::t(user.locale, "errors.family_id_required");
             return Err(ApiError::conflict(msg, user.locale));
         };
 
@@ -262,11 +258,7 @@ pub async fn create_wallet(
 
     if is_family {
         let Some(family_id) = payload.family_id else {
-            let msg = if user.locale == umuryango_i18n::Locale::Rw {
-                "Ugomba gutanga family_id kuri konti y'umuryango."
-            } else {
-                "family_id is required for a family wallet."
-            };
+            let msg = umuryango_i18n::t(user.locale, "errors.family_id_required");
             return Err(ApiError::conflict(msg, user.locale));
         };
 

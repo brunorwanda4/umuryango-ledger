@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, web};
 use chrono::{DateTime, Utc};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use umuryango_core_domain::models::{Family, FamilyMember, FamilyRole, PendingFamilyInvite};
+use umuryango_core_domain::models::{Family, FamilyRole, PendingFamilyInvite};
 use umuryango_i18n::{Translator, terms};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -448,7 +448,7 @@ pub async fn join_family(
     } else if let Some(invite_id) = payload.invite_id {
         #[derive(sqlx::FromRow)]
         struct InviteWithFamily {
-            id: Uuid,
+            _id: Uuid,
             family_id: Uuid,
             role: String,
             fam_name: String,
@@ -463,7 +463,7 @@ pub async fn join_family(
         let inv = sqlx::query_as::<_, InviteWithFamily>(
             r#"
             SELECT
-                fpi.id, fpi.family_id, fpi.role,
+                fpi.id as _id, fpi.family_id, fpi.role,
                 f.name as fam_name, f.description as fam_description, f.currency as fam_currency,
                 f.created_by as fam_created_by, f.invite_code as fam_invite_code,
                 f.created_at as fam_created_at, f.updated_at as fam_updated_at

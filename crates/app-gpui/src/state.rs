@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use umuryango_core_domain::DomainError;
 use umuryango_core_domain::ledger::LedgerValidator;
 use umuryango_core_domain::models::{
-    FamilyMember, FamilyRole, FuturePlan, Loan, Project, Transaction, TransactionType, Wallet,
-    WalletChannel,
+    FamilyMember, FamilyRole, FuturePlan, Loan, PendingFamilyInvite, Project, Transaction,
+    TransactionType, Wallet, WalletChannel,
 };
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
@@ -21,6 +21,8 @@ use crate::updater::AppUpdater;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Screen {
+    Auth,
+    Onboarding,
     Dashboard,
     Transactions,
     Reports,
@@ -34,6 +36,8 @@ pub enum Screen {
 impl Screen {
     pub fn label(&self, locale: Locale) -> String {
         match self {
+            Screen::Auth => Translator::t(locale, terms::LOGIN_TITLE, None),
+            Screen::Onboarding => Translator::t(locale, terms::ONBOARDING_TITLE, None),
             Screen::Dashboard => Translator::t(locale, terms::NAV_DASHBOARD, None),
             Screen::Transactions => Translator::t(locale, terms::NAV_TRANSACTIONS, None),
             Screen::Reports => Translator::t(locale, terms::NAV_REPORTS, None),
@@ -41,13 +45,7 @@ impl Screen {
             Screen::Loans => Translator::t(locale, terms::NAV_LOANS, None),
             Screen::Plans => Translator::t(locale, terms::NAV_PLANS, None),
             Screen::Members => Translator::t(locale, terms::NAV_MEMBERS, None),
-            Screen::Settings => {
-                if locale == Locale::Rw {
-                    "Igenamiterere".to_string()
-                } else {
-                    "Settings".to_string()
-                }
-            }
+            Screen::Settings => umuryango_i18n::t(locale, "settings.title"),
         }
     }
 }
@@ -89,6 +87,19 @@ pub struct AppState {
     pub notifications: Vec<NotificationItem>,
     pub unread_notifications_count: usize,
 
+    // Authentication & Onboarding
+    pub is_authenticated: bool,
+    pub pending_invites: Vec<PendingFamilyInvite>,
+    pub auth_mode_register: bool,
+    pub auth_phone: String,
+    pub auth_password: String,
+    pub auth_confirm_password: String,
+    pub auth_full_name: String,
+    pub auth_gender: String,
+    pub onboarding_family_name: String,
+    pub onboarding_member_phones: Vec<String>,
+    pub onboarding_join_code: String,
+
     // Safe Area Insets (status bar, navigation bar, cutouts, IME)
     pub safe_area: SafeAreaInsets,
 
@@ -124,13 +135,25 @@ impl Default for AppState {
             members: Vec::new(),
 
             sync_status: SyncStatus::Synced,
-            current_screen: Screen::Dashboard,
+            current_screen: Screen::Auth,
             toast_message: None,
             show_quick_entry: false,
 
             show_notifications_drawer: false,
             notifications: Vec::new(),
             unread_notifications_count: 0,
+
+            is_authenticated: false,
+            pending_invites: Vec::new(),
+            auth_mode_register: false,
+            auth_phone: String::new(),
+            auth_password: String::new(),
+            auth_confirm_password: String::new(),
+            auth_full_name: String::new(),
+            auth_gender: "MALE".to_string(),
+            onboarding_family_name: String::new(),
+            onboarding_member_phones: vec![String::new()],
+            onboarding_join_code: String::new(),
 
             safe_area,
             updater: AppUpdater::new(env!("CARGO_PKG_VERSION").to_string()),

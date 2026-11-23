@@ -80,11 +80,7 @@ impl LoansScreen {
                                 IconTone::OnPrimaryButton,
                                 theme,
                             ))
-                            .child(if state.locale == Locale::Rw {
-                                "Andika Umwenda"
-                            } else {
-                                "Record Loan"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "loans.record_loan_btn")),
                     ),
             )
             // Section 1: Lent Out (Ayo twagurije)
@@ -97,11 +93,7 @@ impl LoansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
-                            .child(if state.locale == Locale::Rw {
-                                "Ayo Twagurije Abandi (Lent Out)"
-                            } else {
-                                "Money Lent Out"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "loans.lent_out_title")),
                     )
                     .child(div().flex().flex_col().gap(px(10.0)).children(
                         if lent_loans.is_empty() {
@@ -114,11 +106,7 @@ impl LoansScreen {
                                     .border_color(theme.border_subtle)
                                     .text_xs()
                                     .text_color(theme.text_muted)
-                                    .child(if state.locale == Locale::Rw {
-                                        "Nta mwenda wahawe abandi wanditswe."
-                                    } else {
-                                        "No money lent out recorded yet."
-                                    })
+                                    .child(umuryango_i18n::t(state.locale, "loans.no_lent_out"))
                                     .into_any_element(),
                             ]
                         } else {
@@ -141,11 +129,7 @@ impl LoansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
-                            .child(if state.locale == Locale::Rw {
-                                "Ayo Twagujije (Money Borrowed)"
-                            } else {
-                                "Money Borrowed"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "loans.borrowed_title")),
                     )
                     .child(div().flex().flex_col().gap(px(10.0)).children(
                         if borrowed_loans.is_empty() {
@@ -158,11 +142,7 @@ impl LoansScreen {
                                     .border_color(theme.border_subtle)
                                     .text_xs()
                                     .text_color(theme.text_muted)
-                                    .child(if state.locale == Locale::Rw {
-                                        "Nta mwenda twagujije wanditswe."
-                                    } else {
-                                        "No borrowed debt recorded yet."
-                                    })
+                                    .child(umuryango_i18n::t(state.locale, "loans.no_borrowed"))
                                     .into_any_element(),
                             ]
                         } else {
@@ -265,11 +245,7 @@ impl LoansScreen {
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(theme.text_primary)
                             .cursor_pointer()
-                            .child(if locale == Locale::Rw {
-                                "Kwishyura"
-                            } else {
-                                "Repay"
-                            }),
+                            .child(umuryango_i18n::t(locale, "loans.repay_btn")),
                     ),
             )
     }

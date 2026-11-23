@@ -1,6 +1,6 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
-use umuryango_i18n::{Locale, Translator, terms};
+use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
@@ -68,11 +68,7 @@ impl TransactionsScreen {
                                 IconTone::OnPrimaryButton,
                                 theme,
                             ))
-                            .child(if state.locale == Locale::Rw {
-                                "Andika Igikorwa"
-                            } else {
-                                "Log Transaction"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "dashboard.quick_log_btn")),
                     ),
             )
             // Transactions full list or empty state
@@ -88,11 +84,7 @@ impl TransactionsScreen {
                             .text_sm()
                             .text_center()
                             .text_color(theme.text_muted)
-                            .child(if state.locale == Locale::Rw {
-                                "Nta bikorwa by'imari birandikwa muri uyu mushinga/umuryango."
-                            } else {
-                                "No transactions recorded yet in this scope."
-                            })
+                            .child(umuryango_i18n::t(state.locale, "transactions.no_transactions"))
                             .into_any_element(),
                     ]
                 } else {

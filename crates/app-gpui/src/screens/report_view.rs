@@ -1,7 +1,7 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::reporting::{LocalizedExporter, generate_mothers_report};
-use umuryango_i18n::{Locale, Translator, terms};
+use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
@@ -36,21 +36,13 @@ impl ReportViewScreen {
         let title = Translator::t(state.locale, terms::MOTHERS_REPORT_TITLE, None);
 
         let share_text = whatsapp_text.clone();
-        let share_success = if state.locale == Locale::Rw {
-            "Raporo y'umuryango yakoporowe neza! Mushobora kuyisangiza kuri WhatsApp.".to_string()
-        } else {
-            "Mother's Report copied to clipboard! Ready to share on WhatsApp.".to_string()
-        };
+        let share_success = umuryango_i18n::t(state.locale, "report.share_copied");
 
         let magic_link = format!(
             "https://ledger.umuryango.rw/reports/magic/{}",
             state.active_scope.family_id().unwrap_or(state.user_id)
         );
-        let link_success = if state.locale == Locale::Rw {
-            "Ihuza rya raporo ryakoporowe! Mushobora kurifungura muri browser.".to_string()
-        } else {
-            "Report Magic Link copied to clipboard!".to_string()
-        };
+        let link_success = umuryango_i18n::t(state.locale, "report.link_copied");
 
         let copy_preview_text = whatsapp_text.clone();
         let copy_preview_success = share_success.clone();
@@ -87,11 +79,7 @@ impl ReportViewScreen {
                                 div()
                                     .text_xs()
                                     .text_color(theme.text_muted)
-                                    .child(if state.locale == Locale::Rw {
-                                        "Raporo y'umuryango yoroshye gusobanukira no gusangiza kuri WhatsApp"
-                                    } else {
-                                        "Family financial summary formatted for WhatsApp & zero-login sharing"
-                                    }),
+                                    .child(umuryango_i18n::t(state.locale, "report.report_subtitle")),
                             ),
                     )
                     // Export Actions: WhatsApp Share & Magic Link
@@ -365,11 +353,7 @@ impl ReportViewScreen {
                                     .text_sm()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if state.locale == Locale::Rw {
-                                        "Ibyoherezwa kuri WhatsApp (Formatted)"
-                                    } else {
-                                        "WhatsApp Message Preview"
-                                    }),
+                                    .child(umuryango_i18n::t(state.locale, "report.whatsapp_preview")),
                             )
                             .child(
                                 div()

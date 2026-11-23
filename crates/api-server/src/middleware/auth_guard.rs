@@ -73,11 +73,7 @@ impl FromRequest for AuthenticatedUser {
             .and_then(|h| h.to_str().ok());
 
         let Some(header_str) = auth_header else {
-            let msg = if locale == Locale::Rw {
-                "Ntabwo wanditse umwirondoro (Missing Authorization header)."
-            } else {
-                "Missing Authorization header."
-            };
+            let msg = umuryango_i18n::t(locale, "errors.missing_auth_header");
             return err(ApiError::unauthorized(msg, locale));
         };
 
@@ -111,11 +107,7 @@ impl FromRequest for AuthenticatedUser {
                 })
             }
             Err(_) => {
-                let msg = if locale == Locale::Rw {
-                    "Ijambobanga ry'injira ryarangije igihe cyangwa ntiryemewe."
-                } else {
-                    "Invalid or expired authentication token."
-                };
+                let msg = umuryango_i18n::t(locale, "errors.invalid_token");
                 err(ApiError::unauthorized(msg, locale))
             }
         }
@@ -154,11 +146,7 @@ pub async fn require_family_membership(
     .map_err(|e| ApiError::database(e, locale))?;
 
     let Some(m) = row else {
-        let msg = if locale == Locale::Rw {
-            "Ntabwo uri umunyamuryango muri uyu muryango."
-        } else {
-            "You are not an active member of this family."
-        };
+        let msg = umuryango_i18n::t(locale, "errors.not_family_member");
         return Err(ApiError::forbidden(msg, locale));
     };
 

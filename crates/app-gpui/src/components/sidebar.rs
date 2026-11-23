@@ -1,6 +1,5 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
-use umuryango_i18n::Locale;
 use umuryango_storage_local::SyncStatus;
 
 use crate::RootView;
@@ -31,44 +30,28 @@ impl Sidebar {
         ];
 
         let (sync_icon, sync_label, sync_tone, sync_color) = match state.sync_status {
-            SyncStatus::Synced => {
-                let lbl = if state.locale == Locale::Rw {
-                    "Bihujwe"
-                } else {
-                    "Synced"
-                };
-                (
-                    AppIcon::SyncOnline,
-                    lbl.to_string(),
-                    IconTone::Success,
-                    theme.income_color,
-                )
-            }
-            SyncStatus::PendingSync(n) => {
-                let text = match state.locale {
-                    Locale::Rw => format!("Biri ku murongo ({})", n),
-                    Locale::En => format!("Pending ({})", n),
-                };
-                (
-                    AppIcon::SyncPending,
-                    text,
-                    IconTone::Warning,
-                    theme.accent_secondary,
-                )
-            }
-            SyncStatus::Offline => {
-                let lbl = if state.locale == Locale::Rw {
-                    "Bidakorera ku murongo"
-                } else {
-                    "Offline"
-                };
-                (
-                    AppIcon::SyncOffline,
-                    lbl.to_string(),
-                    IconTone::Error,
-                    theme.expense_color,
-                )
-            }
+            SyncStatus::Synced => (
+                AppIcon::SyncOnline,
+                umuryango_i18n::t(state.locale, "common.synced"),
+                IconTone::Success,
+                theme.income_color,
+            ),
+            SyncStatus::PendingSync(n) => (
+                AppIcon::SyncPending,
+                umuryango_i18n::t_args(
+                    state.locale,
+                    "common.sync_pending",
+                    &[("count", &n.to_string())],
+                ),
+                IconTone::Warning,
+                theme.accent_secondary,
+            ),
+            SyncStatus::Offline => (
+                AppIcon::SyncOffline,
+                umuryango_i18n::t(state.locale, "common.offline"),
+                IconTone::Error,
+                theme.expense_color,
+            ),
         };
 
         div()

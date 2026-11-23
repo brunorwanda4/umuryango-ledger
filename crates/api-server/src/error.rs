@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::error;
 use umuryango_core_domain::DomainError;
-use umuryango_i18n::{Locale, Translator, terms};
+use umuryango_i18n::{Locale, t};
 use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -33,10 +33,10 @@ pub enum ApiErrorKind {
     #[error("conflict: {0}")]
     Conflict(String),
 
-    #[error("database error")]
-    Database(#[source] sqlx::Error),
+    #[error("database error: {0}")]
+    Database(#[from] sqlx::Error),
 
-    #[error("internal error: {0}")]
+    #[error("internal server error: {0}")]
     Internal(String),
 }
 
@@ -63,18 +63,6 @@ impl std::error::Error for ApiError {
 }
 
 impl ApiError {
-    #[allow(dead_code)]
-    pub fn new(kind: ApiErrorKind, locale: Locale) -> Self {
-        Self { kind, locale }
-    }
-
-    pub fn domain(err: DomainError, locale: Locale) -> Self {
-        Self {
-            kind: ApiErrorKind::Domain(err),
-            locale,
-        }
-    }
-
     pub fn unauthorized(msg: impl Into<String>, locale: Locale) -> Self {
         Self {
             kind: ApiErrorKind::Unauthorized(msg.into()),
@@ -110,15 +98,18 @@ impl ApiError {
         }
     }
 
+    pub fn domain(err: DomainError, locale: Locale) -> Self {
+        Self {
+            kind: ApiErrorKind::Domain(err),
+            locale,
+        }
+    }
+
     pub fn database(err: sqlx::Error, locale: Locale) -> Self {
         match err {
             sqlx::Error::RowNotFound => Self::not_found(locale),
             sqlx::Error::Database(ref db_err) if db_err.code().as_deref() == Some("23505") => {
-                let msg = if locale == Locale::Rw {
-                    "Ibyo wanditse birasanzwe muri sisitemu."
-                } else {
-                    "Record already exists."
-                };
+                let msg = t(locale, "errors.record_already_exists");
                 Self::conflict(msg, locale)
             }
             other => {
@@ -151,6 +142,7 @@ impl ResponseError for ApiError {
                 let localized = d.localize(self.locale);
                 let code_upper = localized
                     .code
+                    .trim_start_matches("errors.")
                     .trim_start_matches("error-")
                     .to_uppercase()
                     .replace('-', "_");
@@ -159,25 +151,23 @@ impl ResponseError for ApiError {
             ApiErrorKind::Unauthorized(msg) => ("UNAUTHORIZED".to_string(), msg.clone()),
             ApiErrorKind::Forbidden(msg) => ("FORBIDDEN".to_string(), msg.clone()),
             ApiErrorKind::NotFound => {
-                let msg = Translator::t(self.locale, terms::ERR_NOT_FOUND, None);
+                let msg = t(self.locale, "errors.not_found");
                 ("NOT_FOUND".to_string(), msg)
             }
             ApiErrorKind::Conflict(msg) => ("CONFLICT".to_string(), msg.clone()),
             ApiErrorKind::Database(_) => {
-                let msg = if self.locale == Locale::Rw {
-                    "Habaye ikibazo mu bubiko bw'amakuru. Ongera ugerageze.".to_string()
-                } else {
-                    "A database error occurred. Please try again.".to_string()
-                };
+                let msg = t(self.locale, "errors.database_error");
                 ("DATABASE_ERROR".to_string(), msg)
             }
             ApiErrorKind::Internal(msg) => ("INTERNAL_ERROR".to_string(), msg.clone()),
         };
 
-        HttpResponse::build(self.status_code()).json(LocalizedErrorResponse {
+        let body = LocalizedErrorResponse {
             code,
             locale: self.locale.as_str().to_string(),
             message,
-        })
+        };
+
+        HttpResponse::build(self.status_code()).json(body)
     }
 }

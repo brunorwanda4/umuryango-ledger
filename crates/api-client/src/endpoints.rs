@@ -8,6 +8,8 @@ impl ApiEndpoints {
     pub const TRANSACTIONS: &'static str = "/api/v1/transactions";
     pub const HANDOVERS: &'static str = "/api/v1/transactions/handovers";
     pub const PROJECTS: &'static str = "/api/v1/projects";
+    pub const LOANS: &'static str = "/api/v1/loans";
+    pub const PLANS: &'static str = "/api/v1/plans";
     pub const REPORTS_SUMMARY: &'static str = "/api/v1/reports/summary";
     pub const ZERO_LOGIN_REPORT: &'static str = "/api/v1/reports/zero-login";
 }

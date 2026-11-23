@@ -7,7 +7,6 @@ license.workspace = true
 
 [dependencies]
 umuryango-i18n = { workspace = true }
-fluent-bundle = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 uuid = { workspace = true }

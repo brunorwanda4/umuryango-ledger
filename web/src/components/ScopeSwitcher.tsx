@@ -3,6 +3,7 @@
 import React from "react";
 import { Landmark, Lock } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
+import { t } from "@/lib/i18n";
 
 interface ScopeSwitcherProps {
   locale?: "rw" | "en";
@@ -11,9 +12,8 @@ interface ScopeSwitcherProps {
 export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({ locale = "rw" }) => {
   const { scope, setScope } = useLedger();
 
-  const isRw = locale === "rw";
-  const personalLabel = isRw ? "Imari Yanjye" : "Personal";
-  const familyLabel = isRw ? "Igitabo cy'Umuryango" : "Family Ledger";
+  const personalLabel = t(locale, "scopes.personal_money");
+  const familyLabel = t(locale, "scopes.family_ledger");
 
   return (
     <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">

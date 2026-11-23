@@ -19,11 +19,7 @@ impl MembersScreen {
     ) -> impl IntoElement {
         let title = Translator::t(state.locale, terms::NAV_MEMBERS, None);
 
-        let copy_code_msg = if state.locale == Locale::Rw {
-            "Kode y'ubutumire yakoporowe!".to_string()
-        } else {
-            "Invite code copied to clipboard!".to_string()
-        };
+        let copy_code_msg = umuryango_i18n::t(state.locale, "members.code_copied");
 
         div()
             .id(id)
@@ -56,11 +52,7 @@ impl MembersScreen {
                                     .child(title),
                             )
                             .child(div().text_xs().text_color(theme.text_muted).child(
-                                if state.locale == Locale::Rw {
-                                    "Abagize umuryango n'inshingano zabo"
-                                } else {
-                                    "Family members and custody authorization roles"
-                                },
+                                umuryango_i18n::t(state.locale, "members.subtitle"),
                             )),
                     )
                     // Invite code badge & copy button
@@ -169,27 +161,15 @@ impl MembersScreen {
     ) -> impl IntoElement {
         let (role_label, role_color) = match role {
             FamilyRole::Head => (
-                if locale == Locale::Rw {
-                    "Umukuru w'Umuryango"
-                } else {
-                    "Family Head"
-                },
+                umuryango_i18n::t(locale, "members.role_head"),
                 theme.accent_primary,
             ),
             FamilyRole::Custodian => (
-                if locale == Locale::Rw {
-                    "Umubikizi w'Imari"
-                } else {
-                    "Custodian"
-                },
+                umuryango_i18n::t(locale, "members.role_custodian"),
                 theme.income_color,
             ),
             FamilyRole::Member => (
-                if locale == Locale::Rw {
-                    "Umunyamuryango"
-                } else {
-                    "Member"
-                },
+                umuryango_i18n::t(locale, "members.role_member"),
                 theme.text_muted,
             ),
         };

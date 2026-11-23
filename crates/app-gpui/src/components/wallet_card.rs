@@ -11,21 +11,9 @@ pub struct WalletCard;
 impl WalletCard {
     pub fn channel_label(channel: WalletChannel, locale: Locale) -> String {
         match channel {
-            WalletChannel::Bank => {
-                if locale == Locale::Rw {
-                    "Banki".to_string()
-                } else {
-                    "Bank".to_string()
-                }
-            }
-            WalletChannel::MobileMoney => "MoMo".to_string(),
-            WalletChannel::CashInHand => {
-                if locale == Locale::Rw {
-                    "Amafaranga mu Ntoki".to_string()
-                } else {
-                    "Cash in Hand".to_string()
-                }
-            }
+            WalletChannel::Bank => umuryango_i18n::t(locale, "wallets.channel_bank"),
+            WalletChannel::MobileMoney => umuryango_i18n::t(locale, "wallets.channel_momo"),
+            WalletChannel::CashInHand => umuryango_i18n::t(locale, "wallets.channel_cash"),
         }
     }
 

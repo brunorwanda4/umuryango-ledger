@@ -17,11 +17,11 @@ import { useLedger } from "@/lib/LedgerContext";
 import { TransactionModal } from "@/components/TransactionModal";
 import { HandoverModal } from "@/components/HandoverModal";
 import { CustodyChart } from "@/components/CustodyChart";
+import { t } from "@/lib/i18n";
 
 export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale === "en" ? "en" : "rw";
-  const isRw = locale === "rw";
 
   const { scope, wallets, transactions, kpis } = useLedger();
 
@@ -63,31 +63,25 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               {scope === "family" ? (
                 <>
                   <Landmark className="w-3 h-3 mr-1" />
-                  <span>{isRw ? "Igitabo cy'Umuryango" : "Family Scope"}</span>
+                  <span>{t(locale, "scopes.family_ledger")}</span>
                 </>
               ) : (
                 <>
                   <Lock className="w-3 h-3 mr-1" />
-                  <span>{isRw ? "Imari Yanjye Bwite" : "Personal Scope"}</span>
+                  <span>{t(locale, "scopes.personal_money")}</span>
                 </>
               )}
             </span>
             <span className="text-xs text-slate-400">•</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              {isRw ? "Igihe: Ugushyingo 2026" : "Period: November 2026"}
+              {t(locale, "dashboard.current_period")}
             </span>
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
-            {isRw ? "Incamake y'Imari" : "Financial Dashboard"}
+            {t(locale, "dashboard.title")}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            {scope === "family"
-              ? isRw
-                ? "Irebere uko umutungo w'umuryango wifashe muri rusange n'abawubitse"
-                : "Real-time multi-tenant view of custody wallets, custodians, and handovers"
-              : isRw
-                ? "Konti zawe bwite zitarangirizwa mu muryango"
-                : "Isolated personal finances and private expense tracking"}
+            {scope === "family" ? t(locale, "dashboard.family_subtitle") : t(locale, "dashboard.personal_subtitle")}
           </p>
         </div>
 
@@ -99,7 +93,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               className="px-4 py-2.5 rounded-xl border border-brand-dark dark:border-slate-700 bg-white dark:bg-slate-800 text-brand-dark dark:text-brand-cream hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-xs shadow-sm transition flex items-center space-x-1.5"
             >
               <Handshake className="w-4 h-4 mr-1 text-brand-dark dark:text-brand-cream" />
-              <span>{isRw ? "+ Guhererekanya" : "+ Handover Custody"}</span>
+              <span>{t(locale, "dashboard.quick_handover_btn")}</span>
             </button>
           )}
 
@@ -109,7 +103,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             className="px-5 py-2.5 rounded-xl bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs shadow-md hover:opacity-95 transition flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4 mr-1" />
-            <span>{isRw ? "+ Andika Igikorwa" : "+ Log Transaction"}</span>
+            <span>{t(locale, "dashboard.quick_log_btn_plus")}</span>
           </button>
         </div>
       </div>
@@ -118,49 +112,49 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 bg-white dark:bg-brand-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {isRw ? "Umutungo Wose" : "Total Balance"}
+            {t(locale, "dashboard.total_balance")}
           </span>
           <div className="text-2xl font-black text-brand-dark dark:text-brand-cream mt-2">
             {kpis.totalAssets.toLocaleString()} RWF
           </div>
           <span className="text-xs text-brand-steel-blue font-semibold mt-1 block">
-            ↑ +450,000 RWF ({isRw ? "uku kwezi" : "this month"})
+            ↑ +450,000 RWF ({t(locale, "common.this_month")})
           </span>
         </div>
 
         <div className="p-5 bg-white dark:bg-brand-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {isRw ? "Mobile Money (MoMo)" : "MoMo Custody"}
+            {t(locale, "dashboard.momo_custody")}
           </span>
           <div className="text-2xl font-black text-[#e09f3e] mt-2">
             {kpis.momoTotal.toLocaleString()} RWF
           </div>
           <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">
-            {isRw ? "Umubikizi: Keza Clarisse (Mama)" : "Custodian: Keza Clarisse (Mama)"}
+            {t(locale, "dashboard.custodian_keza")}
           </span>
         </div>
 
         <div className="p-5 bg-white dark:bg-brand-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {isRw ? "Amafaranga mu Ntoki" : "Cash in Hand"}
+            {t(locale, "dashboard.cash_in_hand")}
           </span>
           <div className="text-2xl font-black text-brand-active-crimson mt-2">
             {kpis.cashInHand.toLocaleString()} RWF
           </div>
           <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">
-            {isRw ? "Imbaho z'ababyeyi (Mama & Papa)" : "Held by Mama & Papa"}
+            {t(locale, "dashboard.held_by_parents")}
           </span>
         </div>
 
         <div className="p-5 bg-white dark:bg-brand-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {isRw ? "Amadeni n'Inguzanyo" : "Outstanding Debts"}
+            {t(locale, "dashboard.debts_liabilities")}
           </span>
           <div className="text-2xl font-black text-brand-crimson dark:text-rose-400 mt-2">
             {kpis.outstandingDebts.toLocaleString()} RWF
           </div>
           <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">
-            {isRw ? "Igihe cyo kwishyura: 15/12" : "Due: Dec 15"}
+            {t(locale, "dashboard.due_date_tag")}
           </span>
         </div>
       </div>
@@ -171,7 +165,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
       {/* Wallets Overview */}
       <div className="space-y-3">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-          {isRw ? "Konti z'Umutungo & Abawubitse" : "Custody Wallets & Custodians"}
+          {t(locale, "dashboard.custody_section_title")}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {wallets.map((wallet) => (
@@ -209,19 +203,17 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              {isRw ? "Ibyakozwe vuba" : "Recent Ledger Activity"}
+              {t(locale, "dashboard.recent_activity_title")}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {isRw
-                ? "Urutonde rw'ibyinjiye, ibyasohotse, n'ihererekanya"
-                : "Live history of inflows, outflows, and custody transfers"}
+              {t(locale, "dashboard.recent_activity_subtitle")}
             </p>
           </div>
 
           <div className="flex items-center space-x-2">
             <input
               type="text"
-              placeholder={isRw ? "Shakisha..." : "Search transactions..."}
+              placeholder={t(locale, "transactions.search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-steel-blue"
@@ -232,10 +224,10 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               onChange={(e) => setFilterType(e.target.value)}
               className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
             >
-              <option value="all">{isRw ? "Byose" : "All"}</option>
-              <option value="income">{isRw ? "Ibyinjira" : "Income"}</option>
-              <option value="expense">{isRw ? "Ibisohoka" : "Expenses"}</option>
-              <option value="handover">{isRw ? "Ihererekanya" : "Handovers"}</option>
+              <option value="all">{t(locale, "transactions.filter_all")}</option>
+              <option value="income">{t(locale, "transactions.type_income")}</option>
+              <option value="expense">{t(locale, "transactions.type_expense")}</option>
+              <option value="handover">{t(locale, "transactions.type_handover")}</option>
             </select>
           </div>
         </div>
@@ -244,19 +236,19 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">{isRw ? "Ubwoko" : "Type"}</th>
-                <th className="py-3 px-4">{isRw ? "Ibisobanuro" : "Description"}</th>
-                <th className="py-3 px-4">{isRw ? "Konti" : "Wallet"}</th>
-                <th className="py-3 px-4">{isRw ? "Uwabikoze" : "Actor"}</th>
-                <th className="py-3 px-4">{isRw ? "Itariki" : "Date"}</th>
-                <th className="py-3 px-4 text-right">{isRw ? "Amafaranga" : "Amount"}</th>
+                <th className="py-3 px-4">{t(locale, "common.type")}</th>
+                <th className="py-3 px-4">{t(locale, "common.description")}</th>
+                <th className="py-3 px-4">{t(locale, "common.wallet")}</th>
+                <th className="py-3 px-4">{t(locale, "common.actor")}</th>
+                <th className="py-3 px-4">{t(locale, "common.date")}</th>
+                <th className="py-3 px-4 text-right">{t(locale, "common.amount")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
               {filteredTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-400">
-                    {isRw ? "Nta bikorwa bibonetse" : "No transactions found"}
+                    {t(locale, "common.no_results")}
                   </td>
                 </tr>
               ) : (
@@ -276,16 +268,10 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
                         }`}
                       >
                         {tx.txType === "income"
-                          ? isRw
-                            ? "Ibyinjira"
-                            : "Income"
+                          ? t(locale, "transactions.income")
                           : tx.txType === "expense"
-                            ? isRw
-                              ? "Ibisohoka"
-                              : "Expense"
-                            : isRw
-                              ? "Ihererekanya"
-                              : "Handover"}
+                            ? t(locale, "transactions.expense")
+                            : t(locale, "transactions.handover")}
                       </span>
                     </td>
                     <td className="py-3 px-4">
@@ -338,15 +324,13 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           <div>
             <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-widest text-brand-cream/80 bg-white/10 px-2.5 py-0.5 rounded-full mb-1">
               <ShieldCheck className="w-3 h-3 mr-1 text-brand-cream" />
-              <span>{isRw ? "Umutekano Udakeneye Ijambobanga" : "Zero-Login Magic Link"}</span>
+              <span>{t(locale, "dashboard.zero_login_tag")}</span>
             </span>
             <h3 className="text-xl font-bold tracking-tight">
-              {isRw ? "Raporo y'Ababyeyi n'Abakambwe (Mother's Report)" : "Mother's Summary Report"}
+              {t(locale, "dashboard.mothers_report_card_title")}
             </h3>
             <p className="text-xs text-brand-cream/90 mt-1 max-w-xl">
-              {isRw
-                ? "Fungura cyangwa usangize ababyeyi raporo y'imari yoroheje cyane kureba nta kwijinjiza bisabwa (No login needed)."
-                : "Open or share a simplified, high-trust elder-friendly financial summary view requiring zero authentication."}
+              {t(locale, "dashboard.mothers_report_card_desc")}
             </p>
           </div>
         </div>
@@ -355,7 +339,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           href={`/${locale}/report/family-november-2026`}
           className="inline-flex items-center px-5 py-2.5 rounded-xl bg-brand-cream text-brand-dark hover:bg-white font-extrabold text-xs shadow-md transition whitespace-nowrap"
         >
-          <span>{isRw ? "Fungura Raporo y'Ababyeyi" : "Open Mother's Report"}</span>
+          <span>{t(locale, "dashboard.open_mothers_report")}</span>
           <ArrowRight className="w-4 h-4 ml-1.5" />
         </Link>
       </div>

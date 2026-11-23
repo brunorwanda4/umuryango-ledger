@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, X } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
+import { t } from "@/lib/i18n";
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -29,21 +30,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
-      setErrorMsg(
-        isRw
-          ? "Umubare w'amafaranga ugomba kuba munini kuruta 0."
-          : "Amount must be greater than zero.",
-      );
+      setErrorMsg(t(locale, "errors.invalid_amount"));
       return;
     }
 
     const selectedWallet = wallets.find((w) => w.name === walletName);
     if (txType === "expense" && selectedWallet && selectedWallet.balance < numAmount) {
-      setErrorMsg(
-        isRw
-          ? `Konti '${walletName}' ifite ${selectedWallet.balance.toLocaleString()} RWF gusa; ntihagije ngo ukoreshe ${numAmount.toLocaleString()} RWF.`
-          : `Wallet '${walletName}' only holds ${selectedWallet.balance.toLocaleString()} RWF, which is not enough for ${numAmount.toLocaleString()} RWF.`,
-      );
+      setErrorMsg(t(locale, "errors.insufficient_custody", { wallet: walletName, available: selectedWallet.balance.toLocaleString(), requested: numAmount.toLocaleString() }));
       return;
     }
 
@@ -71,7 +64,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
       <div className="bg-white dark:bg-brand-dark rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-            {isRw ? "Andika Igikorwa Gishya" : "Log New Transaction"}
+            {t(locale, "transactions.log_new_transaction")}
           </h3>
           <button
             type="button"
@@ -105,7 +98,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
               }`}
             >
               <ArrowDownRight className="w-3.5 h-3.5 mr-1" />
-              <span>{isRw ? "Ibisohoka (Expense)" : "Expense"}</span>
+              <span>{t(locale, "transactions.expense")}</span>
             </button>
             <button
               type="button"
@@ -120,13 +113,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
               }`}
             >
               <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-              <span>{isRw ? "Ibyinjira (Income)" : "Income"}</span>
+              <span>{t(locale, "transactions.income")}</span>
             </button>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Konti / Umubikizi" : "Wallet / Custodian"}
+              {t(locale, "wallets.held_by")}
             </label>
             <select
               value={walletName}
@@ -146,7 +139,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Umubare w'Amafaranga (RWF)" : "Amount (RWF)"}
+              {t(locale, "transactions.amount")}
             </label>
             <input
               type="number"
@@ -164,7 +157,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                {isRw ? "Icyiciro" : "Category"}
+                {t(locale, "transactions.category")}
               </label>
               <input
                 type="text"
@@ -176,7 +169,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                {isRw ? "Uwabikoze" : "Authorized By"}
+                {t(locale, "transactions.authorized_by")}
               </label>
               <input
                 type="text"
@@ -190,7 +183,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Ibisobanuro birambuye" : "Note / Description"}
+              {t(locale, "transactions.description")}
             </label>
             <textarea
               rows={2}
@@ -207,13 +200,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
             >
-              {isRw ? "Reka" : "Cancel"}
+              {t(locale, "common.cancel")}
             </button>
             <button
               type="submit"
               className="px-5 py-2 rounded-xl bg-brand-dark text-brand-cream hover:bg-brand-dark/90 dark:bg-brand-steel-blue dark:text-white font-bold text-xs shadow-md transition"
             >
-              {isRw ? "Bika Igikorwa" : "Save Transaction"}
+              {t(locale, "common.save")}
             </button>
           </div>
         </form>

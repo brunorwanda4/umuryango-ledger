@@ -1,6 +1,5 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
-use umuryango_i18n::Locale;
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
@@ -16,7 +15,7 @@ impl SettingsScreen {
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        let is_rw = state.locale == Locale::Rw;
+        let locale = state.locale;
 
         div()
             .id(id)
@@ -52,18 +51,10 @@ impl SettingsScreen {
                                     .text_2xl()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if is_rw {
-                                        "Igenamiterere ry'Insanganyamatsiko"
-                                    } else {
-                                        "Theme & Appearance Settings"
-                                    }),
+                                    .child(umuryango_i18n::t(locale, "settings.theme_appearance")),
                             )
                             .child(div().text_xs().text_color(theme.text_muted).child(
-                                if is_rw {
-                                    "Hindura amabara, umwijima/umucyo n'inyandiko ya Archivo"
-                                } else {
-                                    "Customize runtime palette, Light/Dark modes, and Archivo typography"
-                                },
+                                umuryango_i18n::t(locale, "settings.theme_subtitle"),
                             )),
                     ),
             )
@@ -82,11 +73,7 @@ impl SettingsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(8.0))
-                            .child(if is_rw {
-                                "Umucyo n'Umwijima (Appearance Mode)"
-                            } else {
-                                "Appearance Mode"
-                            }),
+                            .child(umuryango_i18n::t(locale, "settings.appearance_mode")),
                     )
                     .child(
                         div()
@@ -218,11 +205,7 @@ impl SettingsScreen {
                                     .text_base()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if is_rw {
-                                        "Amabara y'Insanganyamatsiko (Palette Tokens)"
-                                    } else {
-                                        "Brand Palette Tokens"
-                                    }),
+                                    .child(umuryango_i18n::t(locale, "settings.brand_palette")),
                             )
                             .child(
                                 div()
@@ -234,11 +217,7 @@ impl SettingsScreen {
                                     .border_color(theme.border_subtle)
                                     .text_xs()
                                     .text_color(theme.accent_secondary)
-                                    .child(if is_rw {
-                                        "Byasubijwe mu mwimerere"
-                                    } else {
-                                        "Persisted to SQLite"
-                                    }),
+                                    .child(umuryango_i18n::t(locale, "settings.persisted_sqlite")),
                             ),
                     )
                     .child(
@@ -293,11 +272,7 @@ impl SettingsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(8.0))
-                            .child(if is_rw {
-                                "Inyandiko n'Ububiko bwa SQLite"
-                            } else {
-                                "Typography & Offline SQLite Engine"
-                            }),
+                            .child(umuryango_i18n::t(locale, "settings.typography_sqlite")),
                     )
                     .child(
                         div()
@@ -341,11 +316,7 @@ impl SettingsScreen {
                                     .text_base()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if is_rw {
-                                        "Ibyerekeye Umuryango Ledger"
-                                    } else {
-                                        "About Umuryango Ledger"
-                                    }),
+                                    .child(umuryango_i18n::t(locale, "settings.about_app")),
                             )
                             .child(
                                 div()

@@ -2,37 +2,33 @@
 
 import React, { use } from "react";
 import { Landmark, Lock, Plus } from "lucide-react";
+import { t } from "@/lib/i18n";
 import { useLedger } from "@/lib/LedgerContext";
 
 export default function ProjectsPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale === "en" ? "en" : "rw";
-  const isRw = locale === "rw";
 
   const { scope } = useLedger();
 
   const projects = [
     {
       id: "proj-1",
-      name: isRw ? "Ubwubatsi bw'Inzu y'Ababyeyi" : "Parents' House Renovation",
-      description: isRw
-        ? "Gusana igisenge no gushyiramo sima mu nzu y'ababyeyi mu cyaro"
-        : "Roof replacement and floor cementing for rural family homestead",
+      name: t(locale, "projects.demo_house_title"),
+      description: t(locale, "projects.demo_house_desc"),
       target: "5,000,000 RWF",
       raised: "1,200,000 RWF",
       percentage: 24,
-      status: isRw ? "Iri Gukorwa" : "In Progress",
+      status: t(locale, "projects.status_in_progress"),
     },
     {
       id: "proj-2",
-      name: isRw ? "Minerval y'Abana (Igihembwe cya 1)" : "School Fees (Term 1)",
-      description: isRw
-        ? "Kwishyurira abana bose b'umuryango amashuri yisumbuye"
-        : "Pooled school tuition funds for secondary students",
+      name: t(locale, "projects.demo_school_title"),
+      description: t(locale, "projects.demo_school_desc"),
       target: "1,800,000 RWF",
       raised: "1,800,000 RWF",
       percentage: 100,
-      status: isRw ? "Byarangiye" : "Completed",
+      status: t(locale, "projects.status_completed"),
     },
   ];
 
@@ -44,22 +40,20 @@ export default function ProjectsPage({ params }: { params: Promise<{ locale: str
             {scope === "family" ? (
               <>
                 <Landmark className="w-3 h-3 mr-1" />
-                <span>{isRw ? "Imishinga y'Umuryango" : "Family Projects"}</span>
+                <span>{t(locale, "projects.family_projects_tab")}</span>
               </>
             ) : (
               <>
                 <Lock className="w-3 h-3 mr-1" />
-                <span>{isRw ? "Imishinga Bwite" : "Personal Goals"}</span>
+                <span>{t(locale, "projects.personal_goals_tab")}</span>
               </>
             )}
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            {isRw ? "Imishinga y'Umuryango" : "Family Projects"}
+            {t(locale, "projects.family_projects_tab")}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {isRw
-              ? "Guhuza imbaraga n'umusanzu mu bikorwa by'iterambere ry'umuryango"
-              : "Pooled contributions and progress tracking for shared goals"}
+            {t(locale, "projects.family_projects_subtitle")}
           </p>
         </div>
 
@@ -68,7 +62,7 @@ export default function ProjectsPage({ params }: { params: Promise<{ locale: str
           className="inline-flex items-center px-4 py-2 bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs rounded-xl shadow-md transition"
         >
           <Plus className="w-4 h-4 mr-1.5" />
-          <span>{isRw ? "Tangiza Umushinga Mushya" : "Start New Project"}</span>
+          <span>{t(locale, "projects.start_new_project")}</span>
         </button>
       </div>
 
@@ -99,7 +93,7 @@ export default function ProjectsPage({ params }: { params: Promise<{ locale: str
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-slate-500 dark:text-slate-400">
-                  {isRw ? "Amafaranga amaze kuboneka" : "Progress"}
+                  {t(locale, "projects.progress_label")}
                 </span>
                 <span className="text-slate-900 dark:text-white font-bold">
                   {proj.raised} / {proj.target} ({proj.percentage}%)

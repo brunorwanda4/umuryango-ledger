@@ -1,12 +1,9 @@
 # Architecture Context — Umuryango Ledger
 
-## 1. System Vision & Domain Architecture
-Umuryango Ledger is a high-integrity, bilingual (`rw` & `en`) family financial management platform. It solves the critical domestic problem where money sent home to Rwanda or pooled within families vanishes into personal pockets without transparent, zero-embarrassment accounting.
+## 1. System Vision & Architecture Paradigm
+`umuryango-ledger` is built on a **Local-First, High-Trust Monorepo** designed for Rwandan family financial accountability. It bridges modern digital finance (Mobile Money / MTN MoMo, Airtel Money, Bank of Kigali) with traditional, elder-friendly custody principles.
 
-### Dual Financial Scope
-- **`PERSONAL` Scope:** Private ledger for individual custodians. Only visible to the owner.
-- **`FAMILY` Scope:** Shared multi-wallet custody ledger. Visible to all members of the family according to their roles (`HEAD`, `CUSTODIAN`, `MEMBER`, `OBSERVER`).
-- **Physical Custody Invariant:** Every family wallet is assigned a designated physical `custodian_id` (e.g., Mom's MoMo, Brother's BK account). Funds cannot move between custodians without an explicit custody handover record.
+Every financial unit is tied to a specific human or account custodian. No money exists in the abstract; transactions are either inflows, outflows, or custody handovers.
 
 ---
 
@@ -17,13 +14,13 @@ umuryango-ledger/
 ├── crates/
 │   ├── core-domain/       # Pure domain models, ledger balance validation, financial math
 │   ├── storage-local/     # Rusqlite cache, offline sync_queue, conflict resolution
-│   ├── i18n/              # Fluent bilingual bundle (rw & en), localized error catalogs
+│   ├── i18n/              # Centralized JSON bilingual engine (rw & en), OnceLock dot-path lookup
 │   ├── api-client/        # Shared async HTTP & WebSocket client for native & web
 │   ├── api-server/        # Actix-web 4, PostgreSQL (SQLx 0.8), JWT, WebSocket hub
 │   ├── wasm-bridge/       # Wasm-bindgen bindings for Next.js web client
 │   └── app-gpui/          # High-performance desktop & mobile UI via Zed GPUI
 ├── web/                   # Next.js 16 (App Router), React 19, Tailwind v4, Bun 1.4+
-├── locales/               # Bilingual Fluent translations (rw.ftl & en.ftl)
+├── locales/               # Bilingual structured JSON translations (rw.json & en.json)
 └── migrations/            # Production PostgreSQL SQLx database migrations
 ```
 
@@ -39,9 +36,11 @@ umuryango-ledger/
 - Implements `utoipa::ToSchema` across all models for OpenAPI 3.1 code generation.
 
 ### `crates/i18n` (Bilingual Localization)
-- Uses Mozilla Project Fluent (`fluent-bundle`).
-- Reads `locales/en.ftl` and `locales/rw.ftl`.
-- Provides static interpolation helper: `Translator::t(locale, key, args)`.
+- Centralized structured JSON single source of truth (`locales/en.json` and `locales/rw.json`).
+- Compile-time embedded bundles via `include_str!` parsed into a thread-safe `OnceLock<HashMap<Locale, serde_json::Value>>`.
+- Dot-path key lookup (`t(locale, "dashboard.title")`) with automatic fallback to English.
+- Dynamic runtime string interpolation (`t_args(locale, "...", &[("key", "val")])`).
+- Supports runtime hot-reloading for Over-The-Air (OTA) translation bundles.
 - Defines domain error translation catalog (`LocalizableError`, `LocalizedError`).
 - Implements `utoipa::ToSchema` for `Locale` and `LocalizedError`.
 
@@ -53,35 +52,31 @@ umuryango-ledger/
 
 ### `crates/api-server` (Backend Actix-web & PostgreSQL)
 - Connection pooling with `sqlx::PgPool`.
-- Password hashing using Argon2id (`argon2` crate).
-- Stateless JWT authentication via `jsonwebtoken`.
-- Real-time `FamilyHub`: `DashMap<Uuid, broadcast::Sender<RealtimeEvent>>` keyed by `family_id`.
-- Zero-login magic link verification with cryptographic hash tokens.
-- Interactive Swagger UI and OpenAPI 3.1 documentation via `utoipa 6.0` and `utoipa-swagger-ui 10.0`.
-- Mounted at `/swagger-ui/` referencing `/api-docs/openapi.json`.
+- Row-Level Security (RLS) enforcement ensuring complete data isolation between families.
+- Atomic custody handovers requiring dual-party agreement or Head-of-Family authorization.
+- Real-time notification hub with WebSockets (`actix-ws`) and actor-based broadcast queues.
+- Generates zero-login Mother's Report read tokens for elder accessibility.
+- Automatic self-update registry and OTA binary/bundle distribution endpoints (`/api/v1/releases`, `/api/v1/ota`).
+- Mounted OpenAPI 3.1 & interactive Swagger UI at `/swagger-ui/` via `utoipa 6.0`.
 
-### `web/` (Next.js 16 Web Portal on Bun)
-- Driven exclusively by Bun (`bun run dev`, `bun run build`, `bun test`, `bunx`).
-- Native Turbopack compilation with WebAssembly support for local verification.
-- Bilingual dynamic routing (`/[locale]/dashboard`, `/[locale]/transactions`, `/[locale]/projects`, `/[locale]/report/[token]`).
-- Clean separation between Personal and Family financial scopes with live real-time sync.
+### `crates/wasm-bridge` (WebAssembly Bridge)
+- Compiles domain math, ledger validation, and Mother's Report generator to `wasm32-unknown-unknown`.
+- Exposes clean JavaScript/TypeScript interfaces via `wasm-bindgen` for the Next.js frontend.
+- Provides `translate(locale, key, args_json)` backed by `crates/i18n`.
 
----
+### `crates/app-gpui` (Native Desktop & Mobile UI)
+- Zed GPUI GPU-accelerated immediate-mode graphics with `gpui-kit` reusable primitives and charts.
+- Strictly adheres to the customizable 5-color token system and Archivo typography.
+- Offline-first UX: optimistic UI updates with background synchronization indicators.
+- Android safe area handling (querying status bar, navigation bar, cutouts, and IME height).
+- Native cross-platform updater engine (`crates/app-gpui/src/updater/`).
+- Theme-aware FontAwesome SVG vector icon catalog (`app_icon`, `AppIcon`).
 
-## 4. PostgreSQL Security & Isolation
-- All tables (`wallets`, `transactions`, `projects`, `loans`, `family_members`, `custody_handovers`) carry `tenant_id` (`family_id` or `user_id`).
-- Row-Level Security (RLS) is enabled across all tables in production migrations.
-- Personal transactions have `scope = 'PERSONAL'` and `user_id = auth_uid()`.
-- Family transactions have `scope = 'FAMILY'` and check family membership via `family_members`.
-
----
-
-## 5. Real-Time Broadcast Architecture
-- WebSocket endpoint: `GET /api/v1/ws?token=<jwt>`.
-- When a transaction or handover is committed in PostgreSQL, the server emits an event onto the family's broadcast channel.
-- Connected clients (GPUI desktop/mobile and Next.js web) receive typed events:
-  - `IncomeAdded`
-  - `ExpenseLogged`
-  - `HandoverCompleted`
-  - `ProjectOrLoanUpdated`
-- Clients immediately update local balances and display bilingual toast alerts.
+### `web/` (Next.js Web Portal)
+- Next.js 16 (App Router) with Turbopack, React 19, Tailwind CSS v4, Bun 1.4+.
+- Directly imports `locales/en.json` and `locales/rw.json` via `@/lib/i18n` with typed `useTranslation` and `t()`.
+- Public, mobile-optimized, zero-login view for family elders (`/report/[token]`).
+- Print-to-PDF styles and WhatsApp sharing formatters.
+- Client-side WASM integration for instant balance verification.
+- Fully wired PWA Service Worker (`web/public/sw.js`) and live `AutoUpdateListener`.
+- Theme-aware FontAwesome vector SVG icons (`<AppIcon />`).

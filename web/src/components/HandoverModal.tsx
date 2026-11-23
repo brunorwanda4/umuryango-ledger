@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Handshake, AlertTriangle, X } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
+import { t } from "@/lib/i18n";
 
 interface HandoverModalProps {
   isOpen: boolean;
@@ -27,30 +28,18 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
-      setErrorMsg(
-        isRw
-          ? "Umubare w'amafaranga ugomba kuba munini kuruta 0."
-          : "Amount must be greater than zero.",
-      );
+      setErrorMsg(t(locale, "errors.invalid_amount"));
       return;
     }
 
     if (fromWallet === toWallet) {
-      setErrorMsg(
-        isRw
-          ? "Guhererekanya amafaranga bigomba gukorwa hagati ya konti ebyiri zitandukanye z'umuryango umwe."
-          : "Handover must be between two different custody wallets within the same family.",
-      );
+      setErrorMsg(t(locale, "errors.invalid_handover"));
       return;
     }
 
     const sourceWallet = wallets.find((w) => w.name === fromWallet);
     if (sourceWallet && sourceWallet.balance < numAmount) {
-      setErrorMsg(
-        isRw
-          ? `Konti '${fromWallet}' ifite ${sourceWallet.balance.toLocaleString()} RWF gusa; ntihagije ngo uhererekanye ${numAmount.toLocaleString()} RWF.`
-          : `Wallet '${fromWallet}' only holds ${sourceWallet.balance.toLocaleString()} RWF, which is not enough for ${numAmount.toLocaleString()} RWF.`,
-      );
+      setErrorMsg(t(locale, "errors.insufficient_custody", { wallet: fromWallet, available: sourceWallet.balance.toLocaleString(), requested: numAmount.toLocaleString() }));
       return;
     }
 
@@ -73,7 +62,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
           <div className="flex items-center space-x-2">
             <Handshake className="w-5 h-5 text-brand-dark dark:text-brand-cream" />
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              {isRw ? "Ihererekanya ry'Umutungo" : "Custodian Handover"}
+              {t(locale, "transactions.handover_title")}
             </h3>
           </div>
           <button
@@ -95,7 +84,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Konti Itangirwaho (Source)" : "Source Wallet (Outgoing)"}
+              {t(locale, "transactions.outgoing_wallet")}
             </label>
             <select
               value={fromWallet}
@@ -115,7 +104,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Konti Yakira (Destination)" : "Destination Wallet (Incoming)"}
+              {t(locale, "transactions.incoming_wallet")}
             </label>
             <select
               value={toWallet}
@@ -135,7 +124,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Umubare w'Amafaranga (RWF)" : "Handover Amount (RWF)"}
+              {t(locale, "transactions.amount")}
             </label>
             <input
               type="number"
@@ -152,7 +141,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-              {isRw ? "Uwatanze / Uwatumwe" : "Initiated By"}
+              {t(locale, "transactions.authorized_by")}
             </label>
             <input
               type="text"
@@ -169,13 +158,13 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
             >
-              {isRw ? "Reka" : "Cancel"}
+              {t(locale, "common.cancel")}
             </button>
             <button
               type="submit"
               className="px-5 py-2 rounded-xl bg-brand-dark text-brand-cream hover:bg-brand-dark/90 dark:bg-brand-steel-blue dark:text-white font-bold text-xs shadow-md transition"
             >
-              {isRw ? "Emeza Ihererekanya" : "Confirm Handover"}
+              {t(locale, "common.confirm")}
             </button>
           </div>
         </form>

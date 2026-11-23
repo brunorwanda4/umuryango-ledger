@@ -1,7 +1,6 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::realtime::RealtimeEvent;
-use umuryango_i18n::Locale;
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
@@ -17,18 +16,9 @@ impl NotificationsDrawer {
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        let (title, mark_all_label, empty_text) = match state.locale {
-            Locale::Rw => (
-                "Imenyesha ry'Imari",
-                "Soma Byose",
-                "Nta bimenyesha bishya bihari.",
-            ),
-            Locale::En => (
-                "Financial Notifications",
-                "Mark All as Read",
-                "No notifications yet.",
-            ),
-        };
+        let title = umuryango_i18n::t(state.locale, "notifications.title");
+        let mark_all_label = umuryango_i18n::t(state.locale, "notifications.mark_all_read");
+        let empty_text = umuryango_i18n::t(state.locale, "notifications.empty");
 
         div()
             .id(id)

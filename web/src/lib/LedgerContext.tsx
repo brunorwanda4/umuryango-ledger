@@ -1,6 +1,17 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  User,
+  Family,
+  PendingFamilyInvite,
+  RegisterPayload,
+  loginUser,
+  registerUser,
+  createFamily as apiCreateFamily,
+  joinFamily as apiJoinFamily,
+  getPendingInvites as apiGetPendingInvites,
+} from "@/lib/api";
 
 export type ScopeType = "family" | "personal";
 export type ThemeType = "light" | "dark";
@@ -47,6 +58,17 @@ interface LedgerContextType {
   dismissToast: (id: string) => void;
   addTransaction: (tx: Omit<LedgerTransaction, "id" | "occurredAt">) => void;
   addHandover: (fromWallet: string, toWallet: string, amount: number, actor: string) => void;
+  currentUser: User | null;
+  token: string | null;
+  pendingInvites: PendingFamilyInvite[];
+  login: (phone: string, pass: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  createFamily: (
+    name: string,
+    memberPhones: string[],
+  ) => Promise<{ family: Family; invite_code: string }>;
+  joinFamily: (inviteCodeOrId: string, isCode?: boolean) => Promise<void>;
+  skipOnboarding: () => void;
   kpis: {
     totalAssets: number;
     cashInHand: number;
@@ -98,7 +120,7 @@ const INITIAL_PERSONAL_WALLETS: CustodyWallet[] = [
     id: "w-p-bk",
     name: "Equity Bank Personal",
     type: "bank",
-    balance: 1250000,
+    balance: 2100000,
     custodianName: "Me",
     currency: "RWF",
   },
@@ -106,15 +128,15 @@ const INITIAL_PERSONAL_WALLETS: CustodyWallet[] = [
     id: "w-p-momo",
     name: "Personal MTN MoMo",
     type: "momo",
-    balance: 185000,
+    balance: 380000,
     custodianName: "Me",
     currency: "RWF",
   },
   {
     id: "w-p-cash",
-    name: "Pocket Cash",
+    name: "Cash in Pocket",
     type: "cash",
-    balance: 35000,
+    balance: 50000,
     custodianName: "Me",
     currency: "RWF",
   },
@@ -126,12 +148,12 @@ const INITIAL_TRANSACTIONS: LedgerTransaction[] = [
     txType: "income",
     scope: "family",
     walletName: "MTN MoMo Treasury",
-    amount: 500000,
+    amount: 150000,
     currency: "RWF",
-    category: "Umuganda w'Umuryango",
-    description: "Umusanzu w'ukwezi kwa 11 (Kagabo)",
-    actorName: "Kagabo Jean",
-    occurredAt: "2026-11-22 14:30",
+    category: "Umusanzu w'Ubuhinzi",
+    description: "Umusaruro w'ibigori (Musanze)",
+    actorName: "Papa",
+    occurredAt: "2026-11-23 09:30",
   },
   {
     id: "tx-2",
@@ -181,6 +203,25 @@ export const LedgerProvider: React.FC<{
   const [wallets, setWallets] = useState<CustodyWallet[]>(INITIAL_FAMILY_WALLETS);
   const [transactions, setTransactions] = useState<LedgerTransaction[]>(INITIAL_TRANSACTIONS);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [pendingInvites, setPendingInvites] = useState<PendingFamilyInvite[]>([]);
+
+  // Initialize token and user from localStorage on client
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("umuryango_token");
+      const storedUser = localStorage.getItem("umuryango_user");
+      if (storedToken) setToken(storedToken);
+      if (storedUser) {
+        try {
+          setCurrentUser(JSON.parse(storedUser));
+        } catch {
+          // Ignore invalid parse
+        }
+      }
+    }
+  }, []);
 
   // Update theme class on HTML element
   useEffect(() => {
@@ -218,6 +259,103 @@ export const LedgerProvider: React.FC<{
     setToasts((prev) => [newToast, ...prev.slice(0, 4)]);
   }, []);
 
+  const login = useCallback(
+    async (phone: string, pass: string) => {
+      const res = await loginUser({ phone, password: pass }, currentLocale);
+      setToken(res.token);
+      setCurrentUser(res.user);
+      setPendingInvites(res.pending_invites || []);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("umuryango_token", res.token);
+        localStorage.setItem("umuryango_user", JSON.stringify(res.user));
+      }
+      addToast({
+        type: "info",
+        title: currentLocale === "rw" ? "Mwinjiye neza" : "Logged in successfully",
+        message:
+          currentLocale === "rw"
+            ? `Murakaza neza, ${res.user.full_name}`
+            : `Welcome back, ${res.user.full_name}`,
+      });
+    },
+    [currentLocale, addToast],
+  );
+
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const res = await registerUser(payload, currentLocale);
+      setToken(res.token);
+      setCurrentUser(res.user);
+      setPendingInvites(res.pending_invites || []);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("umuryango_token", res.token);
+        localStorage.setItem("umuryango_user", JSON.stringify(res.user));
+      }
+      addToast({
+        type: "info",
+        title: currentLocale === "rw" ? "Konti yafunguwe" : "Account Created",
+        message:
+          currentLocale === "rw"
+            ? "Konti yanyu yaremwe neza!"
+            : "Your account was created successfully!",
+      });
+    },
+    [currentLocale, addToast],
+  );
+
+  const createFamily = useCallback(
+    async (name: string, memberPhones: string[]) => {
+      if (!token) throw new Error("Authentication required");
+      const res = await apiCreateFamily(
+        { name, member_phones: memberPhones },
+        token,
+        currentLocale,
+      );
+      setScope("family");
+      addToast({
+        type: "info",
+        title: currentLocale === "rw" ? "Umuryango waremwe" : "Family Created",
+        message:
+          currentLocale === "rw"
+            ? `Umuryango '${name}' waremwe! Kode y'ubutumire: ${res.invite_code}`
+            : `Family '${name}' created! Invite Code: ${res.invite_code}`,
+      });
+      return res;
+    },
+    [token, currentLocale, addToast],
+  );
+
+  const joinFamily = useCallback(
+    async (inviteCodeOrId: string, isCode = true) => {
+      if (!token) throw new Error("Authentication required");
+      const payload = isCode ? { invite_code: inviteCodeOrId } : { invite_id: inviteCodeOrId };
+      const res = await apiJoinFamily(payload, token, currentLocale);
+      setScope("family");
+      setPendingInvites((prev) => prev.filter((inv) => inv.id !== inviteCodeOrId));
+      addToast({
+        type: "info",
+        title: currentLocale === "rw" ? "Mwinjiye mu muryango" : "Joined Family",
+        message:
+          currentLocale === "rw"
+            ? `Mwinjiye muri ${res.family.name} neza!`
+            : `Successfully joined ${res.family.name}!`,
+      });
+    },
+    [token, currentLocale, addToast],
+  );
+
+  const skipOnboarding = useCallback(() => {
+    setScope("personal");
+    addToast({
+      type: "info",
+      title: currentLocale === "rw" ? "Konti Bwite" : "Personal Scope",
+      message:
+        currentLocale === "rw"
+          ? "Ubu murimo gukoresha Amafaranga Yanjye (Konti Bwite)."
+          : "You are currently using your Personal wallet ledger.",
+    });
+  }, [currentLocale, addToast]);
+
   const addTransaction = useCallback(
     (tx: Omit<LedgerTransaction, "id" | "occurredAt">) => {
       const newTx: LedgerTransaction = {
@@ -248,11 +386,13 @@ export const LedgerProvider: React.FC<{
           tx.txType === "income"
             ? isRw
               ? "Amafaranga Mashya Yakiriwe"
-              : "New Income Received"
+              : "New Income Logged"
             : isRw
               ? "Amafaranga Yakoreshejwe"
-              : "Expense Recorded",
-        message: `${tx.amount.toLocaleString()} ${tx.currency} - ${tx.walletName} (${tx.actorName})`,
+              : "Expense Logged",
+        message: `${tx.actorName} ${
+          tx.txType === "income" ? (isRw ? "yongeye" : "added") : isRw ? "yakoresheje" : "spent"
+        } ${tx.amount.toLocaleString()} ${tx.currency} (${tx.category})`,
       });
     },
     [currentLocale, addToast],
@@ -261,14 +401,14 @@ export const LedgerProvider: React.FC<{
   const addHandover = useCallback(
     (fromWallet: string, toWallet: string, amount: number, actor: string) => {
       const newTx: LedgerTransaction = {
-        id: "tx-ho-" + Date.now(),
+        id: "tx-" + Date.now(),
         txType: "handover",
-        scope,
+        scope: "family",
         walletName: fromWallet,
         toWalletName: toWallet,
         amount,
         currency: "RWF",
-        category: "Ihererekanya ry'Umutungo",
+        category: "Ihererekanya ry'Ubwiringiro",
         description: `Handover from ${fromWallet} to ${toWallet}`,
         actorName: actor,
         occurredAt: new Date().toISOString().replace("T", " ").substring(0, 16),
@@ -276,6 +416,7 @@ export const LedgerProvider: React.FC<{
 
       setTransactions((prev) => [newTx, ...prev]);
 
+      // Update wallets: deduct source, credit destination
       setWallets((prev) =>
         prev.map((w) => {
           if (w.name === fromWallet) {
@@ -291,60 +432,62 @@ export const LedgerProvider: React.FC<{
       const isRw = currentLocale === "rw";
       addToast({
         type: "handover",
-        title: isRw ? "Ihererekanya ry'Umutungo Ryemejwe" : "Custody Handover Completed",
-        message: `${amount.toLocaleString()} RWF: ${fromWallet} → ${toWallet}`,
+        title: isRw ? "Ubwiringiro Bwahererekanyijwe" : "Custody Handover Completed",
+        message: isRw
+          ? `${actor} yahererekanyije ${amount.toLocaleString()} RWF kuva kuri '${fromWallet}' ajya kuri '${toWallet}'.`
+          : `${actor} handed over ${amount.toLocaleString()} RWF from '${fromWallet}' to '${toWallet}'.`,
       });
     },
-    [scope, currentLocale, addToast],
+    [currentLocale, addToast],
   );
 
-  // WebSocket Live Subscription to Actix Backend
+  // WebSocket Live Updates
   useEffect(() => {
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4433/ws";
     let ws: WebSocket | null = null;
-    let reconnectTimeout: any = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout>;
 
     const connect = () => {
       try {
-        const wsUrl =
-          (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4433/api/v1/ws") +
-          "?token=demo-live-token";
         ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-          // Connected cleanly
-        };
 
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            const isRw = currentLocale === "rw";
-
             if (data.type === "IncomeAdded") {
+              const p = data.payload;
+              const isRw = currentLocale === "rw";
               addToast({
                 type: "income",
-                title: isRw ? "Amafaranga Mashya (WebSocket)" : "New Inflow (Live)",
-                message: `${data.amount?.toLocaleString()} ${data.currency || "RWF"} yinjijwe kuri ${data.wallet_name} na ${data.added_by_name}`,
+                title: isRw ? "Amafaranga Mashya Yakiriwe" : "New Income Logged",
+                message: isRw
+                  ? `${p.added_by_name} yongeye ${p.amount.toLocaleString()} ${p.currency} kuri konti '${p.wallet_name}' (${p.source_description}).`
+                  : `${p.added_by_name} added ${p.amount.toLocaleString()} ${p.currency} to '${p.wallet_name}' (${p.source_description}).`,
               });
             } else if (data.type === "ExpenseLogged") {
+              const p = data.payload;
+              const isRw = currentLocale === "rw";
               addToast({
                 type: "expense",
-                title: isRw ? "Igikorwa Gishya cy'Isoko" : "New Expense Logged (Live)",
-                message: `${data.amount?.toLocaleString()} ${data.currency || "RWF"} kuri ${data.wallet_name} (${data.category})`,
+                title: isRw ? "Amafaranga Yakoreshejwe" : "Expense Logged",
+                message: isRw
+                  ? `${p.logged_by_name} yakoresheje ${p.amount.toLocaleString()} ${p.currency} kuri konti '${p.wallet_name}' (${p.category}).`
+                  : `${p.logged_by_name} logged ${p.amount.toLocaleString()} ${p.currency} from '${p.wallet_name}' (${p.category}).`,
               });
             } else if (data.type === "HandoverCompleted") {
+              const p = data.payload;
+              const isRw = currentLocale === "rw";
               addToast({
                 type: "handover",
-                title: isRw ? "Ihererekanya Ryemejwe" : "Handover Confirmed (Live)",
-                message: `${data.amount?.toLocaleString()} RWF kuva kuri ${data.from_wallet_name} yageze kuri ${data.to_wallet_name}`,
+                title: isRw ? "Ubwiringiro Bwahererekanyijwe" : "Custody Handover Completed",
+                message: isRw
+                  ? `${p.initiated_by_name} yahererekanyije ${p.amount.toLocaleString()} ${p.currency} kuva kuri '${p.from_wallet_name}' ajya kuri '${p.to_wallet_name}'.`
+                  : `${p.initiated_by_name} handed over ${p.amount.toLocaleString()} ${p.currency} from '${p.from_wallet_name}' to '${p.to_wallet_name}'.`,
               });
             }
           } catch {
-            // Ignore parse errors on ping/pong frames
+            // Non-JSON WS frame
           }
-        };
-
-        ws.onerror = () => {
-          // Backend may be offline in dev
         };
 
         ws.onclose = () => {
@@ -384,6 +527,14 @@ export const LedgerProvider: React.FC<{
         dismissToast,
         addTransaction,
         addHandover,
+        currentUser,
+        token,
+        pendingInvites,
+        login,
+        register,
+        createFamily,
+        joinFamily,
+        skipOnboarding,
         kpis: {
           totalAssets,
           cashInHand,

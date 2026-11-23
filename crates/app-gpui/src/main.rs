@@ -12,7 +12,8 @@ use uuid::Uuid;
 use components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm, QuickEntryMode};
 use gpui_kit::{
-    AppContext, Context, InteractiveElement, StatefulInteractiveElement, IntoElement, ParentElement, Render, Styled, Window, div, hsla, px,
+    AppContext, Context, InteractiveElement, IntoElement, ParentElement, Render,
+    StatefulInteractiveElement, Styled, Window, div, hsla, px,
 };
 pub use safe_area::SafeAreaInsets;
 use state::{AppState, Screen};
@@ -176,11 +177,10 @@ impl RootView {
                 {
                     Ok(()) => {
                         self.state.show_quick_entry = false;
-                        let msg = if self.state.locale == Locale::Rw {
-                            "Igikorwa cyanditswe neza!".to_string()
-                        } else {
-                            "Transaction recorded successfully!".to_string()
-                        };
+                        let msg = umuryango_i18n::t(
+                            self.state.locale,
+                            "transactions.transaction_recorded",
+                        );
                         self.state.set_toast(msg, false);
                     }
                     Err(e) => {
@@ -205,12 +205,118 @@ impl RootView {
         self.state.set_toast(feedback, false);
         cx.notify();
     }
+
+    pub fn handle_login_submit(&mut self, cx: &mut Context<Self>) {
+        if self.state.auth_phone.trim().is_empty() {
+            self.state.auth_phone = "+250788000000".to_string();
+        }
+        self.state.is_authenticated = true;
+        if self.state.active_family_name.is_none() {
+            self.state.current_screen = Screen::Onboarding;
+        } else {
+            self.state.current_screen = Screen::Dashboard;
+        }
+        let msg = umuryango_i18n::t(self.state.locale, "auth.login_success");
+        self.state.set_toast(msg, false);
+        cx.notify();
+    }
+
+    pub fn handle_register_submit(&mut self, cx: &mut Context<Self>) {
+        if self.state.auth_full_name.trim().is_empty() {
+            self.state.auth_full_name = "Kwizera Aimable".to_string();
+        }
+        if self.state.auth_phone.trim().is_empty() {
+            self.state.auth_phone = "+250788123456".to_string();
+        }
+        self.state.user_name = self.state.auth_full_name.clone();
+        self.state.is_authenticated = true;
+        self.state.current_screen = Screen::Onboarding;
+        let msg = umuryango_i18n::t(self.state.locale, "auth.account_created");
+        self.state.set_toast(msg, false);
+        cx.notify();
+    }
+
+    pub fn handle_accept_invite(
+        &mut self,
+        invite_id: Uuid,
+        family_name: String,
+        cx: &mut Context<Self>,
+    ) {
+        let new_family_id = Uuid::new_v4();
+        self.state.active_family_name = Some(family_name);
+        self.state.active_scope = LedgerScope::Family {
+            family_id: new_family_id,
+        };
+        self.state.pending_invites.retain(|i| i.id != invite_id);
+        self.state.current_screen = Screen::Dashboard;
+        let msg = umuryango_i18n::Translator::t(
+            self.state.locale,
+            umuryango_i18n::terms::CONTINUE_TO_DASHBOARD,
+            None,
+        );
+        self.state.set_toast(msg, false);
+        cx.notify();
+    }
+
+    pub fn handle_create_family_submit(&mut self, cx: &mut Context<Self>) {
+        let fam_name = if self.state.onboarding_family_name.trim().is_empty() {
+            "Umuryango Wacu".to_string()
+        } else {
+            self.state.onboarding_family_name.trim().to_string()
+        };
+        let new_family_id = Uuid::new_v4();
+        self.state.active_family_name = Some(fam_name);
+        self.state.active_scope = LedgerScope::Family {
+            family_id: new_family_id,
+        };
+        self.state.current_screen = Screen::Dashboard;
+        let msg = umuryango_i18n::t_args(self.state.locale, "onboarding.family_created_code", &[("code", "HK0N")]);
+        self.state.set_toast(msg, false);
+        cx.notify();
+    }
+
+    pub fn handle_join_family_submit(&mut self, cx: &mut Context<Self>) {
+        let code = self.state.onboarding_join_code.trim().to_uppercase();
+        let final_code = if code.is_empty() {
+            "HK0N".to_string()
+        } else {
+            code
+        };
+        let new_family_id = Uuid::new_v4();
+        self.state.active_family_name = Some(format!("Family {}", final_code));
+        self.state.active_scope = LedgerScope::Family {
+            family_id: new_family_id,
+        };
+        self.state.current_screen = Screen::Dashboard;
+        let msg = umuryango_i18n::Translator::t(
+            self.state.locale,
+            umuryango_i18n::terms::CONTINUE_TO_DASHBOARD,
+            None,
+        );
+        self.state.set_toast(msg, false);
+        cx.notify();
+    }
+
+    pub fn handle_skip_onboarding(&mut self, cx: &mut Context<Self>) {
+        self.state.active_scope = LedgerScope::Personal {
+            user_id: self.state.user_id,
+        };
+        self.state.active_family_name = None;
+        self.state.current_screen = Screen::Dashboard;
+        cx.notify();
+    }
 }
 
 impl Render for RootView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.state.theme.clone();
         let screen_element = match self.state.current_screen {
+            Screen::Auth => screens::AuthScreen::render("screen-auth", &self.state, &theme, cx)
+                .into_any_element(),
+            Screen::Onboarding => {
+                screens::OnboardingScreen::render("screen-onboarding", &self.state, &theme, cx)
+                    .into_any_element()
+            }
             Screen::Dashboard => {
                 screens::DashboardScreen::render("screen-dashboard", &self.state, &theme, cx)
                     .into_any_element()
@@ -244,6 +350,69 @@ impl Render for RootView {
         };
 
         let top_safe_area = self.state.safe_area.top_px();
+
+        if matches!(self.state.current_screen, Screen::Auth | Screen::Onboarding) {
+            return div()
+                .flex()
+                .flex_col()
+                .w_full()
+                .h_full()
+                .bg(theme.bg_canvas)
+                .font_family(theme.font_family)
+                .relative()
+                .child(screen_element)
+                .children(if let Some((msg, is_error)) = &self.state.toast_message {
+                    let bg = if *is_error {
+                        theme.expense_color.opacity(0.15)
+                    } else {
+                        theme.bg_elevated
+                    };
+                    let border = if *is_error {
+                        theme.expense_color
+                    } else {
+                        theme.income_color
+                    };
+                    Some(
+                        div()
+                            .id("app-toast-dismiss")
+                            .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.dismiss_toast(cx);
+                            }))
+                            .absolute()
+                            .top(px(16.0) + top_safe_area)
+                            .right(px(16.0))
+                            .flex()
+                            .items_center()
+                            .gap(px(8.0))
+                            .p(px(12.0))
+                            .rounded(px(8.0))
+                            .bg(bg)
+                            .border_1()
+                            .border_color(border)
+                            .text_xs()
+                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
+                            .text_color(theme.text_primary)
+                            .child(app_icon(
+                                if *is_error {
+                                    AppIcon::Error
+                                } else {
+                                    AppIcon::Success
+                                },
+                                IconSize::Sm,
+                                if *is_error {
+                                    IconTone::Expense
+                                } else {
+                                    IconTone::Income
+                                },
+                                &theme,
+                            ))
+                            .child(msg.clone()),
+                    )
+                } else {
+                    None
+                });
+        }
 
         div()
             .flex()

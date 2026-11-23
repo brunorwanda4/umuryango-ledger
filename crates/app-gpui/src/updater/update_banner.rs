@@ -28,11 +28,7 @@ impl UpdateBanner {
                     Translator::t(locale, terms::UPDATE_READY_BANNER, None)
                 };
 
-                let download_btn_text = if locale == Locale::Rw {
-                    "Kura Verisiyo Nshya"
-                } else {
-                    "Download Update"
-                };
+                let download_btn_text = umuryango_i18n::t(locale, "updater.download_now");
 
                 let banner_bg = if *is_mandatory {
                     theme.expense_color
@@ -124,11 +120,7 @@ impl UpdateBanner {
             }
             UpdateStatus::ReadyToRestart { version, .. } => {
                 let restart_text = Translator::t(locale, terms::UPDATE_RESTART_NOW, None);
-                let ready_msg = if locale == Locale::Rw {
-                    format!("Verisiyo {} iriteguye. Funga wongere ufungure.", version)
-                } else {
-                    format!("Version {} ready. Restart application to apply.", version)
-                };
+                let ready_msg = umuryango_i18n::t_args(locale, "updater.restart_ready", &[("version", version.as_str())]);
 
                 Some(
                     div()
@@ -169,11 +161,7 @@ impl UpdateBanner {
                 )
             }
             UpdateStatus::Failed { error } => {
-                let err_label = if locale == Locale::Rw {
-                    format!("Kuvugurura byanze: {}", error)
-                } else {
-                    format!("Update failed: {}", error)
-                };
+                let err_label = umuryango_i18n::t_args(locale, "updater.failed", &[("error", error.as_str())]);
 
                 Some(
                     div()

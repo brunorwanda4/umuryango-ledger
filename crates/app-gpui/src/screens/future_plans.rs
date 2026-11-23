@@ -68,11 +68,7 @@ impl FuturePlansScreen {
                                 IconTone::OnPrimaryButton,
                                 theme,
                             ))
-                            .child(if state.locale == Locale::Rw {
-                                "Umugambi Mushya"
-                            } else {
-                                "New Goal"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "future_plans.new_plan")),
                     ),
             )
             // Plans list or empty state
@@ -89,11 +85,7 @@ impl FuturePlansScreen {
                                 .text_sm()
                                 .text_center()
                                 .text_color(theme.text_muted)
-                                .child(if state.locale == Locale::Rw {
-                                    "Nta migambi y'ejo hazaza irandikwa. Kanda kuri 'Umugambi Mushya' utangire."
-                                } else {
-                                    "No future plans or goals recorded yet. Click 'New Goal' to start."
-                                })
+                                .child(umuryango_i18n::t(state.locale, "future_plans.no_plans"))
                                 .into_any_element(),
                         ]
                     } else {
@@ -195,11 +187,7 @@ impl FuturePlansScreen {
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.open_quick_entry(cx);
                             }))
-                            .child(if locale == Locale::Rw {
-                                "Kuzigama"
-                            } else {
-                                "Allocate Funds"
-                            }),
+                            .child(umuryango_i18n::t(locale, "future_plans.allocate_funds")),
                     ),
             )
     }

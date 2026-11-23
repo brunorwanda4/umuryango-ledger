@@ -3,12 +3,12 @@
 import React, { useState, use } from "react";
 import { Landmark, Lock, Plus } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
+import { t } from "@/lib/i18n";
 import { TransactionModal } from "@/components/TransactionModal";
 
 export default function TransactionsPage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = use(params);
   const locale = resolvedParams.locale === "en" ? "en" : "rw";
-  const isRw = locale === "rw";
 
   const { scope, transactions } = useLedger();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,22 +36,20 @@ export default function TransactionsPage({ params }: { params: Promise<{ locale:
             {scope === "family" ? (
               <>
                 <Landmark className="w-3 h-3 mr-1" />
-                <span>{isRw ? "Umuryango" : "Family"}</span>
+                <span>{t(locale, "scopes.family_ledger")}</span>
               </>
             ) : (
               <>
                 <Lock className="w-3 h-3 mr-1" />
-                <span>{isRw ? "Imari Bwite" : "Personal"}</span>
+                <span>{t(locale, "scopes.personal_money")}</span>
               </>
             )}
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            {isRw ? "Urutonde rw'Imikoreshereze" : "Transaction Ledger"}
+            {t(locale, "transactions.ledger_title")}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {isRw
-              ? "Imikoreshereze yose yanditse ku buryo bwizewe n'ihererekanya ry'umutungo"
-              : "Complete transparent log of incomes, expenses, and custody handovers"}
+            {t(locale, "transactions.ledger_subtitle")}
           </p>
         </div>
 
@@ -61,7 +59,7 @@ export default function TransactionsPage({ params }: { params: Promise<{ locale:
           className="px-4 py-2 bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5"
         >
           <Plus className="w-4 h-4 mr-1" />
-          <span>{isRw ? "Andika Igikorwa Gishya" : "Record Transaction"}</span>
+          <span>{t(locale, "transactions.log_new_transaction")}</span>
         </button>
       </div>
 
@@ -69,7 +67,7 @@ export default function TransactionsPage({ params }: { params: Promise<{ locale:
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-3">
           <input
             type="text"
-            placeholder={isRw ? "Shakisha..." : "Search transactions..."}
+            placeholder={t(locale, "transactions.search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
@@ -80,22 +78,22 @@ export default function TransactionsPage({ params }: { params: Promise<{ locale:
             onChange={(e) => setFilterType(e.target.value)}
             className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
           >
-            <option value="all">{isRw ? "Byose" : "All"}</option>
-            <option value="income">{isRw ? "Ibyinjira" : "Income"}</option>
-            <option value="expense">{isRw ? "Ibisohoka" : "Expense"}</option>
-            <option value="handover">{isRw ? "Ihererekanya" : "Handover"}</option>
+            <option value="all">{t(locale, "transactions.filter_all")}</option>
+            <option value="income">{t(locale, "transactions.income")}</option>
+            <option value="expense">{t(locale, "transactions.expense")}</option>
+            <option value="handover">{t(locale, "transactions.handover")}</option>
           </select>
         </div>
 
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold uppercase">
             <tr>
-              <th className="px-4 py-3">{isRw ? "Itariki" : "Date"}</th>
-              <th className="px-4 py-3">{isRw ? "Ibisobanuro" : "Description"}</th>
-              <th className="px-4 py-3">{isRw ? "Icyiciro" : "Category"}</th>
-              <th className="px-4 py-3">{isRw ? "Konti / Umubikizi" : "Wallet / Custodian"}</th>
-              <th className="px-4 py-3">{isRw ? "Uwabikoze" : "Actor"}</th>
-              <th className="px-4 py-3 text-right">{isRw ? "Amafaranga" : "Amount"}</th>
+              <th className="px-4 py-3">{t(locale, "common.date")}</th>
+              <th className="px-4 py-3">{t(locale, "common.description")}</th>
+              <th className="px-4 py-3">{t(locale, "transactions.th_category")}</th>
+              <th className="px-4 py-3">{t(locale, "transactions.th_wallet")}</th>
+              <th className="px-4 py-3">{t(locale, "common.actor")}</th>
+              <th className="px-4 py-3 text-right">{t(locale, "common.amount")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">

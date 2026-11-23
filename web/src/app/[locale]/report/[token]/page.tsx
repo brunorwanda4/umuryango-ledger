@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { ShieldCheck, Globe } from "lucide-react";
 import { MothersReportCard } from "@/components/MothersReportCard";
+import { t } from "@/lib/i18n";
 import { LocalizedReportData } from "@/lib/api";
 
 export default async function ZeroLoginReportPage({
@@ -12,28 +13,25 @@ export default async function ZeroLoginReportPage({
   const resolvedParams = await params;
   const locale = resolvedParams.locale === "en" ? "en" : "rw";
   const token = resolvedParams.token;
-  const isRw = locale === "rw";
 
-  const otherLocale = isRw ? "en" : "rw";
+  const otherLocale = locale === "rw" ? "en" : "rw";
 
   const reportData: LocalizedReportData & { family_name: string } = {
-    title: isRw ? "Raporo y'Imari y'Umuryango" : "Family Financial Summary",
-    generated_date: isRw ? "23 Ugushyingo 2026" : "November 23, 2026",
-    family_name: isRw ? "Umuryango Mugisha & Keza" : "Mugisha & Keza Family",
-    total_assets_label: isRw ? "Umutungo Wose w'Umuryango" : "Total Family Balance",
+    title: t(locale, "report.mothers_report_title"),
+    generated_date: t(locale, "dashboard.current_period"),
+    family_name: t(locale, "report.demo_family_name"),
+    total_assets_label: t(locale, "dashboard.total_balance"),
     total_assets_value: "10,000,000",
-    cash_label: isRw ? "Mu Ntoki (Cash)" : "Cash in Hand",
+    cash_label: t(locale, "wallets.channel_cash"),
     cash_value: "350,000 RWF",
-    momo_label: isRw ? "MTN Mobile Money" : "MTN Mobile Money",
+    momo_label: "MTN Mobile Money",
     momo_value: "1,450,000 RWF",
-    bank_label: isRw ? "Konti muri BK" : "Bank of Kigali",
+    bank_label: t(locale, "wallets.channel_bank"),
     bank_value: "8,200,000 RWF",
-    liabilities_label: isRw ? "Amadeni Umuryango Ufite" : "Outstanding Liabilities",
+    liabilities_label: t(locale, "loans.borrowed_tab"),
     liabilities_value: "150,000",
-    mothers_headline: isRw ? "Raporo y'Ababyeyi n'Abakambwe" : "Mother's Summary Report",
-    mothers_description: isRw
-      ? "Incamake y'umutungo n'imari y'umuryango yagenewe ababyeyi kugira ngo bamenye aho buri faranga riherereye n'uko ibintu byifashe."
-      : "A transparent, high-trust financial view crafted for family elders to easily track balances, cash custody, and ongoing projects without passwords.",
+    mothers_headline: t(locale, "report.demo_mothers_headline"),
+    mothers_description: t(locale, "report.demo_mothers_desc"),
   };
 
   return (
@@ -43,7 +41,7 @@ export default async function ZeroLoginReportPage({
         <div className="flex items-center space-x-2">
           <span className="inline-flex items-center px-3 py-1 bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream border border-brand-cream dark:border-slate-700 rounded-full text-xs font-bold">
             <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-            {isRw ? "Ihuza ry'Umutekano ryizewe (Zero-Login)" : "Secure Zero-Login Link"}
+            {t(locale, "report.zero_login_secure_link")}
           </span>
           <span className="text-xs text-slate-400">Token: {token}</span>
         </div>
@@ -53,7 +51,7 @@ export default async function ZeroLoginReportPage({
           className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-brand-active-crimson transition shadow-sm"
         >
           <Globe className="w-3.5 h-3.5 mr-1 text-slate-500" />
-          {isRw ? "Switch to English" : "Hindura mu Kinyarwanda"}
+          {t(locale, "report.switch_to_other_lang")}
         </Link>
       </div>
 

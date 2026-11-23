@@ -6,8 +6,8 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
 use umuryango_core_domain::models::{
-    Family, FamilyRole, FuturePlan, Loan, Project, Transaction, TransactionType, Wallet,
-    WalletChannel,
+    Family, FamilyRole, FuturePlan, Loan, PendingFamilyInvite, Project, Transaction,
+    TransactionType, User, Wallet, WalletChannel,
 };
 use umuryango_core_domain::reporting::MothersReport;
 use umuryango_core_domain::scope::LedgerScope;
@@ -41,31 +41,57 @@ pub enum ApiClientError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthResponse {
     pub token: String,
-    pub user_id: Uuid,
-    pub email: String,
-    pub full_name: String,
-    pub locale: Locale,
+    #[serde(default)]
+    pub user: Option<User>,
+    #[serde(default)]
+    pub user_id: Option<Uuid>,
+    #[serde(default)]
+    pub email: Option<String>,
+    #[serde(default)]
+    pub full_name: Option<String>,
+    #[serde(default)]
+    pub locale: Option<Locale>,
+    #[serde(default)]
+    pub families: Vec<Family>,
+    #[serde(default)]
+    pub pending_invites: Vec<PendingFamilyInvite>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegisterRequest {
-    pub email: String,
-    pub password: String,
     pub full_name: String,
+    pub phone: Option<String>,
     pub phone_number: Option<String>,
+    pub gender: Option<String>,
+    pub password: String,
+    pub confirm_password: Option<String>,
+    pub email: Option<String>,
     pub preferred_locale: Option<Locale>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginRequest {
-    pub email: String,
+    pub phone: Option<String>,
+    pub login: Option<String>,
+    pub email: Option<String>,
     pub password: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateFamilyRequest {
     pub name: String,
+    pub description: Option<String>,
     pub currency: Option<String>,
+    #[serde(default)]
+    pub member_phones: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JoinFamilyRequest {
+    pub invite_code: Option<String>,
+    pub invite_id: Option<Uuid>,
+    pub display_name: Option<String>,
+    pub role: Option<FamilyRole>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,39 +140,39 @@ pub struct CreateProjectRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateLoanRequest {
-    pub scope: String,
     pub family_id: Option<Uuid>,
     pub counterparty_name: String,
+    pub counterparty_phone: Option<String>,
+    pub direction: String,
     pub principal_amount: Decimal,
-    pub interest_rate: Decimal,
-    pub is_borrowed: bool,
+    pub currency: String,
+    pub reason: Option<String>,
     pub due_date: Option<chrono::NaiveDate>,
-    pub notes: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreatePlanRequest {
-    pub scope: String,
     pub family_id: Option<Uuid>,
     pub title: String,
-    pub description: Option<String>,
-    pub estimated_cost: Decimal,
+    pub target_amount: Decimal,
     pub target_date: Option<chrono::NaiveDate>,
+    pub category: String,
+    pub notes: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShareLinkResponse {
     pub share_url: String,
-    pub magic_token: String,
+    pub token: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Clone)]
 pub struct ApiClient {
-    pub base_url: String,
+    base_url: String,
     pub ws_url: String,
     http: Client,
-    pub auth_token: Arc<RwLock<Option<String>>>,
-    pub locale: Arc<RwLock<Locale>>,
+    auth_token: Arc<RwLock<Option<String>>>,
+    locale: Arc<RwLock<Locale>>,
 }
 
 // Backward compatibility alias
@@ -294,6 +320,17 @@ impl ApiClient {
         Self::handle_response(resp).await
     }
 
+    pub async fn list_pending_invites(&self) -> Result<Vec<PendingFamilyInvite>, ApiClientError> {
+        let url = format!("{}/api/v1/families/pending-invites", self.base_url);
+        let resp = self
+            .http
+            .get(&url)
+            .headers(self.build_headers(None).await)
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
     pub async fn create_family(&self, req: &CreateFamilyRequest) -> Result<Family, ApiClientError> {
         let url = format!("{}{}", self.base_url, ApiEndpoints::FAMILIES);
         let resp = self
@@ -303,7 +340,12 @@ impl ApiClient {
             .json(req)
             .send()
             .await?;
-        Self::handle_response(resp).await
+        #[derive(Deserialize)]
+        struct CreateFamResp {
+            family: Family,
+        }
+        let res = Self::handle_response::<CreateFamResp>(resp).await?;
+        Ok(res.family)
     }
 
     pub async fn join_family(&self, invite_code: &str) -> Result<Family, ApiClientError> {
@@ -315,7 +357,32 @@ impl ApiClient {
             .json(&serde_json::json!({ "invite_code": invite_code }))
             .send()
             .await?;
-        Self::handle_response(resp).await
+        #[derive(Deserialize)]
+        struct JoinFamResp {
+            family: Family,
+        }
+        let res = Self::handle_response::<JoinFamResp>(resp).await?;
+        Ok(res.family)
+    }
+
+    pub async fn join_family_request(
+        &self,
+        req: &JoinFamilyRequest,
+    ) -> Result<Family, ApiClientError> {
+        let url = format!("{}{}/join", self.base_url, ApiEndpoints::FAMILIES);
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.build_headers(None).await)
+            .json(req)
+            .send()
+            .await?;
+        #[derive(Deserialize)]
+        struct JoinFamResp {
+            family: Family,
+        }
+        let res = Self::handle_response::<JoinFamResp>(resp).await?;
+        Ok(res.family)
     }
 
     pub async fn update_member_role(
@@ -384,26 +451,9 @@ impl ApiClient {
 
     // ================= TRANSACTIONS =================
 
-    pub async fn create_transaction(
-        &self,
-        req: &CreateTransactionRequest,
-        idempotency_key: Option<Uuid>,
-    ) -> Result<TransactionExecutionResult, ApiClientError> {
-        let url = format!("{}{}", self.base_url, ApiEndpoints::TRANSACTIONS);
-        let resp = self
-            .http
-            .post(&url)
-            .headers(self.build_headers(idempotency_key).await)
-            .json(req)
-            .send()
-            .await?;
-        Self::handle_response(resp).await
-    }
-
     pub async fn list_transactions(
         &self,
         scope: &LedgerScope,
-        wallet_id: Option<Uuid>,
     ) -> Result<Vec<Transaction>, ApiClientError> {
         let mut url = format!("{}{}", self.base_url, ApiEndpoints::TRANSACTIONS);
         match scope {
@@ -411,9 +461,6 @@ impl ApiClient {
             LedgerScope::Family { family_id } => {
                 url.push_str(&format!("?scope=family&family_id={}", family_id))
             }
-        }
-        if let Some(wid) = wallet_id {
-            url.push_str(&format!("&wallet_id={}", wid));
         }
         let resp = self
             .http
@@ -424,15 +471,31 @@ impl ApiClient {
         Self::handle_response(resp).await
     }
 
+    pub async fn create_transaction(
+        &self,
+        req: &CreateTransactionRequest,
+    ) -> Result<TransactionExecutionResult, ApiClientError> {
+        let url = format!("{}{}", self.base_url, ApiEndpoints::TRANSACTIONS);
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.build_headers(req.idempotency_key).await)
+            .json(req)
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
     // ================= PROJECTS =================
 
-    pub async fn list_projects(&self, family_id: Uuid) -> Result<Vec<Project>, ApiClientError> {
-        let url = format!(
-            "{}{}?family_id={}",
-            self.base_url,
-            ApiEndpoints::PROJECTS,
-            family_id
-        );
+    pub async fn list_projects(
+        &self,
+        family_id: Option<Uuid>,
+    ) -> Result<Vec<Project>, ApiClientError> {
+        let mut url = format!("{}{}", self.base_url, ApiEndpoints::PROJECTS);
+        if let Some(fid) = family_id {
+            url.push_str(&format!("?family_id={}", fid));
+        }
         let resp = self
             .http
             .get(&url)
@@ -460,7 +523,7 @@ impl ApiClient {
     // ================= LOANS =================
 
     pub async fn list_loans(&self, scope: &LedgerScope) -> Result<Vec<Loan>, ApiClientError> {
-        let mut url = format!("{}/api/v1/loans", self.base_url);
+        let mut url = format!("{}{}", self.base_url, ApiEndpoints::LOANS);
         match scope {
             LedgerScope::Personal { .. } => url.push_str("?scope=personal"),
             LedgerScope::Family { family_id } => {
@@ -476,30 +539,40 @@ impl ApiClient {
         Self::handle_response(resp).await
     }
 
-    pub async fn repay_loan(&self, loan_id: Uuid, amount: Decimal) -> Result<(), ApiClientError> {
-        let url = format!("{}/api/v1/loans/{}/repay", self.base_url, loan_id);
+    pub async fn create_loan(&self, req: &CreateLoanRequest) -> Result<Loan, ApiClientError> {
+        let url = format!("{}{}", self.base_url, ApiEndpoints::LOANS);
         let resp = self
             .http
             .post(&url)
             .headers(self.build_headers(None).await)
-            .json(&serde_json::json!({ "amount": amount }))
+            .json(req)
             .send()
             .await?;
-        if resp.status().is_success() {
-            Ok(())
-        } else {
-            Self::handle_response::<serde_json::Value>(resp).await?;
-            Ok(())
-        }
+        Self::handle_response(resp).await
     }
 
-    // ================= FUTURE PLANS =================
-
-    pub async fn list_future_plans(
+    pub async fn repay_loan(
         &self,
-        scope: &LedgerScope,
-    ) -> Result<Vec<FuturePlan>, ApiClientError> {
-        let mut url = format!("{}/api/v1/plans", self.base_url);
+        loan_id: Uuid,
+        amount: Decimal,
+    ) -> Result<serde_json::Value, ApiClientError> {
+        let url = format!("{}{}/{}/repay", self.base_url, ApiEndpoints::LOANS, loan_id);
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.build_headers(None).await)
+            .json(&serde_json::json!({
+                "amount": amount
+            }))
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
+    // ================= PLANS =================
+
+    pub async fn list_plans(&self, scope: &LedgerScope) -> Result<Vec<FuturePlan>, ApiClientError> {
+        let mut url = format!("{}{}", self.base_url, ApiEndpoints::PLANS);
         match scope {
             LedgerScope::Personal { .. } => url.push_str("?scope=personal"),
             LedgerScope::Family { family_id } => {
@@ -510,6 +583,25 @@ impl ApiClient {
             .http
             .get(&url)
             .headers(self.build_headers(None).await)
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
+    pub async fn list_future_plans(
+        &self,
+        scope: &LedgerScope,
+    ) -> Result<Vec<FuturePlan>, ApiClientError> {
+        self.list_plans(scope).await
+    }
+
+    pub async fn create_plan(&self, req: &CreatePlanRequest) -> Result<FuturePlan, ApiClientError> {
+        let url = format!("{}{}", self.base_url, ApiEndpoints::PLANS);
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.build_headers(None).await)
+            .json(req)
             .send()
             .await?;
         Self::handle_response(resp).await
@@ -519,33 +611,35 @@ impl ApiClient {
         &self,
         plan_id: Uuid,
         amount: Decimal,
-    ) -> Result<(), ApiClientError> {
-        let url = format!("{}/api/v1/plans/{}/allocate", self.base_url, plan_id);
+    ) -> Result<serde_json::Value, ApiClientError> {
+        let url = format!(
+            "{}{}/{}/allocate",
+            self.base_url,
+            ApiEndpoints::PLANS,
+            plan_id
+        );
         let resp = self
             .http
             .post(&url)
             .headers(self.build_headers(None).await)
-            .json(&serde_json::json!({ "amount": amount }))
+            .json(&serde_json::json!({
+                "amount": amount
+            }))
             .send()
             .await?;
-        if resp.status().is_success() {
-            Ok(())
-        } else {
-            Self::handle_response::<serde_json::Value>(resp).await?;
-            Ok(())
-        }
+        Self::handle_response(resp).await
     }
 
     // ================= REPORTS =================
 
-    pub async fn get_report_summary(
+    pub async fn get_mothers_report(
         &self,
         scope: &LedgerScope,
         start: chrono::DateTime<chrono::Utc>,
         end: chrono::DateTime<chrono::Utc>,
     ) -> Result<MothersReport, ApiClientError> {
         let mut url = format!(
-            "{}{}?from={}&to={}",
+            "{}{}?start={}&end={}",
             self.base_url,
             ApiEndpoints::REPORTS_SUMMARY,
             start.to_rfc3339(),

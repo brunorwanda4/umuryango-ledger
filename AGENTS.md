@@ -50,8 +50,10 @@ Plus semantic status tokens: `error`, `success`, `warning`, `info`.
 - Immediately update [`.context/progress-tracker.md`](file:///.context/progress-tracker.md) with the commit hash and summary.
 
 ### Rule 7: Bilingual First (`rw` & `en`)
-- Every user-facing UI text, report label, WebSocket notification, and backend Actix-web API error must exist in both Kinyarwanda (`locales/rw.ftl`) and English (`locales/en.ftl`).
-- Never hardcode unlocalized English strings in templates or backend error responses.
+- Centralized, structured JSON translation files (`locales/rw.json` and `locales/en.json`) serve as the **single source of truth** shared across all layers (`crates/i18n`, `crates/core-domain`, `crates/api-server`, `crates/wasm-bridge`, `crates/app-gpui`, and `web/`).
+- Every user-facing UI text, report label, WebSocket notification, and backend Actix-web API error must exist in both Kinyarwanda (`locales/rw.json`) and English (`locales/en.json`).
+- Never hardcode unlocalized English or Kinyarwanda strings in templates, UI components, or backend error responses.
+- Adding a new language only requires adding a new `locales/<lang>.json` file and registering its `Locale` variant.
 
 ### Rule 8: Bun as Exclusive JS/TS Runtime & Package Manager
 - **Bun Only:** Exclusively use `bun` and `bunx` across `web/` and all JavaScript/TypeScript tooling, package management, script running, and testing.
@@ -72,7 +74,7 @@ Plus semantic status tokens: `error`, `success`, `warning`, `info`.
 | **Desktop / Mobile UI** | Rust, `gpui`, `gpui-kit` components and charts, Android safe area insets |
 | **Offline Storage** | SQLite (`rusqlite` bundled), optimistic sync queue |
 | **Web & Report Portal**| Next.js 16 (App Router), Bun 1.4+, React 19, Tailwind CSS v4, WebAssembly (`wasm-bindgen`) |
-| **Localization** | Project Fluent (`fluent-bundle`, `locales/en.ftl`, `locales/rw.ftl`) |
+| **Localization** | Centralized JSON translation bundles (`locales/en.json`, `locales/rw.json`), `crates/i18n` with OnceLock fast dot-path lookup & fallback, `@/lib/i18n` in Next.js |
 | **Typography** | `Archivo` Google Font family |
 
 ---

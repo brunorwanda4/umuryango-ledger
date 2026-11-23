@@ -2,7 +2,7 @@ use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use umuryango_core_domain::models::Project;
-use umuryango_i18n::{Locale, Translator, terms};
+use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
@@ -69,11 +69,7 @@ impl ProjectsScreen {
                                 IconTone::OnPrimaryButton,
                                 theme,
                             ))
-                            .child(if state.locale == Locale::Rw {
-                                "Umushinga Mushya"
-                            } else {
-                                "New Project"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "projects.new_project")),
                     ),
             )
             // Projects Grid or Empty State
@@ -87,11 +83,7 @@ impl ProjectsScreen {
                     .text_sm()
                     .text_center()
                     .text_color(theme.text_muted)
-                    .child(if state.locale == Locale::Rw {
-                        "Nta mishinga y'umuryango irandikwa. Kanda kuri 'Umushinga Mushya' utangire."
-                    } else {
-                        "No family projects recorded yet. Click 'New Project' above to create one."
-                    })
+                    .child(umuryango_i18n::t(state.locale, "projects.no_projects"))
                     .into_any_element()
             } else {
                 div()

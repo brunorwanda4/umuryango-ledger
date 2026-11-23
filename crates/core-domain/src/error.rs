@@ -1,4 +1,3 @@
-use fluent_bundle::{FluentArgs, FluentValue};
 use rust_decimal::Decimal;
 use thiserror::Error;
 use umuryango_i18n::{Locale, LocalizableError, LocalizedError, localize_domain_error, terms};
@@ -64,25 +63,19 @@ impl LocalizableError for DomainError {
         }
     }
 
-    fn to_fluent_args(&self) -> Option<FluentArgs<'static>> {
+    fn error_args(&self) -> Vec<(&'static str, String)> {
         match self {
             Self::InsufficientCustodyBalance {
                 wallet,
                 available,
                 requested,
-            } => {
-                let mut args = FluentArgs::new();
-                args.set("wallet", FluentValue::from(wallet.clone()));
-                args.set("available", FluentValue::from(available.to_string()));
-                args.set("requested", FluentValue::from(requested.to_string()));
-                Some(args)
-            }
-            Self::ValidationError(msg) => {
-                let mut args = FluentArgs::new();
-                args.set("message", FluentValue::from(msg.clone()));
-                Some(args)
-            }
-            _ => None,
+            } => vec![
+                ("wallet", wallet.clone()),
+                ("available", available.to_string()),
+                ("requested", requested.to_string()),
+            ],
+            Self::ValidationError(msg) => vec![("message", msg.clone())],
+            _ => Vec::new(),
         }
     }
 }

@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use fluent_bundle::{FluentArgs, FluentValue};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use umuryango_i18n::{Locale, Translator, terms};
@@ -63,7 +62,6 @@ impl RealtimeEvent {
     }
 
     pub fn format_notification(&self, locale: Locale) -> String {
-        let mut args = FluentArgs::new();
         match self {
             RealtimeEvent::IncomeAdded {
                 wallet_name,
@@ -72,10 +70,13 @@ impl RealtimeEvent {
                 source_description,
                 ..
             } => {
-                args.set("actor", FluentValue::from(added_by_name.as_str()));
-                args.set("amount", FluentValue::from(amount.to_string()));
-                args.set("wallet", FluentValue::from(wallet_name.as_str()));
-                args.set("source", FluentValue::from(source_description.as_str()));
+                let amount_str = amount.to_string();
+                let args = [
+                    ("actor", added_by_name.as_str()),
+                    ("amount", amount_str.as_str()),
+                    ("wallet", wallet_name.as_str()),
+                    ("source", source_description.as_str()),
+                ];
                 Translator::t(locale, terms::NOTIF_INCOME_ADDED, Some(&args))
             }
             RealtimeEvent::ExpenseLogged {
@@ -85,10 +86,13 @@ impl RealtimeEvent {
                 category,
                 ..
             } => {
-                args.set("actor", FluentValue::from(logged_by_name.as_str()));
-                args.set("amount", FluentValue::from(amount.to_string()));
-                args.set("wallet", FluentValue::from(wallet_name.as_str()));
-                args.set("category", FluentValue::from(category.as_str()));
+                let amount_str = amount.to_string();
+                let args = [
+                    ("actor", logged_by_name.as_str()),
+                    ("amount", amount_str.as_str()),
+                    ("wallet", wallet_name.as_str()),
+                    ("category", category.as_str()),
+                ];
                 Translator::t(locale, terms::NOTIF_EXPENSE_LOGGED, Some(&args))
             }
             RealtimeEvent::HandoverCompleted {
@@ -98,17 +102,22 @@ impl RealtimeEvent {
                 initiated_by_name,
                 ..
             } => {
-                args.set("actor", FluentValue::from(initiated_by_name.as_str()));
-                args.set("amount", FluentValue::from(amount.to_string()));
-                args.set("from_wallet", FluentValue::from(from_wallet_name.as_str()));
-                args.set("to_wallet", FluentValue::from(to_wallet_name.as_str()));
+                let amount_str = amount.to_string();
+                let args = [
+                    ("actor", initiated_by_name.as_str()),
+                    ("amount", amount_str.as_str()),
+                    ("from_wallet", from_wallet_name.as_str()),
+                    ("to_wallet", to_wallet_name.as_str()),
+                ];
                 Translator::t(locale, terms::NOTIF_HANDOVER_COMPLETED, Some(&args))
             }
             RealtimeEvent::ProjectOrLoanUpdated {
                 entity_type, title, ..
             } => {
-                args.set("entity_type", FluentValue::from(entity_type.as_str()));
-                args.set("title", FluentValue::from(title.as_str()));
+                let args = [
+                    ("entity_type", entity_type.as_str()),
+                    ("title", title.as_str()),
+                ];
                 Translator::t(locale, terms::NOTIF_PROJECT_LOAN_UPDATED, Some(&args))
             }
             RealtimeEvent::AppUpdateAvailable {
@@ -116,7 +125,7 @@ impl RealtimeEvent {
                 is_mandatory,
                 ..
             } => {
-                args.set("version", FluentValue::from(version.as_str()));
+                let args = [("version", version.as_str())];
                 let term = if *is_mandatory {
                     terms::NOTIF_APP_UPDATE_MANDATORY
                 } else {

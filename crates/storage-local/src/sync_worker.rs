@@ -118,10 +118,7 @@ impl SyncWorker {
                     idempotency_key: Some(*idempotency_key),
                 };
 
-                match client
-                    .create_transaction(&req, Some(*idempotency_key))
-                    .await
-                {
+                match client.create_transaction(&req).await {
                     Ok(result) => {
                         let locked = db.lock().unwrap();
                         let q_repo = SyncQueueRepository::new(&locked);
@@ -178,10 +175,7 @@ impl SyncWorker {
                     idempotency_key: Some(*idempotency_key),
                 };
 
-                match client
-                    .create_transaction(&req, Some(*idempotency_key))
-                    .await
-                {
+                match client.create_transaction(&req).await {
                     Ok(result) => {
                         let locked = db.lock().unwrap();
                         let q_repo = SyncQueueRepository::new(&locked);
@@ -195,7 +189,7 @@ impl SyncWorker {
                         }
                     }
                     Err(e) => {
-                        warn!("Handover mutation {} failed: {:?}", item.id, e);
+                        warn!("Offline handover {} failed: {:?}", item.id, e);
                         let locked = db.lock().unwrap();
                         let q_repo = SyncQueueRepository::new(&locked);
                         match &e {
@@ -273,7 +267,7 @@ impl SyncWorker {
         }
 
         // 2. Transactions
-        if let Ok(txs) = client.list_transactions(scope, None).await {
+        if let Ok(txs) = client.list_transactions(scope).await {
             let locked = db.lock().unwrap();
             let repo = CacheRepository::new(&locked);
             for t in txs {
@@ -283,7 +277,7 @@ impl SyncWorker {
 
         // 3. Projects (if Family scope)
         if let LedgerScope::Family { family_id } = scope {
-            if let Ok(projects) = client.list_projects(*family_id).await {
+            if let Ok(projects) = client.list_projects(Some(*family_id)).await {
                 let locked = db.lock().unwrap();
                 let repo = CacheRepository::new(&locked);
                 for p in projects {

@@ -13,6 +13,7 @@ import {
   Printer,
 } from "lucide-react";
 import { LocalizedReportData } from "@/lib/api";
+import { t } from "@/lib/i18n";
 
 interface ExtendedReportData extends LocalizedReportData {
   family_name?: string;
@@ -50,9 +51,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
   };
 
   const handleWhatsAppShare = () => {
-    const text = isRw
-      ? `*${data.title}*\nItariki: ${data.generated_date}\nUmuryango: ${data.family_name || "Umuryango"}\n\n*Umutungo Wose:* ${data.total_assets_value} RWF\nMoMo: ${data.momo_value}\nMu Ntoki (Cash): ${data.cash_value}\nMuri Banki: ${data.bank_value}\nAmadeni: ${data.liabilities_value} RWF\n\nReba incamake yose hano: ${window.location.href}`
-      : `*${data.title}*\nDate: ${data.generated_date}\nFamily: ${data.family_name || "Family"}\n\n*Total Balance:* ${data.total_assets_value} RWF\nMoMo: ${data.momo_value}\nCash in Hand: ${data.cash_value}\nBank: ${data.bank_value}\nLiabilities: ${data.liabilities_value} RWF\n\nView full summary here: ${window.location.href}`;
+    const text = `*${data.title}*\n${t(locale, "transactions.th_date")}: ${data.generated_date}\n${t(locale, "onboarding.family_name")}: ${data.family_name || t(locale, "scopes.family_ledger")}\n\n*${data.total_assets_label}:* ${data.total_assets_value} RWF\nMoMo: ${data.momo_value}\n${t(locale, "wallets.channel_cash")}: ${data.cash_value}\n${t(locale, "wallets.channel_bank")}: ${data.bank_value}\n${data.liabilities_label}: ${data.liabilities_value} RWF\n\n${t(locale, "report.view_full_summary", { url: window.location.href })}`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
@@ -71,7 +70,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           />
         </div>
         <div className="inline-block bg-brand-cream/20 border border-brand-cream/30 text-brand-cream px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase mb-2">
-          {data.family_name || (isRw ? "Igitabo cy'Umuryango" : "Family Ledger")}
+          {data.family_name || t(locale, "scopes.family_ledger")}
         </div>
         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-brand-cream">
           {data.mothers_headline}
@@ -99,12 +98,12 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           <div className="flex justify-center items-center space-x-6 mt-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <div>
               <span className="text-emerald-700 dark:text-emerald-400 font-bold">↑ +450,000</span>{" "}
-              {isRw ? "Yinjiye" : "Inflow"}
+              {t(locale, "report.inflow")}
             </div>
             <span>•</span>
             <div>
               <span className="text-brand-crimson dark:text-rose-400 font-bold">↓ -45,000</span>{" "}
-              {isRw ? "Yasohotse" : "Outflow"}
+              {t(locale, "report.outflow")}
             </div>
           </div>
         </div>
@@ -114,7 +113,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center space-x-1.5">
             <MapPin className="w-3.5 h-3.5 text-brand-steel-blue" />
             <span>
-              {isRw ? "Aho Amafaranga Ari (Mu Ntoki & Konti)" : "Where the Funds Are Held"}
+              {t(locale, "report.where_funds_held")}
             </span>
           </h4>
 
@@ -128,7 +127,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
                 {data.bank_value}
               </span>
               <span className="text-[10px] text-slate-400 mt-0.5 block">
-                {isRw ? "Umubikizi: Papa" : "Custodian: Papa"}
+                {t(locale, "wallets.custodian_label", { name: "Papa" })}
               </span>
             </div>
 
@@ -141,7 +140,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
                 {data.momo_value}
               </span>
               <span className="text-[10px] text-amber-800/80 dark:text-slate-400 mt-0.5 block">
-                {isRw ? "Umubikizi: Mama" : "Custodian: Mama"}
+                {t(locale, "wallets.custodian_label", { name: "Mama" })}
               </span>
             </div>
 
@@ -154,7 +153,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
                 {data.cash_value}
               </span>
               <span className="text-[10px] text-rose-800/80 dark:text-slate-400 mt-0.5 block">
-                {isRw ? "Mu Ntoki z'Ababyeyi" : "In Hand (Mama & Papa)"}
+                {t(locale, "wallets.in_hand_label", { custodians: "Mama & Papa" })}
               </span>
             </div>
           </div>
@@ -164,12 +163,12 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
             <Hammer className="w-3.5 h-3.5 text-brand-steel-blue" />
-            <span>{isRw ? "Imishinga y'Umuryango Iri Gukorwa" : "Active Family Projects"}</span>
+            <span>{t(locale, "report.active_projects_section")}</span>
           </h4>
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
-                <span>{isRw ? "Gusana inzu y'ababyeyi" : "House Renovation"}</span>
+                <span>{t(locale, "report.house_renovation")}</span>
                 <span>1,200,000 / 5,000,000 RWF (24%)</span>
               </div>
               <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full mt-1.5 overflow-hidden">
@@ -188,7 +187,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
                 {data.liabilities_label}
               </span>
               <span className="text-[11px] text-rose-700 dark:text-rose-400">
-                {isRw ? "Kwishyura ifumbire (Due: 15/12)" : "Fertilizer loan (Due: Dec 15)"}
+                {t(locale, "report.fertilizer_loan")}
               </span>
             </div>
           </div>
@@ -205,7 +204,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
             className="w-full py-3 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
           >
             <Share2 className="w-4 h-4" />
-            <span>{isRw ? "Sangiza kuri WhatsApp" : "Share to WhatsApp"}</span>
+            <span>{t(locale, "report.share_whatsapp")}</span>
           </button>
 
           <button
@@ -214,7 +213,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
             className="w-full py-3 rounded-2xl bg-brand-dark dark:bg-slate-700 hover:bg-brand-dark/90 text-brand-cream dark:text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
           >
             <Printer className="w-4 h-4" />
-            <span>{isRw ? "Koporora / Shyira muri PDF" : "Download / Print PDF"}</span>
+            <span>{t(locale, "report.download_pdf")}</span>
           </button>
         </div>
       </div>
