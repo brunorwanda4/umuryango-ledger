@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::{Wallet, WalletChannel};
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
 pub struct WalletCard;
@@ -28,11 +29,11 @@ impl WalletCard {
         }
     }
 
-    pub fn channel_icon(channel: WalletChannel) -> &'static str {
+    pub const fn channel_icon(channel: WalletChannel) -> AppIcon {
         match channel {
-            WalletChannel::Bank => "🏦",
-            WalletChannel::MobileMoney => "📱",
-            WalletChannel::CashInHand => "💵",
+            WalletChannel::Bank => AppIcon::Bank,
+            WalletChannel::MobileMoney => AppIcon::MobileMoney,
+            WalletChannel::CashInHand => AppIcon::Cash,
         }
     }
 
@@ -74,8 +75,13 @@ impl WalletCard {
                         div()
                             .flex()
                             .items_center()
-                            .gap(px(6.0))
-                            .child(div().text_base().child(channel_ico))
+                            .gap(px(8.0))
+                            .child(app_icon(
+                                channel_ico,
+                                IconSize::Md,
+                                IconTone::AccentPrimary,
+                                theme,
+                            ))
                             .child(
                                 div()
                                     .text_sm()
@@ -112,12 +118,22 @@ impl WalletCard {
                     .gap(px(6.0))
                     .text_xs()
                     .text_color(theme.text_muted)
-                    .child(if is_family {
+                    .children(if is_family {
                         let custodian_label = Translator::t(locale, terms::HELD_BY, None);
                         let name = custodian_name.unwrap_or("Family Custodian");
-                        format!("{}: 👤 {}", custodian_label, name)
+                        vec![
+                            app_icon(AppIcon::Members, IconSize::Xs, IconTone::Muted, theme)
+                                .into_any_element(),
+                            div()
+                                .child(format!("{}: {}", custodian_label, name))
+                                .into_any_element(),
+                        ]
                     } else {
-                        Translator::t(locale, terms::PERSONAL_SCOPE, None)
+                        vec![
+                            div()
+                                .child(Translator::t(locale, terms::PERSONAL_SCOPE, None))
+                                .into_any_element(),
+                        ]
                     }),
             )
     }

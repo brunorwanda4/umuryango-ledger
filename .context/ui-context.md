@@ -67,3 +67,16 @@ The entire design system is anchored in five harmonious brand tokens:
 - `HandoverModal`: Custody transfer between family wallets.
 - `MothersReportCard`: Print-ready, elder-friendly financial summary.
 - `ToastContainer`: Live floating alerts for WebSocket broadcasts.
+
+---
+
+## 5. Unified FontAwesome Vector Icon System (Zero Emojis)
+
+All icons across Desktop, Mobile, and Web use local FontAwesome Free Solid SVGs (`assets/fontawesome/free-solid-svg-icons/`).
+
+- **Rust GPUI (`crates/app-gpui/src/components/icon.rs`):**
+  - `AppIcon` enum provides type-safe icons (`Dashboard`, `Transactions`, `Reports`, `Projects`, `Loans`, `FuturePlans`, `Members`, `Settings`, `Bank`, `MobileMoney`, `Cash`, `Income`, `Expense`, `Add`, `Check`, `Sun`, `Moon`, `Bell`, `SyncOnline`, etc.).
+  - `app_icon(icon, size, tone, theme) -> impl IntoElement` applies exact palette tokens in Light and Dark modes.
+  - Zero emojis allowed anywhere in the GPUI UI hierarchy.
+- **Next.js Web (`web/src/components/AppIcon.tsx`):**
+  - `<AppIcon name={name} size={size} tone={tone} />` utilizes CSS `mask-image` with `currentColor` fill, adapting seamlessly to active theme mode.

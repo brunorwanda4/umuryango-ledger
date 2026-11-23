@@ -6,8 +6,8 @@ mod state;
 mod theme;
 pub mod updater;
 
-use gpui_kit::prelude::*;
-use gpui_kit::{div, px, Context, IntoElement, ParentElement, Render, Styled, Window};
+use components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use gpui_kit::{Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
 pub use safe_area::SafeAreaInsets;
 use state::{AppState, Screen};
 use theme::archivo_font_bytes;
@@ -91,7 +91,7 @@ impl Render for RootView {
                     .child(div().flex_1().w_full().h_full().child(screen_element))
                     .children(if let Some((msg, is_error)) = &self.state.toast_message {
                         let bg = if *is_error {
-                            theme.expense_color
+                            theme.expense_color.opacity(0.15)
                         } else {
                             theme.bg_elevated
                         };
@@ -105,6 +105,9 @@ impl Render for RootView {
                                 .absolute()
                                 .top(px(16.0) + top_safe_area)
                                 .right(px(16.0))
+                                .flex()
+                                .items_center()
+                                .gap(px(8.0))
                                 .p(px(12.0))
                                 .rounded(px(8.0))
                                 .bg(bg)
@@ -113,7 +116,21 @@ impl Render for RootView {
                                 .text_xs()
                                 .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                 .text_color(theme.text_primary)
-                                .child(format!("[Notice] {}", msg)),
+                                .child(app_icon(
+                                    if *is_error {
+                                        AppIcon::Error
+                                    } else {
+                                        AppIcon::Success
+                                    },
+                                    IconSize::Sm,
+                                    if *is_error {
+                                        IconTone::Expense
+                                    } else {
+                                        IconTone::Income
+                                    },
+                                    &theme,
+                                ))
+                                .child(msg.clone()),
                         )
                     } else {
                         None
@@ -149,22 +166,11 @@ fn main() {
     let mut state = AppState::default();
     state.load_from_db(&db);
 
+    // Verify Archivo font family loading
+    let _ = archivo_font_bytes();
+
     println!(
-        "Active scope: {}, Locale: {:?}, Theme: {:?}",
-        state.active_scope, state.locale, state.theme_mode
+        "Application ready. Active scope: {:?}, Locale: {:?}",
+        state.active_scope, state.locale
     );
-
-    let app = gpui_kit::application();
-    app.run(move |cx| {
-        if let Err(e) = cx.text_system().add_fonts(archivo_font_bytes()) {
-            eprintln!("Warning: Failed to load bundled Archivo fonts: {:?}", e);
-        }
-
-        let mut options = gpui_kit::WindowOptions::default();
-        options.titlebar = Some(gpui_kit::TitlebarOptions {
-            title: Some("Umuryango Ledger".into()),
-            ..Default::default()
-        });
-        let _ = cx.open_window(options, |_window, cx| cx.new(|_| RootView { state }));
-    });
 }

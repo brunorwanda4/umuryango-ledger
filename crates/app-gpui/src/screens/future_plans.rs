@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::FuturePlan;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
 
@@ -44,6 +45,9 @@ impl FuturePlansScreen {
                     )
                     .child(
                         div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
                             .px(px(12.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
@@ -52,10 +56,16 @@ impl FuturePlansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Add,
+                                IconSize::Xs,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
                             .child(if state.locale == Locale::Rw {
-                                "+ Umugambi Mushya"
+                                "Umugambi Mushya"
                             } else {
-                                "+ New Goal"
+                                "New Goal"
                             }),
                     ),
             )
@@ -95,10 +105,22 @@ impl FuturePlansScreen {
                     .mb(px(6.0))
                     .child(
                         div()
-                            .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(plan.title.clone()),
+                            .flex()
+                            .items_center()
+                            .gap(px(8.0))
+                            .child(app_icon(
+                                AppIcon::FuturePlans,
+                                IconSize::Sm,
+                                IconTone::AccentPrimary,
+                                theme,
+                            ))
+                            .child(
+                                div()
+                                    .text_base()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(plan.title.clone()),
+                            ),
                     )
                     .child(
                         div()

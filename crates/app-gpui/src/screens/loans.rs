@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::{Loan, LoanDirection};
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
 
@@ -56,6 +57,9 @@ impl LoansScreen {
                     )
                     .child(
                         div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
                             .px(px(12.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
@@ -64,10 +68,16 @@ impl LoansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Add,
+                                IconSize::Xs,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
                             .child(if state.locale == Locale::Rw {
-                                "+ Andika Umwenda"
+                                "Andika Umwenda"
                             } else {
-                                "+ Record Loan"
+                                "Record Loan"
                             }),
                     ),
             )
@@ -131,6 +141,11 @@ impl LoansScreen {
         } else {
             theme.expense_color
         };
+        let tone = if is_lent {
+            IconTone::Income
+        } else {
+            IconTone::Expense
+        };
 
         div()
             .flex()
@@ -145,20 +160,27 @@ impl LoansScreen {
             .child(
                 div()
                     .flex()
-                    .flex_col()
-                    .gap(px(2.0))
+                    .items_center()
+                    .gap(px(10.0))
+                    .child(app_icon(AppIcon::Loans, IconSize::Sm, tone, theme))
                     .child(
                         div()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(loan.counterparty_name.clone()),
-                    )
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(loan.notes.clone().unwrap_or_default()),
+                            .flex()
+                            .flex_col()
+                            .gap(px(2.0))
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(loan.counterparty_name.clone()),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child(loan.notes.clone().unwrap_or_default()),
+                            ),
                     ),
             )
             .child(

@@ -1,7 +1,8 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
-use umuryango_i18n::{terms, Locale, Translator};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::tx_row::TxRow;
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -44,6 +45,9 @@ impl TransactionsScreen {
                     )
                     .child(
                         div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
                             .px(px(14.0))
                             .py(px(8.0))
                             .rounded(px(8.0))
@@ -52,10 +56,16 @@ impl TransactionsScreen {
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Add,
+                                IconSize::Xs,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
                             .child(if state.locale == Locale::Rw {
-                                "+ Andika Igikorwa"
+                                "Andika Igikorwa"
                             } else {
-                                "+ Log Transaction"
+                                "Log Transaction"
                             }),
                     ),
             )

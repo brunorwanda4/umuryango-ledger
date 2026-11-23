@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::Locale;
 use umuryango_storage_local::SyncStatus;
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::lang_toggle::LangToggle;
 use crate::components::scope_switcher::ScopeSwitcher;
 use crate::state::{AppState, Screen};
@@ -17,29 +18,55 @@ impl Sidebar {
         theme: &SemanticTheme,
     ) -> impl IntoElement {
         let screens = [
-            (Screen::Dashboard, "📊", state.locale),
-            (Screen::Transactions, "💳", state.locale),
-            (Screen::Reports, "📜", state.locale),
-            (Screen::Projects, "🏗️", state.locale),
-            (Screen::Loans, "🤝", state.locale),
-            (Screen::Plans, "🎯", state.locale),
-            (Screen::Members, "👥", state.locale),
-            (Screen::Settings, "⚙️", state.locale),
+            (Screen::Dashboard, AppIcon::Dashboard, state.locale),
+            (Screen::Transactions, AppIcon::Transactions, state.locale),
+            (Screen::Reports, AppIcon::Reports, state.locale),
+            (Screen::Projects, AppIcon::Projects, state.locale),
+            (Screen::Loans, AppIcon::Loans, state.locale),
+            (Screen::Plans, AppIcon::FuturePlans, state.locale),
+            (Screen::Members, AppIcon::Members, state.locale),
+            (Screen::Settings, AppIcon::Settings, state.locale),
         ];
 
-        let sync_badge = match state.sync_status {
-            SyncStatus::Synced => ("🟢 Synced", theme.income_color),
-            SyncStatus::PendingSync(n) => {
-                let text = match state.locale {
-                    Locale::Rw => format!("🟡 Biri ku murongo ({})", n),
-                    Locale::En => format!("🟡 Pending ({})", n),
+        let (sync_icon, sync_label, sync_tone, sync_color) = match state.sync_status {
+            SyncStatus::Synced => {
+                let lbl = if state.locale == Locale::Rw {
+                    "Bihujwe"
+                } else {
+                    "Synced"
                 };
                 (
-                    Box::leak(text.into_boxed_str()) as &'static str,
+                    AppIcon::SyncOnline,
+                    lbl.to_string(),
+                    IconTone::Success,
+                    theme.income_color,
+                )
+            }
+            SyncStatus::PendingSync(n) => {
+                let text = match state.locale {
+                    Locale::Rw => format!("Biri ku murongo ({})", n),
+                    Locale::En => format!("Pending ({})", n),
+                };
+                (
+                    AppIcon::SyncPending,
+                    text,
+                    IconTone::Warning,
                     theme.accent_secondary,
                 )
             }
-            SyncStatus::Offline => ("🔴 Offline", theme.expense_color),
+            SyncStatus::Offline => {
+                let lbl = if state.locale == Locale::Rw {
+                    "Bidakorera ku murongo"
+                } else {
+                    "Offline"
+                };
+                (
+                    AppIcon::SyncOffline,
+                    lbl.to_string(),
+                    IconTone::Error,
+                    theme.expense_color,
+                )
+            }
         };
 
         div()
@@ -119,7 +146,16 @@ impl Sidebar {
                                         theme.border_subtle
                                     })
                                     .cursor_pointer()
-                                    .child(div().text_sm().child("🔔"))
+                                    .child(app_icon(
+                                        AppIcon::Bell,
+                                        IconSize::Sm,
+                                        if state.unread_notifications_count > 0 {
+                                            IconTone::AccentPrimary
+                                        } else {
+                                            IconTone::Muted
+                                        },
+                                        theme,
+                                    ))
                                     .children(if state.unread_notifications_count > 0 {
                                         Some(
                                             div()
@@ -160,8 +196,9 @@ impl Sidebar {
                             .border_color(theme.border_subtle)
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(sync_badge.1)
-                            .child(sync_badge.0),
+                            .text_color(sync_color)
+                            .child(app_icon(sync_icon, IconSize::Xs, sync_tone, theme))
+                            .child(sync_label),
                     ),
             )
             // Center Section: Nav links
@@ -179,6 +216,11 @@ impl Sidebar {
                     } else {
                         theme.text_primary
                     };
+                    let icon_tone = if is_active {
+                        IconTone::OnPrimaryButton
+                    } else {
+                        IconTone::Default
+                    };
 
                     div()
                         .flex()
@@ -189,7 +231,7 @@ impl Sidebar {
                         .rounded(px(8.0))
                         .bg(bg)
                         .cursor_pointer()
-                        .child(div().text_sm().child(icon))
+                        .child(app_icon(icon, IconSize::Md, icon_tone, theme))
                         .child(
                             div()
                                 .text_sm()
@@ -222,6 +264,9 @@ impl Sidebar {
                     // Mode toggle
                     .child(
                         div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
                             .px(px(10.0))
                             .py(px(4.0))
                             .rounded(px(6.0))
@@ -232,10 +277,20 @@ impl Sidebar {
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(theme.text_primary)
                             .cursor_pointer()
+                            .child(app_icon(
+                                if state.theme_mode.is_dark() {
+                                    AppIcon::Sun
+                                } else {
+                                    AppIcon::Moon
+                                },
+                                IconSize::Xs,
+                                IconTone::Default,
+                                theme,
+                            ))
                             .child(if state.theme_mode.is_dark() {
-                                "☀️ Light"
+                                "Light"
                             } else {
-                                "🌙 Dark"
+                                "Dark"
                             }),
                     ),
             )
@@ -248,11 +303,11 @@ impl Sidebar {
         theme: &SemanticTheme,
     ) -> impl IntoElement {
         let mobile_screens = [
-            (Screen::Dashboard, "📊"),
-            (Screen::Transactions, "💳"),
-            (Screen::Reports, "📜"),
-            (Screen::Projects, "🏗️"),
-            (Screen::Settings, "⚙️"),
+            (Screen::Dashboard, AppIcon::Dashboard),
+            (Screen::Transactions, AppIcon::Transactions),
+            (Screen::Reports, AppIcon::Reports),
+            (Screen::Projects, AppIcon::Projects),
+            (Screen::Settings, AppIcon::Settings),
         ];
 
         div()
@@ -269,6 +324,11 @@ impl Sidebar {
             .border_color(theme.border_subtle)
             .children(mobile_screens.into_iter().map(|(screen, icon)| {
                 let is_active = state.current_screen == screen;
+                let tone = if is_active {
+                    IconTone::AccentPrimary
+                } else {
+                    IconTone::Muted
+                };
                 let color = if is_active {
                     theme.accent_primary
                 } else {
@@ -280,7 +340,7 @@ impl Sidebar {
                     .items_center()
                     .gap(px(2.0))
                     .cursor_pointer()
-                    .child(div().text_base().child(icon))
+                    .child(app_icon(icon, IconSize::Lg, tone, theme))
                     .child(
                         div()
                             .text_xs()

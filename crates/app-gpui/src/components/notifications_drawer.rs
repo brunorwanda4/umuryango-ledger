@@ -3,6 +3,7 @@ use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_i18n::Locale;
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{AppState, NotificationItem};
 use crate::theme::SemanticTheme;
 
@@ -54,6 +55,12 @@ impl NotificationsDrawer {
                             .flex_row()
                             .items_center()
                             .gap(px(8.0))
+                            .child(app_icon(
+                                AppIcon::Bell,
+                                IconSize::Sm,
+                                IconTone::AccentPrimary,
+                                theme,
+                            ))
                             .child(
                                 div()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
@@ -146,22 +153,23 @@ impl NotificationsDrawer {
         item: &NotificationItem,
         theme: &SemanticTheme,
     ) -> impl IntoElement {
-        let (icon, icon_bg, icon_color) = match &item.event {
-            RealtimeEvent::IncomeAdded { .. } => ("+", theme.bg_elevated, theme.income_color),
-            RealtimeEvent::ExpenseLogged { .. } => ("-", theme.bg_elevated, theme.expense_color),
+        let (icon, icon_tone) = match &item.event {
+            RealtimeEvent::IncomeAdded { .. } => (AppIcon::Income, IconTone::Income),
+            RealtimeEvent::ExpenseLogged { .. } => (AppIcon::Expense, IconTone::Expense),
             RealtimeEvent::HandoverCompleted { .. } => {
-                ("->", theme.bg_elevated, theme.handover_color)
+                (AppIcon::Handover, IconTone::AccentSecondary)
             }
             RealtimeEvent::ProjectOrLoanUpdated { .. } => {
-                ("#", theme.bg_elevated, theme.accent_secondary)
+                (AppIcon::Projects, IconTone::AccentSecondary)
             }
-            RealtimeEvent::AppUpdateAvailable { is_mandatory, .. } => {
+            RealtimeEvent::AppUpdateAvailable { is_mandatory, .. } => (
+                AppIcon::UpdateAvailable,
                 if *is_mandatory {
-                    ("!", theme.bg_elevated, theme.expense_color)
+                    IconTone::Expense
                 } else {
-                    ("^", theme.bg_elevated, theme.income_color)
-                }
-            }
+                    IconTone::Income
+                },
+            ),
         };
 
         let card_bg = if item.is_read {
@@ -186,7 +194,7 @@ impl NotificationsDrawer {
             } else {
                 theme.border_subtle
             })
-            // Icon
+            // Vector Icon badge
             .child(
                 div()
                     .flex()
@@ -195,11 +203,8 @@ impl NotificationsDrawer {
                     .w(px(32.0))
                     .h(px(32.0))
                     .rounded(px(6.0))
-                    .bg(icon_bg)
-                    .text_sm()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(icon_color)
-                    .child(icon),
+                    .bg(theme.bg_surface)
+                    .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
             )
             // Content
             .child(

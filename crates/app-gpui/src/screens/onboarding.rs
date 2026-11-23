@@ -1,7 +1,8 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::Locale;
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
 pub struct OnboardingScreen {
@@ -81,15 +82,28 @@ impl OnboardingScreen {
                     .child(
                         div()
                             .w_full()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .gap(px(8.0))
                             .py(px(10.0))
                             .rounded(px(8.0))
                             .bg(theme.accent_primary)
-                            .text_center()
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
-                            .child(if is_rw { "Tangira nonaha" } else { "Get Started" }),
+                            .child(if is_rw {
+                                "Tangira nonaha"
+                            } else {
+                                "Get Started"
+                            })
+                            .child(app_icon(
+                                AppIcon::ChevronRight,
+                                IconSize::Sm,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            )),
                     ),
             )
     }

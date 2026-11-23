@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::FamilyRole;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
 
@@ -81,13 +82,22 @@ impl MembersScreen {
                             )
                             .child(
                                 div()
-                                    .px(px(6.0))
-                                    .py(px(2.0))
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(4.0))
+                                    .px(px(8.0))
+                                    .py(px(3.0))
                                     .rounded(px(4.0))
                                     .bg(theme.accent_primary)
                                     .text_xs()
                                     .text_color(theme.bg_canvas)
                                     .cursor_pointer()
+                                    .child(app_icon(
+                                        AppIcon::Copy,
+                                        IconSize::Xs,
+                                        IconTone::OnPrimaryButton,
+                                        theme,
+                                    ))
                                     .child("Copy"),
                             ),
                     ),
@@ -168,7 +178,12 @@ impl MembersScreen {
             }
         };
 
-        let initial = name.chars().next().unwrap_or('M').to_uppercase().to_string();
+        let initial = name
+            .chars()
+            .next()
+            .unwrap_or('M')
+            .to_uppercase()
+            .to_string();
 
         div()
             .flex()
@@ -238,6 +253,9 @@ impl MembersScreen {
             )
             .child(
                 div()
+                    .flex()
+                    .items_center()
+                    .gap(px(6.0))
                     .px(px(10.0))
                     .py(px(4.0))
                     .rounded(px(6.0))
@@ -245,6 +263,16 @@ impl MembersScreen {
                     .text_xs()
                     .font_weight(gpui_kit::FontWeight::BOLD)
                     .text_color(role_color)
+                    .child(app_icon(
+                        AppIcon::Members,
+                        IconSize::Xs,
+                        match role {
+                            FamilyRole::Head => IconTone::AccentPrimary,
+                            FamilyRole::Custodian => IconTone::Income,
+                            FamilyRole::Member => IconTone::Muted,
+                        },
+                        theme,
+                    ))
                     .child(role_label),
             )
     }

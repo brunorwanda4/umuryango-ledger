@@ -1,9 +1,10 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::scope::LedgerScope;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
 pub struct ScopeSwitcher;
@@ -39,6 +40,10 @@ impl ScopeSwitcher {
             .child(
                 div()
                     .flex_1()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .gap(px(6.0))
                     .py(px(6.0))
                     .px(px(12.0))
                     .rounded(px(6.0))
@@ -55,12 +60,26 @@ impl ScopeSwitcher {
                         inactive_text
                     })
                     .cursor_pointer()
+                    .child(app_icon(
+                        AppIcon::FamilyLedger,
+                        IconSize::Xs,
+                        if is_family {
+                            IconTone::OnPrimaryButton
+                        } else {
+                            IconTone::Muted
+                        },
+                        theme,
+                    ))
                     .child(family_label),
             )
             // Personal scope button
             .child(
                 div()
                     .flex_1()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .gap(px(6.0))
                     .py(px(6.0))
                     .px(px(12.0))
                     .rounded(px(6.0))
@@ -77,6 +96,16 @@ impl ScopeSwitcher {
                         inactive_text
                     })
                     .cursor_pointer()
+                    .child(app_icon(
+                        AppIcon::PersonalWallet,
+                        IconSize::Xs,
+                        if !is_family {
+                            IconTone::OnPrimaryButton
+                        } else {
+                            IconTone::Muted
+                        },
+                        theme,
+                    ))
                     .child(personal_label),
             )
     }

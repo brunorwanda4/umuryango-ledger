@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::tx_row::TxRow;
 use crate::components::wallet_card::WalletCard;
 use crate::state::AppState;
@@ -73,6 +74,9 @@ impl DashboardScreen {
                     )
                     .child(
                         div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
                             .px(px(14.0))
                             .py(px(8.0))
                             .rounded(px(8.0))
@@ -81,10 +85,16 @@ impl DashboardScreen {
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Add,
+                                IconSize::Sm,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
                             .child(if state.locale == Locale::Rw {
-                                "+ Andika Igikorwa"
+                                "Andika Igikorwa"
                             } else {
-                                "+ Log Transaction"
+                                "Log Transaction"
                             }),
                     ),
             )
@@ -98,6 +108,8 @@ impl DashboardScreen {
                     // Total Balance Card
                     .child(Self::render_kpi_card(
                         "kpi-total-balance",
+                        AppIcon::Dashboard,
+                        IconTone::Income,
                         &total_balance_label,
                         &total_balance_str,
                         theme.income_color,
@@ -106,6 +118,8 @@ impl DashboardScreen {
                     // Income Card
                     .child(Self::render_kpi_card(
                         "kpi-total-income",
+                        AppIcon::Income,
+                        IconTone::Income,
                         &income_label,
                         &income_str,
                         theme.income_color,
@@ -114,6 +128,8 @@ impl DashboardScreen {
                     // Expenses Card
                     .child(Self::render_kpi_card(
                         "kpi-total-expenses",
+                        AppIcon::Expense,
+                        IconTone::Expense,
                         &expense_label,
                         &expense_str,
                         theme.expense_color,
@@ -122,6 +138,8 @@ impl DashboardScreen {
                     // Projects Card
                     .child(Self::render_kpi_card(
                         "kpi-projects-budget",
+                        AppIcon::Projects,
+                        IconTone::AccentPrimary,
                         &projects_label,
                         &projects_budget_str,
                         theme.accent_primary,
@@ -300,6 +318,8 @@ impl DashboardScreen {
 
     fn render_kpi_card(
         id: impl Into<ElementId>,
+        icon: AppIcon,
+        icon_tone: IconTone,
         label: &str,
         value: &str,
         value_color: gpui_kit::Hsla,
@@ -314,10 +334,17 @@ impl DashboardScreen {
             .border_color(theme.border_subtle)
             .child(
                 div()
-                    .text_xs()
-                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                    .text_color(theme.text_muted)
-                    .child(label.to_string()),
+                    .flex()
+                    .items_center()
+                    .justify_between()
+                    .child(
+                        div()
+                            .text_xs()
+                            .font_weight(gpui_kit::FontWeight::MEDIUM)
+                            .text_color(theme.text_muted)
+                            .child(label.to_string()),
+                    )
+                    .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
             )
             .child(
                 div()

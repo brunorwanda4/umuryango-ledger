@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
-use umuryango_core_domain::reporting::{generate_mothers_report, LocalizedExporter};
-use umuryango_i18n::{terms, Locale, Translator};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use umuryango_core_domain::reporting::{LocalizedExporter, generate_mothers_report};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
 
@@ -90,6 +91,12 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
+                                    .child(app_icon(
+                                        AppIcon::Share,
+                                        IconSize::Xs,
+                                        IconTone::OnPrimaryButton,
+                                        theme,
+                                    ))
                                     .child("WhatsApp Share"),
                             )
                             .child(
@@ -105,6 +112,12 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
+                                    .child(app_icon(
+                                        AppIcon::Language,
+                                        IconSize::Xs,
+                                        IconTone::OnPrimaryButton,
+                                        theme,
+                                    ))
                                     .child("Magic Link"),
                             ),
                     ),
@@ -127,12 +140,29 @@ impl ReportViewScreen {
                             .border_color(theme.border_subtle)
                             .child(
                                 div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(Translator::t(state.locale, terms::TOTAL_INCOME, None)),
+                                    .flex()
+                                    .items_center()
+                                    .justify_between()
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(theme.text_muted)
+                                            .child(Translator::t(
+                                                state.locale,
+                                                terms::TOTAL_INCOME,
+                                                None,
+                                            )),
+                                    )
+                                    .child(app_icon(
+                                        AppIcon::Income,
+                                        IconSize::Sm,
+                                        IconTone::Income,
+                                        theme,
+                                    )),
                             )
                             .child(
                                 div()
+                                    .mt(px(4.0))
                                     .text_xl()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.income_color)
@@ -150,12 +180,29 @@ impl ReportViewScreen {
                             .border_color(theme.border_subtle)
                             .child(
                                 div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(Translator::t(state.locale, terms::TOTAL_EXPENSES, None)),
+                                    .flex()
+                                    .items_center()
+                                    .justify_between()
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(theme.text_muted)
+                                            .child(Translator::t(
+                                                state.locale,
+                                                terms::TOTAL_EXPENSES,
+                                                None,
+                                            )),
+                                    )
+                                    .child(app_icon(
+                                        AppIcon::Expense,
+                                        IconSize::Sm,
+                                        IconTone::Expense,
+                                        theme,
+                                    )),
                             )
                             .child(
                                 div()
+                                    .mt(px(4.0))
                                     .text_xl()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.expense_color)
@@ -173,12 +220,29 @@ impl ReportViewScreen {
                             .border_color(theme.border_subtle)
                             .child(
                                 div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(Translator::t(state.locale, terms::CLOSING_BALANCE, None)),
+                                    .flex()
+                                    .items_center()
+                                    .justify_between()
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(theme.text_muted)
+                                            .child(Translator::t(
+                                                state.locale,
+                                                terms::CLOSING_BALANCE,
+                                                None,
+                                            )),
+                                    )
+                                    .child(app_icon(
+                                        AppIcon::Reports,
+                                        IconSize::Sm,
+                                        IconTone::AccentPrimary,
+                                        theme,
+                                    )),
                             )
                             .child(
                                 div()
+                                    .mt(px(4.0))
                                     .text_xl()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.accent_primary)
@@ -201,7 +265,11 @@ impl ReportViewScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
-                            .child(Translator::t(state.locale, terms::CASH_CUSTODY_BREAKDOWN, None)),
+                            .child(Translator::t(
+                                state.locale,
+                                terms::CASH_CUSTODY_BREAKDOWN,
+                                None,
+                            )),
                     )
                     .child(
                         div()
@@ -223,6 +291,12 @@ impl ReportViewScreen {
                                             .flex()
                                             .items_center()
                                             .gap(px(8.0))
+                                            .child(app_icon(
+                                                AppIcon::Members,
+                                                IconSize::Xs,
+                                                IconTone::Muted,
+                                                theme,
+                                            ))
                                             .child(
                                                 div()
                                                     .text_sm()
@@ -269,6 +343,9 @@ impl ReportViewScreen {
                             )
                             .child(
                                 div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(4.0))
                                     .py(px(4.0))
                                     .px(px(10.0))
                                     .rounded(px(6.0))
@@ -276,6 +353,12 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .text_color(theme.text_muted)
                                     .cursor_pointer()
+                                    .child(app_icon(
+                                        AppIcon::Copy,
+                                        IconSize::Xs,
+                                        IconTone::Muted,
+                                        theme,
+                                    ))
                                     .child("Copy Text"),
                             ),
                     )

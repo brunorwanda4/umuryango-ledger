@@ -1,12 +1,13 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use std::str::FromStr;
 use umuryango_core_domain::models::{Transaction, TransactionType, Wallet};
 use umuryango_core_domain::scope::LedgerScope;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -81,7 +82,7 @@ impl QuickEntryDialog {
             .border_1()
             .border_color(theme.border_subtle)
             .font_family(theme.font_family)
-            // Header
+            // Header with vector icon
             .child(
                 div()
                     .flex()
@@ -91,14 +92,26 @@ impl QuickEntryDialog {
                     .mb(px(16.0))
                     .child(
                         div()
-                            .text_lg()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(if locale == Locale::Rw {
-                                "Andika Igikorwa Gishya"
-                            } else {
-                                "Log New Transaction"
-                            }),
+                            .flex()
+                            .items_center()
+                            .gap(px(8.0))
+                            .child(app_icon(
+                                AppIcon::Add,
+                                IconSize::Md,
+                                IconTone::AccentPrimary,
+                                theme,
+                            ))
+                            .child(
+                                div()
+                                    .text_lg()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(if locale == Locale::Rw {
+                                        "Andika Igikorwa Gishya"
+                                    } else {
+                                        "Log New Transaction"
+                                    }),
+                            ),
                     ),
             )
             // Mode selector tabs
@@ -112,9 +125,12 @@ impl QuickEntryDialog {
                     .child(
                         div()
                             .flex_1()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .gap(px(6.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
-                            .text_center()
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                             .bg(if form.mode == QuickEntryMode::Expense {
@@ -128,15 +144,28 @@ impl QuickEntryDialog {
                                 theme.text_primary
                             })
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Expense,
+                                IconSize::Xs,
+                                if form.mode == QuickEntryMode::Expense {
+                                    IconTone::OnPrimaryButton
+                                } else {
+                                    IconTone::Expense
+                                },
+                                theme,
+                            ))
                             .child(expense_label),
                     )
                     // Income tab
                     .child(
                         div()
                             .flex_1()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .gap(px(6.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
-                            .text_center()
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                             .bg(if form.mode == QuickEntryMode::Income {
@@ -150,15 +179,28 @@ impl QuickEntryDialog {
                                 theme.text_primary
                             })
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Income,
+                                IconSize::Xs,
+                                if form.mode == QuickEntryMode::Income {
+                                    IconTone::OnPrimaryButton
+                                } else {
+                                    IconTone::Income
+                                },
+                                theme,
+                            ))
                             .child(income_label),
                     )
                     // Handover tab (only in Family mode)
                     .child(
                         div()
                             .flex_1()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .gap(px(6.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
-                            .text_center()
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                             .bg(if form.mode == QuickEntryMode::Handover {
@@ -172,6 +214,16 @@ impl QuickEntryDialog {
                                 theme.text_primary
                             })
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Handover,
+                                IconSize::Xs,
+                                if form.mode == QuickEntryMode::Handover {
+                                    IconTone::OnPrimaryButton
+                                } else {
+                                    IconTone::AccentSecondary
+                                },
+                                theme,
+                            ))
                             .child(handover_label),
                     ),
             )
@@ -295,22 +347,31 @@ impl QuickEntryDialog {
                             ),
                     ),
             )
-            // Action button
+            // Action button with vector check icon
             .child(
                 div()
                     .mt(px(20.0))
                     .py(px(10.0))
                     .rounded(px(8.0))
                     .bg(theme.accent_primary)
-                    .text_center()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .gap(px(8.0))
                     .text_sm()
                     .font_weight(gpui_kit::FontWeight::BOLD)
                     .text_color(theme.bg_canvas)
                     .cursor_pointer()
+                    .child(app_icon(
+                        AppIcon::Check,
+                        IconSize::Sm,
+                        IconTone::OnPrimaryButton,
+                        theme,
+                    ))
                     .child(if locale == Locale::Rw {
-                        "✓ Emeza Igikorwa"
+                        "Emeza Igikorwa"
                     } else {
-                        "✓ Confirm Transaction"
+                        "Confirm Transaction"
                     }),
             )
     }

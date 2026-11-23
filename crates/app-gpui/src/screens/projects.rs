@@ -1,9 +1,10 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use umuryango_core_domain::models::Project;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
 
@@ -45,6 +46,9 @@ impl ProjectsScreen {
                     )
                     .child(
                         div()
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
                             .px(px(12.0))
                             .py(px(6.0))
                             .rounded(px(6.0))
@@ -53,10 +57,16 @@ impl ProjectsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .child(app_icon(
+                                AppIcon::Add,
+                                IconSize::Xs,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
                             .child(if state.locale == Locale::Rw {
-                                "+ Umushinga Mushya"
+                                "Umushinga Mushya"
                             } else {
-                                "+ New Project"
+                                "New Project"
                             }),
                     ),
             )
@@ -92,10 +102,22 @@ impl ProjectsScreen {
                     .mb(px(8.0))
                     .child(
                         div()
-                            .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(project.name.clone()),
+                            .flex()
+                            .items_center()
+                            .gap(px(8.0))
+                            .child(app_icon(
+                                AppIcon::Projects,
+                                IconSize::Sm,
+                                IconTone::AccentPrimary,
+                                theme,
+                            ))
+                            .child(
+                                div()
+                                    .text_base()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(project.name.clone()),
+                            ),
                     )
                     .child(
                         div()

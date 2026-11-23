@@ -3,6 +3,7 @@ use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Locale, Translator, terms};
 
 use super::UpdateStatus;
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
 pub struct UpdateBanner;
@@ -55,6 +56,12 @@ impl UpdateBanner {
                                 .flex()
                                 .items_center()
                                 .gap(px(8.0))
+                                .child(app_icon(
+                                    AppIcon::UpdateAvailable,
+                                    IconSize::Sm,
+                                    IconTone::OnPrimaryButton,
+                                    theme,
+                                ))
                                 .child(
                                     div()
                                         .font_weight(gpui_kit::FontWeight::BOLD)
@@ -99,6 +106,12 @@ impl UpdateBanner {
                                 .flex()
                                 .items_center()
                                 .gap(px(8.0))
+                                .child(app_icon(
+                                    AppIcon::SyncPending,
+                                    IconSize::Sm,
+                                    IconTone::Default,
+                                    theme,
+                                ))
                                 .child(div().text_sm().child(downloading_text))
                                 .child(
                                     div()
@@ -133,6 +146,12 @@ impl UpdateBanner {
                                 .flex()
                                 .items_center()
                                 .gap(px(8.0))
+                                .child(app_icon(
+                                    AppIcon::Check,
+                                    IconSize::Sm,
+                                    IconTone::OnPrimaryButton,
+                                    theme,
+                                ))
                                 .child(div().text_sm().child(ready_msg)),
                         )
                         .child(
@@ -167,7 +186,19 @@ impl UpdateBanner {
                         .py(px(10.0))
                         .bg(theme.expense_color)
                         .text_color(theme.bg_canvas)
-                        .child(div().text_xs().child(err_label)),
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(8.0))
+                                .child(app_icon(
+                                    AppIcon::Error,
+                                    IconSize::Sm,
+                                    IconTone::OnPrimaryButton,
+                                    theme,
+                                ))
+                                .child(div().text_xs().child(err_label)),
+                        ),
                 )
             }
         }

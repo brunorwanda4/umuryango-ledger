@@ -1,9 +1,10 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{div, px, ElementId, IntoElement, ParentElement, Styled};
+use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::Locale;
 
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
-use crate::theme::{hex_to_hsla, SemanticTheme};
+use crate::theme::{SemanticTheme, hex_to_hsla};
 
 pub struct SettingsScreen;
 
@@ -30,24 +31,38 @@ impl SettingsScreen {
             .child(
                 div()
                     .flex()
-                    .flex_col()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(12.0))
                     .mb(px(20.0))
+                    .child(app_icon(
+                        AppIcon::Settings,
+                        IconSize::Lg,
+                        IconTone::AccentPrimary,
+                        theme,
+                    ))
                     .child(
                         div()
-                            .text_2xl()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(if is_rw { "Igenamiterere ry'Insanganyamatsiko" } else { "Theme & Appearance Settings" }),
-                    )
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(if is_rw {
-                                "Hindura amabara, umwijima/umucyo n'inyandiko ya Archivo"
-                            } else {
-                                "Customize runtime palette, Light/Dark modes, and Archivo typography"
-                            }),
+                            .flex()
+                            .flex_col()
+                            .child(
+                                div()
+                                    .text_2xl()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(if is_rw {
+                                        "Igenamiterere ry'Insanganyamatsiko"
+                                    } else {
+                                        "Theme & Appearance Settings"
+                                    }),
+                            )
+                            .child(div().text_xs().text_color(theme.text_muted).child(
+                                if is_rw {
+                                    "Hindura amabara, umwijima/umucyo n'inyandiko ya Archivo"
+                                } else {
+                                    "Customize runtime palette, Light/Dark modes, and Archivo typography"
+                                },
+                            )),
                     ),
             )
             // Section 1: Mode Switcher (Light / Dark)
@@ -65,7 +80,11 @@ impl SettingsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(8.0))
-                            .child(if is_rw { "Umucyo n'Umwijima (Appearance Mode)" } else { "Appearance Mode" }),
+                            .child(if is_rw {
+                                "Umucyo n'Umwijima (Appearance Mode)"
+                            } else {
+                                "Appearance Mode"
+                            }),
                     )
                     .child(
                         div()
@@ -77,16 +96,40 @@ impl SettingsScreen {
                                     .flex_1()
                                     .p(px(14.0))
                                     .rounded(px(8.0))
-                                    .bg(if !state.theme_mode.is_dark() { theme.accent_primary } else { theme.bg_canvas })
-                                    .text_color(if !state.theme_mode.is_dark() { theme.bg_canvas } else { theme.text_primary })
+                                    .bg(if !state.theme_mode.is_dark() {
+                                        theme.accent_primary
+                                    } else {
+                                        theme.bg_canvas
+                                    })
+                                    .text_color(if !state.theme_mode.is_dark() {
+                                        theme.bg_canvas
+                                    } else {
+                                        theme.text_primary
+                                    })
                                     .border_1()
                                     .border_color(theme.border_subtle)
                                     .cursor_pointer()
                                     .child(
                                         div()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_sm()
-                                            .child("Light Mode (Umucyo)"),
+                                            .flex()
+                                            .items_center()
+                                            .gap(px(8.0))
+                                            .child(app_icon(
+                                                AppIcon::Sun,
+                                                IconSize::Sm,
+                                                if !state.theme_mode.is_dark() {
+                                                    IconTone::OnPrimaryButton
+                                                } else {
+                                                    IconTone::Default
+                                                },
+                                                theme,
+                                            ))
+                                            .child(
+                                                div()
+                                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                                    .text_sm()
+                                                    .child("Light Mode (Umucyo)"),
+                                            ),
                                     )
                                     .child(
                                         div()
@@ -101,16 +144,40 @@ impl SettingsScreen {
                                     .flex_1()
                                     .p(px(14.0))
                                     .rounded(px(8.0))
-                                    .bg(if state.theme_mode.is_dark() { theme.accent_primary } else { theme.bg_canvas })
-                                    .text_color(if state.theme_mode.is_dark() { theme.bg_canvas } else { theme.text_primary })
+                                    .bg(if state.theme_mode.is_dark() {
+                                        theme.accent_primary
+                                    } else {
+                                        theme.bg_canvas
+                                    })
+                                    .text_color(if state.theme_mode.is_dark() {
+                                        theme.bg_canvas
+                                    } else {
+                                        theme.text_primary
+                                    })
                                     .border_1()
                                     .border_color(theme.border_subtle)
                                     .cursor_pointer()
                                     .child(
                                         div()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_sm()
-                                            .child("Dark Mode (Umwijima)"),
+                                            .flex()
+                                            .items_center()
+                                            .gap(px(8.0))
+                                            .child(app_icon(
+                                                AppIcon::Moon,
+                                                IconSize::Sm,
+                                                if state.theme_mode.is_dark() {
+                                                    IconTone::OnPrimaryButton
+                                                } else {
+                                                    IconTone::Default
+                                                },
+                                                theme,
+                                            ))
+                                            .child(
+                                                div()
+                                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                                    .text_sm()
+                                                    .child("Dark Mode (Umwijima)"),
+                                            ),
                                     )
                                     .child(
                                         div()
@@ -141,7 +208,11 @@ impl SettingsScreen {
                                     .text_base()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if is_rw { "Amabara y'Insanganyamatsiko (Palette Tokens)" } else { "Brand Palette Tokens" }),
+                                    .child(if is_rw {
+                                        "Amabara y'Insanganyamatsiko (Palette Tokens)"
+                                    } else {
+                                        "Brand Palette Tokens"
+                                    }),
                             )
                             .child(
                                 div()
@@ -153,7 +224,11 @@ impl SettingsScreen {
                                     .border_color(theme.border_subtle)
                                     .text_xs()
                                     .text_color(theme.accent_secondary)
-                                    .child(if is_rw { "Byasubijwe mu mwimerere" } else { "Persisted to SQLite" }),
+                                    .child(if is_rw {
+                                        "Byasubijwe mu mwimerere"
+                                    } else {
+                                        "Persisted to SQLite"
+                                    }),
                             ),
                     )
                     .child(
@@ -161,11 +236,36 @@ impl SettingsScreen {
                             .grid()
                             .grid_cols(5)
                             .gap(px(12.0))
-                            .child(Self::render_color_token_card("crimson_deep", &state.theme_config.crimson_deep, "Primary Brand / Expense", theme))
-                            .child(Self::render_color_token_card("crimson_bright", &state.theme_config.crimson_bright, "Badges / Alert Accent", theme))
-                            .child(Self::render_color_token_card("cream_warm", &state.theme_config.cream_warm, "Light Canvas / Dark Text", theme))
-                            .child(Self::render_color_token_card("prussian_navy", &state.theme_config.prussian_navy, "Dark Canvas / Light Text", theme))
-                            .child(Self::render_color_token_card("steel_blue", &state.theme_config.steel_blue, "Income / Custody Balance", theme)),
+                            .child(Self::render_color_token_card(
+                                "crimson_deep",
+                                &state.theme_config.crimson_deep,
+                                "Primary Brand / Expense",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "crimson_bright",
+                                &state.theme_config.crimson_bright,
+                                "Badges / Alert Accent",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "cream_warm",
+                                &state.theme_config.cream_warm,
+                                "Light Canvas / Dark Text",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "prussian_navy",
+                                &state.theme_config.prussian_navy,
+                                "Dark Canvas / Light Text",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "steel_blue",
+                                &state.theme_config.steel_blue,
+                                "Income / Custody Balance",
+                                theme,
+                            )),
                     ),
             )
             // Section 3: Typography & Offline Storage Status
@@ -183,7 +283,11 @@ impl SettingsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(8.0))
-                            .child(if is_rw { "Inyandiko n'Ububiko bwa SQLite" } else { "Typography & Offline SQLite Engine" }),
+                            .child(if is_rw {
+                                "Inyandiko n'Ububiko bwa SQLite"
+                            } else {
+                                "Typography & Offline SQLite Engine"
+                            }),
                     )
                     .child(
                         div()
@@ -227,7 +331,11 @@ impl SettingsScreen {
                                     .text_base()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(if is_rw { "Ibyerekeye Umuryango Ledger" } else { "About Umuryango Ledger" }),
+                                    .child(if is_rw {
+                                        "Ibyerekeye Umuryango Ledger"
+                                    } else {
+                                        "About Umuryango Ledger"
+                                    }),
                             )
                             .child(
                                 div()
