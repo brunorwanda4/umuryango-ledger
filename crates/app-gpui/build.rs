@@ -1,6 +1,16 @@
 use std::fs;
 use std::io::Cursor;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+fn write_if_changed<P: AsRef<Path>>(path: P, content: &[u8]) {
+    let p = path.as_ref();
+    if let Ok(existing) = fs::read(p) {
+        if existing == content {
+            return;
+        }
+    }
+    let _ = fs::write(p, content);
+}
 
 fn encode_ico(images: &[(u32, &[u8])]) -> Vec<u8> {
     let mut out = Vec::new();
@@ -119,20 +129,20 @@ fn main() {
                 let png_1024 = resize_png(1024);
 
                 // 1. GPUI Desktop Icons
-                let _ = fs::write(gpui_icons_dir.join("icon-16.png"), &png_16);
-                let _ = fs::write(gpui_icons_dir.join("icon-32.png"), &png_32);
-                let _ = fs::write(gpui_icons_dir.join("icon-48.png"), &png_48);
-                let _ = fs::write(gpui_icons_dir.join("icon-64.png"), &png_64);
-                let _ = fs::write(gpui_icons_dir.join("icon-128.png"), &png_128);
-                let _ = fs::write(gpui_icons_dir.join("icon-256.png"), &png_256);
-                let _ = fs::write(gpui_icons_dir.join("icon-512.png"), &png_512);
-                let _ = fs::write(gpui_icons_dir.join("icon-1024.png"), &png_1024);
+                write_if_changed(gpui_icons_dir.join("icon-16.png"), &png_16);
+                write_if_changed(gpui_icons_dir.join("icon-32.png"), &png_32);
+                write_if_changed(gpui_icons_dir.join("icon-48.png"), &png_48);
+                write_if_changed(gpui_icons_dir.join("icon-64.png"), &png_64);
+                write_if_changed(gpui_icons_dir.join("icon-128.png"), &png_128);
+                write_if_changed(gpui_icons_dir.join("icon-256.png"), &png_256);
+                write_if_changed(gpui_icons_dir.join("icon-512.png"), &png_512);
+                write_if_changed(gpui_icons_dir.join("icon-1024.png"), &png_1024);
 
                 // Multi-size Windows app.ico (16, 32, 48, 256)
                 let app_ico =
                     encode_ico(&[(16, &png_16), (32, &png_32), (48, &png_48), (256, &png_256)]);
                 let app_ico_path = gpui_icons_dir.join("app.ico");
-                let _ = fs::write(&app_ico_path, &app_ico);
+                write_if_changed(&app_ico_path, &app_ico);
 
                 // macOS AppIcon.icns (128, 256, 512, 1024)
                 let app_icns = encode_icns(&[
@@ -141,28 +151,28 @@ fn main() {
                     (b"ic09", &png_512),
                     (b"ic10", &png_1024),
                 ]);
-                let _ = fs::write(gpui_icons_dir.join("AppIcon.icns"), &app_icns);
+                write_if_changed(gpui_icons_dir.join("AppIcon.icns"), &app_icns);
 
                 // 2. Android Mipmap Icons
-                let _ = fs::write(mobile_dir.join("mipmap-mdpi/ic_launcher.png"), &png_48);
-                let _ = fs::write(mobile_dir.join("mipmap-hdpi/ic_launcher.png"), &png_72);
-                let _ = fs::write(mobile_dir.join("mipmap-xhdpi/ic_launcher.png"), &png_96);
-                let _ = fs::write(mobile_dir.join("mipmap-xxhdpi/ic_launcher.png"), &png_144);
-                let _ = fs::write(mobile_dir.join("mipmap-xxxhdpi/ic_launcher.png"), &png_192);
+                write_if_changed(mobile_dir.join("mipmap-mdpi/ic_launcher.png"), &png_48);
+                write_if_changed(mobile_dir.join("mipmap-hdpi/ic_launcher.png"), &png_72);
+                write_if_changed(mobile_dir.join("mipmap-xhdpi/ic_launcher.png"), &png_96);
+                write_if_changed(mobile_dir.join("mipmap-xxhdpi/ic_launcher.png"), &png_144);
+                write_if_changed(mobile_dir.join("mipmap-xxxhdpi/ic_launcher.png"), &png_192);
 
                 // 3. iOS App Icons
-                let _ = fs::write(mobile_dir.join("ios/AppIcon-60@2x.png"), &png_120);
-                let _ = fs::write(mobile_dir.join("ios/AppIcon-60@3x.png"), &png_180);
-                let _ = fs::write(mobile_dir.join("ios/AppIcon-76@2x.png"), &png_152);
-                let _ = fs::write(mobile_dir.join("ios/AppIcon-83.5@2x.png"), &png_167);
-                let _ = fs::write(mobile_dir.join("ios/AppIcon-1024.png"), &png_1024);
+                write_if_changed(mobile_dir.join("ios/AppIcon-60@2x.png"), &png_120);
+                write_if_changed(mobile_dir.join("ios/AppIcon-60@3x.png"), &png_180);
+                write_if_changed(mobile_dir.join("ios/AppIcon-76@2x.png"), &png_152);
+                write_if_changed(mobile_dir.join("ios/AppIcon-83.5@2x.png"), &png_167);
+                write_if_changed(mobile_dir.join("ios/AppIcon-1024.png"), &png_1024);
 
                 // 4. Web Public Icons
                 let favicon_ico = encode_ico(&[(16, &png_16), (32, &png_32), (48, &png_48)]);
-                let _ = fs::write(web_public_dir.join("favicon.ico"), &favicon_ico);
-                let _ = fs::write(web_public_dir.join("icon-192.png"), &png_192);
-                let _ = fs::write(web_public_dir.join("icon-512.png"), &png_512);
-                let _ = fs::write(web_public_dir.join("apple-touch-icon.png"), &png_180);
+                write_if_changed(web_public_dir.join("favicon.ico"), &favicon_ico);
+                write_if_changed(web_public_dir.join("icon-192.png"), &png_192);
+                write_if_changed(web_public_dir.join("icon-512.png"), &png_512);
+                write_if_changed(web_public_dir.join("apple-touch-icon.png"), &png_180);
 
                 // 5. Linux Desktop entry
                 let desktop_entry = r#"[Desktop Entry]
@@ -178,7 +188,10 @@ Categories=Office;Finance;
 StartupNotify=true
 StartupWMClass=app-gpui
 "#;
-                let _ = fs::write(branding_dir.join("umuryango-ledger.desktop"), desktop_entry);
+                write_if_changed(
+                    branding_dir.join("umuryango-ledger.desktop"),
+                    desktop_entry.as_bytes(),
+                );
             }
         }
     }

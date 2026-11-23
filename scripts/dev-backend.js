@@ -8,6 +8,7 @@ const watchTargets = [
   "Cargo.toml",
   "Cargo.lock",
 ];
+const IGNORED_DIRS = new Set(["target", "node_modules", ".git", ".next", "dist", "out"]);
 const watchers = [];
 
 let child;
@@ -15,6 +16,13 @@ let restartTimer;
 let restarting = false;
 let restartPending = false;
 let stopping = false;
+
+function isIgnored(filename) {
+  if (!filename) return true;
+  const segments = filename.split(/[\\/]/);
+  if (segments.some((seg) => IGNORED_DIRS.has(seg))) return true;
+  return /(~|\.swp|\.tmp)$/i.test(filename);
+}
 
 function startBackend() {
   console.log("Starting backend in development mode...");
@@ -78,13 +86,17 @@ function stop() {
   child?.kill();
 }
 
-for (const target of watchTargets) {
-  const watcher = watch(target, { recursive: true }, () => {
-    if (!stopping) {
-      scheduleRestart();
-    }
-  });
-  watchers.push(watcher);
+const watchEnabled = !process.argv.includes("--no-watch");
+
+if (watchEnabled) {
+  for (const target of watchTargets) {
+    const watcher = watch(target, { recursive: true }, (_eventType, filename) => {
+      if (!stopping && !isIgnored(filename)) {
+        scheduleRestart();
+      }
+    });
+    watchers.push(watcher);
+  }
 }
 
 process.on("SIGINT", stop);

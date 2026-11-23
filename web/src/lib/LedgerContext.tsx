@@ -306,7 +306,7 @@ export const LedgerProvider: React.FC<{
     const connect = () => {
       try {
         const wsUrl =
-          (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/api/v1/ws") +
+          (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4433/api/v1/ws") +
           "?token=demo-live-token";
         ws = new WebSocket(wsUrl);
 

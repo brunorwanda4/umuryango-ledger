@@ -42,7 +42,7 @@ const SERVICE_DEFINITIONS = {
   backend: {
     name: "backend",
     color: colors.cyan,
-    cmd: [bunExe, "run", "scripts/dev-backend.js"],
+    cmd: [bunExe, "run", "scripts/dev-backend.js", "--no-watch"],
     desc: "Actix-web API (http://127.0.0.1:4433)",
     watch: WATCH_PATHS.backend,
   },
@@ -56,7 +56,7 @@ const SERVICE_DEFINITIONS = {
   native: {
     name: "native",
     color: colors.magenta,
-    cmd: [bunExe, "run", "scripts/dev-native.js"],
+    cmd: [bunExe, "run", "scripts/dev-native.js", "--no-watch"],
     desc: "GPUI Native Client",
     watch: WATCH_PATHS.native,
   },
@@ -375,6 +375,15 @@ function scheduleRestart(svc, changedFile) {
 function isIgnored(filename) {
   const segments = filename.split(/[\\/]/);
   if (segments.some((seg) => IGNORED_DIRS.has(seg))) return true;
+  if (
+    filename.includes("app.ico") ||
+    filename.includes("AppIcon.icns") ||
+    filename.includes("icon-") ||
+    filename.includes("ic_launcher") ||
+    filename.includes(".desktop")
+  ) {
+    return true;
+  }
   // Editor temp/backup files
   return /(~|\.swp|\.tmp)$/i.test(filename);
 }

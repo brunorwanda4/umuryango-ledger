@@ -12,9 +12,9 @@ async fn main() -> std::io::Result<()> {
 
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = env::var("PORT")
-        .unwrap_or_else(|_| "8080".to_string())
+        .unwrap_or_else(|_| "4433".to_string())
         .parse::<u16>()
-        .unwrap_or(8080);
+        .unwrap_or(4433);
 
     let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| {
         "postgres://postgres:postgres@localhost:5432/umuryango_ledger".to_string()
