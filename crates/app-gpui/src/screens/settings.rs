@@ -149,10 +149,8 @@ impl SettingsScreen {
                                     .border_1()
                                     .border_color(theme.border_subtle)
                                     .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                    .text_color(theme.text_primary)
-                                    .cursor_pointer()
-                                    .child("↺ Subiza ku Mabara Asanzwe (Reset Default)"),
+                                    .text_color(theme.accent_secondary)
+                                    .child(if is_rw { "Byasubijwe mu mwimerere" } else { "Persisted to SQLite" }),
                             ),
                     )
                     .child(
@@ -175,6 +173,7 @@ impl SettingsScreen {
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
+                    .mb(px(20.0))
                     .child(
                         div()
                             .text_base()
@@ -193,6 +192,52 @@ impl SettingsScreen {
                             .child("• Font Family: Archivo (Regular, Medium, SemiBold, Bold bundled & registered via text_system)")
                             .child("• Local Storage: umuryango_offline.db (WAL mode enabled, full offline caching of wallets & sync queue)")
                             .child("• Idempotency: All offline mutations assigned unique UUIDs to guarantee zero duplication on sync"),
+                    ),
+            )
+            // Section 4: About Umuryango Ledger
+            .child(
+                div()
+                    .p(px(20.0))
+                    .rounded(px(12.0))
+                    .bg(theme.bg_surface)
+                    .border_1()
+                    .border_color(theme.border_subtle)
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(16.0))
+                    .child(
+                        gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
+                            .w(px(54.0))
+                            .h(px(54.0))
+                            .rounded(px(12.0))
+                            .border_1()
+                            .border_color(theme.border_subtle),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(2.0))
+                            .child(
+                                div()
+                                    .text_base()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(if is_rw { "Ibyerekeye Umuryango Ledger" } else { "About Umuryango Ledger" }),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child("Version 0.1.0 • Multi-tenant Family & Personal Accountability"),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.accent_secondary)
+                                    .child("🇷🇼 Built with Rust, GPUI, Actix-web, SQLite & Next.js"),
+                            ),
                     ),
             )
     }

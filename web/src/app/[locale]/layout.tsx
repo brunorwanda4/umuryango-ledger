@@ -5,6 +5,13 @@ import { ScopeSwitcher } from "@/components/ScopeSwitcher";
 export const metadata = {
   title: "Umuryango Ledger - Family & Personal Financial Accountability",
   description: "Multi-tenant bilingual family and personal finance accountability platform.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
+  themeColor: "#003049",
 };
 
 export default async function LocaleLayout({
@@ -29,8 +36,17 @@ export default async function LocaleLayout({
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-6">
-              <Link href={`/${locale}`} className="flex items-center space-x-2">
-                <span className="text-2xl font-black text-emerald-700">🇷🇼 Umuryango</span>
+              <Link href={`/${locale}`} className="flex items-center space-x-3">
+                <img
+                  src="/icon-192.png"
+                  alt="Umuryango Ledger Emblem"
+                  width={34}
+                  height={34}
+                  className="rounded-lg shadow-sm border border-slate-200"
+                />
+                <span className="text-xl font-bold tracking-tight text-slate-900">
+                  Umuryango <span className="text-emerald-700">Ledger</span>
+                </span>
               </Link>
               <nav className="hidden md:flex space-x-4 text-sm font-medium text-slate-600">
                 <Link href={`/${locale}/dashboard`} className="hover:text-emerald-700 transition">

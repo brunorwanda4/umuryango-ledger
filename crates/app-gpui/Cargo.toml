@@ -18,3 +18,7 @@ rust_decimal = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 gpui-kit = { version = "0.10.0", features = ["component"] }
+
+[build-dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }
+winres = "0.1"

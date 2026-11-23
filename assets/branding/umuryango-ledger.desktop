@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Umuryango Ledger
+GenericName=Family & Personal Finance Accountability
+Comment=Multi-tenant family and personal finance accountability platform
+Exec=app-gpui
+Icon=umuryango-ledger
+Terminal=false
+Categories=Office;Finance;
+StartupNotify=true
+StartupWMClass=app-gpui

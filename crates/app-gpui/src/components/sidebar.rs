@@ -60,7 +60,7 @@ impl Sidebar {
                     .flex()
                     .flex_col()
                     .gap(px(14.0))
-                    // Brand title & Notification Bell
+                    // Brand title with custom emblem & Notification Bell
                     .child(
                         div()
                             .flex()
@@ -70,20 +70,33 @@ impl Sidebar {
                             .child(
                                 div()
                                     .flex()
-                                    .flex_col()
-                                    .gap(px(2.0))
+                                    .flex_row()
+                                    .items_center()
+                                    .gap(px(8.0))
                                     .child(
-                                        div()
-                                            .text_base()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.text_primary)
-                                            .child("🇷🇼 Umuryango"),
+                                        gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
+                                            .w(px(30.0))
+                                            .h(px(30.0))
+                                            .rounded(px(7.0)),
                                     )
                                     .child(
                                         div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child("Finance Ledger"),
+                                            .flex()
+                                            .flex_col()
+                                            .gap(px(1.0))
+                                            .child(
+                                                div()
+                                                    .text_sm()
+                                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                                    .text_color(theme.text_primary)
+                                                    .child("Umuryango"),
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(theme.text_muted)
+                                                    .child("Finance Ledger"),
+                                            ),
                                     ),
                             )
                             // Notification Bell Icon with dynamic Badge

@@ -12,6 +12,9 @@ use umuryango_api_client::{RealtimeClient, RealtimeHandle};
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_storage_local::LocalDatabase;
 
+/// Official 256x256 embedded emblem icon
+pub const APP_ICON_256_PNG: &[u8] = include_bytes!("../assets/icons/icon-256.png");
+
 struct RootView {
     state: AppState,
 }
@@ -144,7 +147,11 @@ fn main() {
             eprintln!("Warning: Failed to load bundled Archivo fonts: {:?}", e);
         }
 
-        let options = gpui_kit::WindowOptions::default();
+        let mut options = gpui_kit::WindowOptions::default();
+        options.titlebar = Some(gpui_kit::TitlebarOptions {
+            title: Some("Umuryango Ledger".into()),
+            ..Default::default()
+        });
         let _ = cx.open_window(options, |_window, cx| cx.new(|_| RootView { state }));
     });
 }

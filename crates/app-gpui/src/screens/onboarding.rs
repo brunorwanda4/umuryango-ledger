@@ -48,8 +48,13 @@ impl OnboardingScreen {
                     .flex_col()
                     .items_center()
                     .gap(px(16.0))
-                    // Logo
-                    .child(div().text_2xl().child("🇷🇼"))
+                    // Official Application Emblem
+                    .child(
+                        gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
+                            .w(px(64.0))
+                            .h(px(64.0))
+                            .rounded(px(14.0)),
+                    )
                     .child(
                         div()
                             .text_xl()
