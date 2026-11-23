@@ -154,14 +154,16 @@ impl TestServer {
         // 1. Mother (Head)
         let mother_id = Uuid::new_v4();
         let mother_email = format!("mother_{}@test.rw", mother_id.as_simple());
+        let mother_phone = format!("+250788{:06}", mother_id.as_u128() % 1_000_000);
         sqlx::query(
             r#"
-            INSERT INTO users (id, email, full_name, password_hash, preferred_locale, is_active, created_at, updated_at)
-            VALUES ($1, $2, 'Mama Keza', $3, 'rw', TRUE, $4, $4)
+            INSERT INTO users (id, email, phone, gender, full_name, password_hash, preferred_locale, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, 'FEMALE', 'Mama Keza', $4, 'rw', TRUE, $5, $5)
             "#,
         )
         .bind(mother_id)
         .bind(&mother_email)
+        .bind(&mother_phone)
         .bind(&password_hash)
         .bind(now)
         .execute(&self.pool)
@@ -173,14 +175,16 @@ impl TestServer {
 
         // 2. Family
         let family_id = Uuid::new_v4();
+        let invite_code = format!("{:04X}", family_id.as_u128() % 0x10000);
         sqlx::query(
             r#"
-            INSERT INTO families (id, name, description, currency, created_by, created_at, updated_at)
-            VALUES ($1, 'Umuryango Keza', 'Test Family Ledger', 'RWF', $2, $3, $3)
+            INSERT INTO families (id, name, description, currency, created_by, invite_code, created_at, updated_at)
+            VALUES ($1, 'Umuryango Keza', 'Test Family Ledger', 'RWF', $2, $3, $4, $4)
             "#,
         )
         .bind(family_id)
         .bind(mother_id)
+        .bind(&invite_code)
         .bind(now)
         .execute(&self.pool)
         .await
@@ -204,14 +208,16 @@ impl TestServer {
         // 3. Bruno (Custodian - Bank)
         let bruno_id = Uuid::new_v4();
         let bruno_email = format!("bruno_{}@test.rw", bruno_id.as_simple());
+        let bruno_phone = format!("+250789{:06}", bruno_id.as_u128() % 1_000_000);
         sqlx::query(
             r#"
-            INSERT INTO users (id, email, full_name, password_hash, preferred_locale, is_active, created_at, updated_at)
-            VALUES ($1, $2, 'Bruno (Bank Custodian)', $3, 'en', TRUE, $4, $4)
+            INSERT INTO users (id, email, phone, gender, full_name, password_hash, preferred_locale, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, 'MALE', 'Bruno (Bank Custodian)', $4, 'en', TRUE, $5, $5)
             "#,
         )
         .bind(bruno_id)
         .bind(&bruno_email)
+        .bind(&bruno_phone)
         .bind(&password_hash)
         .bind(now)
         .execute(&self.pool)
@@ -255,14 +261,16 @@ impl TestServer {
         // 4. Brother (Custodian - Cash)
         let brother_id = Uuid::new_v4();
         let brother_email = format!("brother_{}@test.rw", brother_id.as_simple());
+        let brother_phone = format!("+250787{:06}", brother_id.as_u128() % 1_000_000);
         sqlx::query(
             r#"
-            INSERT INTO users (id, email, full_name, password_hash, preferred_locale, is_active, created_at, updated_at)
-            VALUES ($1, $2, 'Eric (Cash Custodian)', $3, 'rw', TRUE, $4, $4)
+            INSERT INTO users (id, email, phone, gender, full_name, password_hash, preferred_locale, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, 'MALE', 'Eric (Cash Custodian)', $4, 'rw', TRUE, $5, $5)
             "#,
         )
         .bind(brother_id)
         .bind(&brother_email)
+        .bind(&brother_phone)
         .bind(&password_hash)
         .bind(now)
         .execute(&self.pool)
