@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useLedger, ScopeType } from "@/lib/LedgerContext";
+import { Landmark, Lock } from "lucide-react";
+import { useLedger } from "@/lib/LedgerContext";
 
 interface ScopeSwitcherProps {
   locale?: "rw" | "en";
@@ -25,7 +26,7 @@ export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({ locale = "rw" }) =
             : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
         }`}
       >
-        <span>🏛️</span>
+        <Landmark className="w-3.5 h-3.5" />
         <span>{familyLabel}</span>
       </button>
 
@@ -38,7 +39,7 @@ export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({ locale = "rw" }) =
             : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
         }`}
       >
-        <span>🔒</span>
+        <Lock className="w-3.5 h-3.5" />
         <span>{personalLabel}</span>
       </button>
     </div>

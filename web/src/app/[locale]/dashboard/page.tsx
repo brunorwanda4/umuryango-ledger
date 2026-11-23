@@ -2,6 +2,17 @@
 
 import React, { useState, use } from "react";
 import Link from "next/link";
+import {
+  Landmark,
+  Lock,
+  Handshake,
+  Plus,
+  Building2,
+  Smartphone,
+  Banknote,
+  ShieldCheck,
+  ArrowRight,
+} from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
 import { TransactionModal } from "@/components/TransactionModal";
 import { HandoverModal } from "@/components/HandoverModal";
@@ -43,19 +54,23 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
         <div>
           <div className="flex items-center space-x-2">
             <span
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
                 scope === "family"
                   ? "bg-brand-dark text-brand-cream"
                   : "bg-brand-crimson text-white"
               }`}
             >
-              {scope === "family"
-                ? isRw
-                  ? "🏛️ Igitabo cy'Umuryango"
-                  : "🏛️ Family Scope"
-                : isRw
-                  ? "🔒 Imari Yanjye Bwite"
-                  : "🔒 Personal Scope"}
+              {scope === "family" ? (
+                <>
+                  <Landmark className="w-3 h-3 mr-1" />
+                  <span>{isRw ? "Igitabo cy'Umuryango" : "Family Scope"}</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3 h-3 mr-1" />
+                  <span>{isRw ? "Imari Yanjye Bwite" : "Personal Scope"}</span>
+                </>
+              )}
             </span>
             <span className="text-xs text-slate-400">•</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -83,7 +98,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               onClick={() => setIsHandoverModalOpen(true)}
               className="px-4 py-2.5 rounded-xl border border-brand-dark dark:border-slate-700 bg-white dark:bg-slate-800 text-brand-dark dark:text-brand-cream hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-xs shadow-sm transition flex items-center space-x-1.5"
             >
-              <span>🤝</span>
+              <Handshake className="w-4 h-4 mr-1 text-brand-dark dark:text-brand-cream" />
               <span>{isRw ? "+ Guhererekanya" : "+ Handover Custody"}</span>
             </button>
           )}
@@ -93,7 +108,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             onClick={() => setIsTxModalOpen(true)}
             className="px-5 py-2.5 rounded-xl bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs shadow-md hover:opacity-95 transition flex items-center space-x-1.5"
           >
-            <span>✍️</span>
+            <Plus className="w-4 h-4 mr-1" />
             <span>{isRw ? "+ Andika Igikorwa" : "+ Log Transaction"}</span>
           </button>
         </div>
@@ -165,8 +180,14 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               className="p-4 bg-white dark:bg-brand-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-brand-steel-blue transition"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xl">
-                  {wallet.type === "bank" ? "🏦" : wallet.type === "momo" ? "📱" : "💵"}
+                <span className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  {wallet.type === "bank" ? (
+                    <Building2 className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                  ) : wallet.type === "momo" ? (
+                    <Smartphone className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  ) : (
+                    <Banknote className="w-5 h-5 text-brand-crimson dark:text-rose-400" />
+                  )}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                   {wallet.custodianName}
@@ -315,8 +336,9 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             className="rounded-2xl shadow-lg border border-white/20"
           />
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/80 bg-white/10 px-2.5 py-0.5 rounded-full inline-block mb-1">
-              {isRw ? "🔒 Umutekano Udakeneye Ijambobanga" : "🔒 Zero-Login Magic Link"}
+            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-widest text-brand-cream/80 bg-white/10 px-2.5 py-0.5 rounded-full mb-1">
+              <ShieldCheck className="w-3 h-3 mr-1 text-brand-cream" />
+              <span>{isRw ? "Umutekano Udakeneye Ijambobanga" : "Zero-Login Magic Link"}</span>
             </span>
             <h3 className="text-xl font-bold tracking-tight">
               {isRw ? "Raporo y'Ababyeyi n'Abakambwe (Mother's Report)" : "Mother's Summary Report"}
@@ -331,9 +353,10 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
 
         <Link
           href={`/${locale}/report/family-november-2026`}
-          className="px-5 py-2.5 rounded-xl bg-brand-cream text-brand-dark hover:bg-white font-extrabold text-xs shadow-md transition whitespace-nowrap"
+          className="inline-flex items-center px-5 py-2.5 rounded-xl bg-brand-cream text-brand-dark hover:bg-white font-extrabold text-xs shadow-md transition whitespace-nowrap"
         >
-          {isRw ? "Fungura Raporo y'Ababyeyi →" : "Open Mother's Report →"}
+          <span>{isRw ? "Fungura Raporo y'Ababyeyi" : "Open Mother's Report"}</span>
+          <ArrowRight className="w-4 h-4 ml-1.5" />
         </Link>
       </div>
 

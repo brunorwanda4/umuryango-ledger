@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Smartphone, Shield, HeartHandshake, ArrowRight } from "lucide-react";
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const resolvedParams = await params;
@@ -18,7 +19,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <div className="py-12 space-y-12">
       <div className="text-center max-w-3xl mx-auto space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream border border-brand-cream dark:border-slate-700 rounded-full text-xs font-bold shadow-sm">
-          🇷🇼 Made for Rwandan Families & Diaspora
+          <span>Made for Rwandan Families & Diaspora</span>
         </div>
         <h1 className="text-4xl sm:text-6xl font-black text-brand-dark dark:text-white tracking-tight leading-tight">
           {title}
@@ -30,9 +31,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href={`/${locale}/dashboard`}
-            className="px-7 py-3.5 rounded-2xl bg-brand-dark dark:bg-brand-active-crimson text-white font-extrabold shadow-lg hover:opacity-95 transition transform hover:-translate-y-0.5"
+            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-brand-dark dark:bg-brand-active-crimson text-white font-extrabold shadow-lg hover:opacity-95 transition transform hover:-translate-y-0.5"
           >
-            {openDashboard} →
+            <span>{openDashboard}</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href={`/${locale}/report/family-november-2026`}
@@ -45,7 +47,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-brand-dark p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
-          <div className="text-3xl mb-3">📱</div>
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-brand-steel-blue">
+            <Smartphone className="w-6 h-6" />
+          </div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white">
             {isRw ? "Amakonti n'Umutungo Ubitswe" : "Custody Wallets (MoMo/Bank/Cash)"}
           </h3>
@@ -57,7 +61,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
 
         <div className="bg-white dark:bg-brand-dark p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
-          <div className="text-3xl mb-3">🔒</div>
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-brand-active-crimson">
+            <Shield className="w-6 h-6" />
+          </div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white">
             {isRw ? "Imari Bwite vs Iy'Umuryango" : "Personal vs Family Scopes"}
           </h3>
@@ -69,7 +75,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
 
         <div className="bg-white dark:bg-brand-dark p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
-          <div className="text-3xl mb-3">👵</div>
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-brand-steel-blue">
+            <HeartHandshake className="w-6 h-6" />
+          </div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white">
             {isRw ? "Raporo y'Ababyeyi (Zero-Login)" : "Mother's Zero-Login Report"}
           </h3>

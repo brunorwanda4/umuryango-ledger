@@ -6,7 +6,7 @@
 umuryango-ledger/
 ├── AGENTS.md                   # Agent master instructions
 ├── .context/                   # System design, standards & progress tracking
-├── Cargo.toml                  # Workspace manifest (resolver = "2")
+├── Cargo.toml                  # Workspace manifest (edition = "2024", resolver = "3")
 ├── locales/                    # Fluent bilingual catalog (en.ftl, rw.ftl)
 ├── migrations/                 # PostgreSQL migrations (SQLx with RLS)
 ├── assets/                     # Master branding and multi-platform icon assets
@@ -18,19 +18,34 @@ umuryango-ledger/
 │   ├── api-server/             # Actix-web backend, SQLx PostgreSQL, auth, WS hub
 │   ├── wasm-bridge/            # WebAssembly bindings for browser calculations
 │   └── app-gpui/               # Desktop & mobile GPUI native application
-└── web/                        # Next.js 15 App Router web application
+└── web/                        # Next.js 16 App Router (React 19, Tailwind CSS v4)
     ├── public/                 # Static web assets, manifests, icons
     ├── src/
-    │   ├── app/                # Root layout & bilingual routes (/[locale]/...)
-    │   ├── components/         # Shared web UI components & charts
+    │   ├── app/                # Root layout, globals.css & bilingual routes (/[locale]/...)
+    │   ├── components/         # Shared web UI primitives, modals & charts
     │   └── lib/                # LedgerContext, API clients, WASM bridge loaders
-    ├── tailwind.config.ts      # Brand palette design tokens
-    └── package.json            # Web dependencies (Next.js, Tailwind, Lucide)
+    ├── postcss.config.js       # @tailwindcss/postcss pipeline
+    ├── next.config.ts          # Turbopack & WebAssembly configuration
+    └── package.json            # Web dependencies (Next.js 16, React 19, Tailwind v4, Lucide)
 ```
 
 ---
 
-## 2. Layer Responsibilities & Dependencies
+## 2. Framework & Library Versions
+
+| Layer | Framework / Library | Version | Notes |
+| :--- | :--- | :--- | :--- |
+| **Rust Toolchain** | Rust Edition | `2024` | Resolver `3` across all workspace crates |
+| **Error Handling** | `thiserror` | `2.0` | Deriving domain errors in core & local storage |
+| **Web Framework** | Next.js | `16.4.6` | App Router with Turbopack native builds |
+| **Frontend UI** | React / React DOM | `19.3.1` | Native Server & Client components (`use()` hook) |
+| **Styling** | Tailwind CSS | `4.3.5` | CSS-first `@theme` design tokens via `@tailwindcss/postcss` |
+| **Icons** | `lucide-react` | `1.77.0` | Professional vector icons only, zero emojis |
+| **Language** | TypeScript | `7.0.2` | Full strict mode typing |
+
+---
+
+## 3. Layer Responsibilities & Dependencies
 
 ```mermaid
 graph TD
@@ -39,7 +54,7 @@ graph TD
     UI_GPUI --> Core[crates/core-domain]
     UI_GPUI --> I18N[crates/i18n]
 
-    Web[web/ Next.js] --> WASM[crates/wasm-bridge]
+    Web[web/ Next.js 16] --> WASM[crates/wasm-bridge]
     WASM --> Core
     WASM --> I18N
 
@@ -80,7 +95,7 @@ graph TD
 
 ---
 
-## 3. PostgreSQL Security & Isolation
+## 4. PostgreSQL Security & Isolation
 - All tables (`wallets`, `transactions`, `projects`, `loans`, `family_members`, `custody_handovers`) carry `tenant_id` (`family_id` or `user_id`).
 - Row-Level Security (RLS) is enabled across all tables in production migrations.
 - Personal transactions have `scope = 'PERSONAL'` and `user_id = auth_uid()`.
@@ -88,7 +103,7 @@ graph TD
 
 ---
 
-## 4. Real-Time Broadcast Architecture
+## 5. Real-Time Broadcast Architecture
 - WebSocket endpoint: `GET /api/v1/ws?token=<jwt>`.
 - When a transaction or handover is committed in PostgreSQL, the server emits an event onto the family's broadcast channel.
 - Connected clients (GPUI desktop/mobile and Next.js web) receive typed events:

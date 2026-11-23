@@ -1,6 +1,7 @@
 "use client";
 
 import React, { use } from "react";
+import { Landmark, Lock, Plus } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
 
 export default function ProjectsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -39,14 +40,18 @@ export default function ProjectsPage({ params }: { params: Promise<{ locale: str
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream mb-1">
-            {scope === "family"
-              ? isRw
-                ? "🏛️ Imishinga y'Umuryango"
-                : "🏛️ Family Projects"
-              : isRw
-                ? "🔒 Imishinga Bwite"
-                : "🔒 Personal Goals"}
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream mb-1">
+            {scope === "family" ? (
+              <>
+                <Landmark className="w-3 h-3 mr-1" />
+                <span>{isRw ? "Imishinga y'Umuryango" : "Family Projects"}</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3 h-3 mr-1" />
+                <span>{isRw ? "Imishinga Bwite" : "Personal Goals"}</span>
+              </>
+            )}
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {isRw ? "Imishinga y'Umuryango" : "Family Projects"}
@@ -60,9 +65,10 @@ export default function ProjectsPage({ params }: { params: Promise<{ locale: str
 
         <button
           type="button"
-          className="px-4 py-2 bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs rounded-xl shadow-md transition"
+          className="inline-flex items-center px-4 py-2 bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs rounded-xl shadow-md transition"
         >
-          {isRw ? "+ Tangiza Umushinga Mushya" : "+ Start New Project"}
+          <Plus className="w-4 h-4 mr-1.5" />
+          <span>{isRw ? "Tangiza Umushinga Mushya" : "Start New Project"}</span>
         </button>
       </div>
 

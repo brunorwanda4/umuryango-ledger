@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, X } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
 
 interface TransactionModalProps {
@@ -75,16 +76,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-sm"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold p-1 rounded-lg"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-brand-crimson/10 border border-brand-crimson/30 text-brand-active-crimson text-xs font-semibold">
-              ⚠️ {errorMsg}
+            <div className="p-3 rounded-xl bg-brand-crimson/10 border border-brand-crimson/30 text-brand-active-crimson text-xs font-semibold flex items-center">
+              <AlertTriangle className="w-4 h-4 mr-2 shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -96,13 +98,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                 setTxType("expense");
                 setErrorMsg(null);
               }}
-              className={`py-2 text-xs font-bold rounded-lg transition ${
+              className={`py-2 text-xs font-bold rounded-lg transition flex items-center justify-center ${
                 txType === "expense"
                   ? "bg-brand-crimson text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-300"
               }`}
             >
-              💸 {isRw ? "Ibisohoka (Expense)" : "Expense"}
+              <ArrowDownRight className="w-3.5 h-3.5 mr-1" />
+              <span>{isRw ? "Ibisohoka (Expense)" : "Expense"}</span>
             </button>
             <button
               type="button"
@@ -110,13 +113,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onCl
                 setTxType("income");
                 setErrorMsg(null);
               }}
-              className={`py-2 text-xs font-bold rounded-lg transition ${
+              className={`py-2 text-xs font-bold rounded-lg transition flex items-center justify-center ${
                 txType === "income"
                   ? "bg-brand-steel-blue text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-300"
               }`}
             >
-              💰 {isRw ? "Ibyinjira (Income)" : "Income"}
+              <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+              <span>{isRw ? "Ibyinjira (Income)" : "Income"}</span>
             </button>
           </div>
 

@@ -1,6 +1,21 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-dark: var(--primary-dark);
+  --color-brand-cream: var(--accent-cream);
+  --color-brand-crimson: var(--primary-crimson);
+  --color-brand-active-crimson: var(--active-crimson);
+  --color-brand-steel-blue: var(--steel-blue);
+
+  --color-status-error: var(--color-error);
+  --color-status-success: var(--color-success);
+  --color-status-warning: var(--color-warning);
+  --color-status-info: var(--color-info);
+
+  --font-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
+}
 
 :root {
   --primary-dark: #003049;
@@ -8,6 +23,11 @@
   --primary-crimson: #780000;
   --active-crimson: #c1121f;
   --steel-blue: #669bbc;
+
+  --color-error: #c1121f;
+  --color-success: #2a9d8f;
+  --color-warning: #e76f51;
+  --color-info: #669bbc;
 
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
@@ -17,6 +37,17 @@
 }
 
 .dark {
+  --primary-dark: #003049;
+  --accent-cream: #fdf0d5;
+  --primary-crimson: #780000;
+  --active-crimson: #c1121f;
+  --steel-blue: #669bbc;
+
+  --color-error: #e63946;
+  --color-success: #2a9d8f;
+  --color-warning: #f4a261;
+  --color-info: #669bbc;
+
   --bg-main: #001e2e;
   --bg-card: #003049;
   --text-main: #f8fafc;
@@ -25,7 +56,7 @@
 }
 
 body {
-  font-family: var(--font-archivo), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-main);
   color: var(--text-main);
   transition:

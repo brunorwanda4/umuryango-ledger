@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, use } from "react";
+import { Landmark, Lock, Plus } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
 import { TransactionModal } from "@/components/TransactionModal";
 
@@ -31,14 +32,18 @@ export default function TransactionsPage({ params }: { params: Promise<{ locale:
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream mb-1">
-            {scope === "family"
-              ? isRw
-                ? "🏛️ Umuryango"
-                : "🏛️ Family"
-              : isRw
-                ? "🔒 Imari Bwite"
-                : "🔒 Personal"}
+          <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream mb-1">
+            {scope === "family" ? (
+              <>
+                <Landmark className="w-3 h-3 mr-1" />
+                <span>{isRw ? "Umuryango" : "Family"}</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3 h-3 mr-1" />
+                <span>{isRw ? "Imari Bwite" : "Personal"}</span>
+              </>
+            )}
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {isRw ? "Urutonde rw'Imikoreshereze" : "Transaction Ledger"}
@@ -55,8 +60,8 @@ export default function TransactionsPage({ params }: { params: Promise<{ locale:
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-brand-dark dark:bg-brand-active-crimson text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5"
         >
-          <span>✍️</span>
-          <span>{isRw ? "+ Andika Igikorwa Gishya" : "+ Record Transaction"}</span>
+          <Plus className="w-4 h-4 mr-1" />
+          <span>{isRw ? "Andika Igikorwa Gishya" : "Record Transaction"}</span>
         </button>
       </div>
 

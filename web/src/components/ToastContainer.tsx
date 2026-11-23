@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Bell, ArrowUpRight, ArrowDownRight, Handshake, X } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
 
 export const ToastContainer: React.FC = () => {
@@ -12,17 +13,17 @@ export const ToastContainer: React.FC = () => {
     <div className="fixed top-20 right-4 z-50 flex flex-col space-y-2 max-w-sm w-full pointer-events-none no-print">
       {toasts.map((toast) => {
         let borderClass = "border-slate-300";
-        let icon = "🔔";
+        let icon = <Bell className="w-5 h-5 text-slate-500 shrink-0" />;
 
         if (toast.type === "income") {
           borderClass = "border-brand-steel-blue";
-          icon = "💰";
+          icon = <ArrowUpRight className="w-5 h-5 text-emerald-600 shrink-0" />;
         } else if (toast.type === "expense") {
           borderClass = "border-brand-crimson";
-          icon = "💸";
+          icon = <ArrowDownRight className="w-5 h-5 text-brand-active-crimson shrink-0" />;
         } else if (toast.type === "handover") {
           borderClass = "border-brand-dark";
-          icon = "🤝";
+          icon = <Handshake className="w-5 h-5 text-brand-dark dark:text-brand-cream shrink-0" />;
         }
 
         return (
@@ -32,7 +33,7 @@ export const ToastContainer: React.FC = () => {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
-                <span className="text-xl">{icon}</span>
+                <span className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800">{icon}</span>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                     {toast.title}
@@ -46,9 +47,9 @@ export const ToastContainer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => dismissToast(toast.id)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold ml-2"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg ml-2"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Handshake, AlertTriangle, X } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
 
 interface HandoverModalProps {
@@ -70,7 +71,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
       <div className="bg-white dark:bg-brand-dark rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-xl">🤝</span>
+            <Handshake className="w-5 h-5 text-brand-dark dark:text-brand-cream" />
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
               {isRw ? "Ihererekanya ry'Umutungo" : "Custodian Handover"}
             </h3>
@@ -78,16 +79,17 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold text-sm"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold p-1 rounded-lg"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-brand-crimson/10 border border-brand-crimson/30 text-brand-active-crimson text-xs font-semibold">
-              ⚠️ {errorMsg}
+            <div className="p-3 rounded-xl bg-brand-crimson/10 border border-brand-crimson/30 text-brand-active-crimson text-xs font-semibold flex items-center">
+              <AlertTriangle className="w-4 h-4 mr-2 shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
