@@ -1,11 +1,13 @@
 use fluent_bundle::{FluentArgs, FluentValue};
 use rust_decimal::Decimal;
 use thiserror::Error;
-use umuryango_i18n::{localize_domain_error, terms, Locale, LocalizableError, LocalizedError};
+use umuryango_i18n::{Locale, LocalizableError, LocalizedError, localize_domain_error, terms};
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum DomainError {
-    #[error("insufficient custody balance in wallet '{wallet}': available {available}, requested {requested}")]
+    #[error(
+        "insufficient custody balance in wallet '{wallet}': available {available}, requested {requested}"
+    )]
     InsufficientCustodyBalance {
         wallet: String,
         available: Decimal,
@@ -15,7 +17,9 @@ pub enum DomainError {
     #[error("unauthorized role: your role in this family does not allow performing this action")]
     UnauthorizedRole,
 
-    #[error("invalid handover: handover must be between two different custody wallets within the same family")]
+    #[error(
+        "invalid handover: handover must be between two different custody wallets within the same family"
+    )]
     InvalidHandover,
 
     #[error("scope mismatch: cannot mix personal wallet funds with family ledger transactions")]

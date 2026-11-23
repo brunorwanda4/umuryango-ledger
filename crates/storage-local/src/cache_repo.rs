@@ -1,5 +1,5 @@
 use chrono::{DateTime, NaiveDate, Utc};
-use rusqlite::{params, Result};
+use rusqlite::{Result, params};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;

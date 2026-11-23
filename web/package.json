@@ -9,7 +9,8 @@
     "lint": "bun --bun next lint",
     "typecheck": "bunx tsc --noEmit",
     "test": "bun test",
-    "wasm:build": "wasm-pack build ../crates/wasm-bridge --target web --out-dir ../web/src/wasm"
+    "wasm:build": "wasm-pack build ../crates/wasm-bridge --target web --out-dir ../web/src/wasm",
+    "icons:sync": "bun scripts/sync-icons.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.5",

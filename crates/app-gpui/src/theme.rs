@@ -1,4 +1,4 @@
-use gpui_kit::{hsla, rgb, rgba, Hsla, Rgba};
+use gpui_kit::{Hsla, Rgba, hsla, rgb, rgba};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use umuryango_storage_local::UserThemePrefs;

@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/i18n",
     "crates/core-domain",
     "crates/storage-local",
+    "crates/i18n",
     "crates/api-client",
     "crates/api-server",
     "crates/wasm-bridge",
@@ -15,7 +15,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Umuryango Ledger Contributors"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/umuryango/umuryango-ledger"
+repository = "https://github.com/umuryango/ledger"
 
 [workspace.dependencies]
 # Internal workspace crates
@@ -46,6 +46,7 @@ dotenvy = "0.15"
 
 # Async & Networking
 tokio = { version = "1.40", features = ["full"] }
+async-trait = "0.1"
 futures = "0.3"
 futures-util = "0.3"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
@@ -76,3 +77,7 @@ unic-langid = "0.9"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-actix-web = "0.7"
+
+# OpenAPI & Swagger UI
+utoipa = { version = "6.0", features = ["macros"] }
+utoipa-swagger-ui = { version = "10.0", features = ["actix-web"] }

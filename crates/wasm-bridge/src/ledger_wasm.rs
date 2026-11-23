@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 
 use umuryango_core_domain::ledger::{BalanceBreakdown, LedgerValidator};
 use umuryango_core_domain::models::{FamilyRole, Transaction, Wallet};
-use umuryango_core_domain::reporting::{generate_mothers_report, LocalizedExporter, MothersReport};
+use umuryango_core_domain::reporting::{LocalizedExporter, MothersReport, generate_mothers_report};
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::Locale;
 
@@ -109,8 +109,10 @@ pub fn render_mothers_report_wasm(
     tx_s_json: &str,
     locale: &str,
 ) -> Result<String, JsValue> {
-    let scope: LedgerScope = serde_json::from_str(scope_json)
-        .unwrap_or_else(|_| LedgerScope::Personal { user_id: uuid::Uuid::nil() });
+    let scope: LedgerScope =
+        serde_json::from_str(scope_json).unwrap_or_else(|_| LedgerScope::Personal {
+            user_id: uuid::Uuid::nil(),
+        });
     let wallets: Vec<Wallet> = serde_json::from_str(wallets_json).unwrap_or_default();
     let transactions: Vec<Transaction> = serde_json::from_str(tx_s_json).unwrap_or_default();
     let loc = if locale.eq_ignore_ascii_case("rw") {

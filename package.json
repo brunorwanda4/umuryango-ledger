@@ -1,0 +1,37 @@
+{
+  "name": "umuryango",
+  "version": "0.1.5",
+  "private": true,
+  "scripts": {
+    "build": "cargo build -p umuryango-app",
+    "build:windows": "bun run scripts/build-release.js windows",
+    "build:android": "bun run scripts/build-release.js android",
+    "build:mobile": "bun run scripts/build-release.js android",
+    "build:all": "bun run scripts/build-release.js all",
+    "dev": "bun run scripts/dev-native.js",
+    "dev:backend": "bun run scripts/dev-backend.js",
+    "dev:frontend": "bun run --cwd web dev",
+    "dev:web": "bun run --cwd web dev",
+    "dev:all": "bun run scripts/dev-all.js",
+    "dev:both": "bun run scripts/dev-all.js",
+    "dev:fullstack": "bun run scripts/dev-all.js",
+    "dev:native": "bun run scripts/dev-native.js",
+    "dev:watch": "cargo watch -x \"run -p umuryango-app\"",
+    "dev:native:all": "bun run scripts/dev-all.js --native",
+    "dev:app:all": "bun run scripts/dev-all.js --app",
+    "dev:no-web": "bun run scripts/dev-all.js --no-web",
+    "release": "bun run scripts/release.js",
+    "release:mobile": "bun run scripts/release.js --mobile",
+    "release:all": "bun run scripts/release.js --build",
+    "check": "cargo check -p umuryango-app",
+    "test": "cargo test --workspace",
+    "test:web": "bun run --cwd web test",
+    "typecheck": "bun run --cwd web typecheck",
+    "fmt": "cargo fmt --all -- --check",
+    "fmt:fix": "cargo fmt --all"
+  },
+  "engines": {
+    "bun": ">=1.4.0"
+  },
+  "packageManager": "bun@1.4.4"
+}

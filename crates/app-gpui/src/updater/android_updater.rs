@@ -42,7 +42,9 @@ pub async fn download_and_install_apk(
     hasher.update(&bytes);
     let calculated_hash = format!("{:x}", hasher.finalize());
 
-    if !expected_sha256.is_empty() && calculated_hash.to_lowercase() != expected_sha256.to_lowercase() {
+    if !expected_sha256.is_empty()
+        && calculated_hash.to_lowercase() != expected_sha256.to_lowercase()
+    {
         error!(
             expected = expected_sha256,
             actual = calculated_hash,

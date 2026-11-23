@@ -21,7 +21,10 @@ pub async fn download_and_apply_desktop_update(
     download_url: &str,
     expected_sha256: &str,
 ) -> Result<PathBuf, DesktopUpdateError> {
-    info!(url = download_url, "Starting binary download for desktop self-update");
+    info!(
+        url = download_url,
+        "Starting binary download for desktop self-update"
+    );
 
     let client = reqwest::Client::builder()
         .user_agent("Umuryango-Ledger-Updater/1.0")
@@ -42,7 +45,9 @@ pub async fn download_and_apply_desktop_update(
     hasher.update(&bytes);
     let calculated_hash = format!("{:x}", hasher.finalize());
 
-    if !expected_sha256.is_empty() && calculated_hash.to_lowercase() != expected_sha256.to_lowercase() {
+    if !expected_sha256.is_empty()
+        && calculated_hash.to_lowercase() != expected_sha256.to_lowercase()
+    {
         error!(
             expected = expected_sha256,
             actual = calculated_hash,

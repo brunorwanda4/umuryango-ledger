@@ -6,9 +6,9 @@ use rust_decimal::Decimal;
 use std::time::Duration;
 use tokio::time::timeout;
 use umuryango_api_client::ApiClient;
+use umuryango_core_domain::RealtimeEvent;
 use umuryango_core_domain::models::{TransactionType, Wallet, WalletChannel};
 use umuryango_core_domain::scope::LedgerScope;
-use umuryango_core_domain::RealtimeEvent;
 use umuryango_i18n::Locale;
 use umuryango_storage_local::cache_repo::CacheRepository;
 use umuryango_storage_local::sync_queue::{SyncMutation, SyncQueueRepository};
@@ -88,11 +88,7 @@ async fn test_offline_queue_chronological_sync_and_reconciliation() {
     }
 
     // 3. Connect client and flush mutations
-    let client = ApiClient::new(
-        server.base_url.clone(),
-        server.ws_url.clone(),
-        Locale::En,
-    );
+    let client = ApiClient::new(server.base_url.clone(), server.ws_url.clone(), Locale::En);
     client.set_token(Some(fixture.bruno.token.clone())).await;
 
     let flushed = SyncWorker::flush_pending_mutations(&local_db, &client).await;
@@ -135,8 +131,7 @@ async fn test_mid_sync_dropout_idempotency_prevents_double_charge() {
     let server = TestServer::start().await;
     let fixture = server.seed_test_family().await;
 
-    let target_addr: std::net::SocketAddr =
-        format!("127.0.0.1:{}", server.port).parse().unwrap();
+    let target_addr: std::net::SocketAddr = format!("127.0.0.1:{}", server.port).parse().unwrap();
     let proxy = FaultyNetworkProxy::new(target_addr).await;
 
     let (_temp_dir, local_db) = server.create_isolated_local_db();
@@ -248,11 +243,7 @@ async fn test_concurrent_custody_conflict_rolls_back_with_bilingual_error() {
     let (_temp_dir, local_db) = server.create_isolated_local_db();
 
     // Scenario A: English client requests amount exceeding custody balance
-    let client_en = ApiClient::new(
-        server.base_url.clone(),
-        server.ws_url.clone(),
-        Locale::En,
-    );
+    let client_en = ApiClient::new(server.base_url.clone(), server.ws_url.clone(), Locale::En);
     client_en.set_token(Some(fixture.bruno.token.clone())).await;
 
     let mut_id_en = {
@@ -291,11 +282,7 @@ async fn test_concurrent_custody_conflict_rolls_back_with_bilingual_error() {
     }
 
     // Scenario B: Kinyarwanda client requests amount exceeding custody balance
-    let client_rw = ApiClient::new(
-        server.base_url.clone(),
-        server.ws_url.clone(),
-        Locale::Rw,
-    );
+    let client_rw = ApiClient::new(server.base_url.clone(), server.ws_url.clone(), Locale::Rw);
     client_rw.set_token(Some(fixture.bruno.token.clone())).await;
 
     let mut_id_rw = {
@@ -355,8 +342,7 @@ async fn test_intermittent_flaky_network_batch_recovery() {
     let server = TestServer::start().await;
     let fixture = server.seed_test_family().await;
 
-    let target_addr: std::net::SocketAddr =
-        format!("127.0.0.1:{}", server.port).parse().unwrap();
+    let target_addr: std::net::SocketAddr = format!("127.0.0.1:{}", server.port).parse().unwrap();
     let proxy = FaultyNetworkProxy::new(target_addr).await;
 
     let (_temp_dir, local_db) = server.create_isolated_local_db();
@@ -500,7 +486,10 @@ async fn test_intermittent_flaky_network_batch_recovery() {
 
         let cache = CacheRepository::new(&locked);
         let bruno_w = cache.get_wallet(fixture.bruno_wallet.id).unwrap().unwrap();
-        let brother_w = cache.get_wallet(fixture.brother_wallet.id).unwrap().unwrap();
+        let brother_w = cache
+            .get_wallet(fixture.brother_wallet.id)
+            .unwrap()
+            .unwrap();
 
         // Bruno: 150k + 50k (income) - 10k (expense) - 15k (handover) - 5k (expense) = 170k
         assert_eq!(bruno_w.balance, Decimal::new(170000, 0));
@@ -572,11 +561,7 @@ async fn test_realtime_websocket_notification_fires_when_offline_income_syncs() 
         .unwrap();
     }
 
-    let client = ApiClient::new(
-        server.base_url.clone(),
-        server.ws_url.clone(),
-        Locale::En,
-    );
+    let client = ApiClient::new(server.base_url.clone(), server.ws_url.clone(), Locale::En);
     client.set_token(Some(fixture.bruno.token.clone())).await;
 
     // Bruno flushes offline income to live server

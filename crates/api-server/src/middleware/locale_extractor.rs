@@ -1,5 +1,5 @@
-use actix_web::{dev::Payload, FromRequest, HttpRequest};
-use futures::future::{ok, Ready};
+use actix_web::{FromRequest, HttpRequest, dev::Payload};
+use futures::future::{Ready, ok};
 use std::str::FromStr;
 use umuryango_i18n::Locale;
 

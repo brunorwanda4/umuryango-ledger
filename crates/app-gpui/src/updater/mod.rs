@@ -75,7 +75,8 @@ impl AppUpdater {
             is_mandatory,
         } = event
         {
-            if platform.eq_ignore_ascii_case(self.platform) || platform.eq_ignore_ascii_case("ALL") {
+            if platform.eq_ignore_ascii_case(self.platform) || platform.eq_ignore_ascii_case("ALL")
+            {
                 info!(version = %version, is_mandatory = *is_mandatory, "Realtime update broadcast received");
                 self.status = UpdateStatus::Available {
                     version: version.clone(),

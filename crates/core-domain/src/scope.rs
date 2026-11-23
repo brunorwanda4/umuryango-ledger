@@ -1,12 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum LedgerScope {
-    Personal { user_id: Uuid },
-    Family { family_id: Uuid },
+    Personal {
+        #[schema(example = "415d18d4-5487-432a-bb3b-31d7f6b96e47")]
+        user_id: Uuid,
+    },
+    Family {
+        #[schema(example = "9a756613-263a-4467-9d7a-11239c04901f")]
+        family_id: Uuid,
+    },
 }
 
 impl LedgerScope {

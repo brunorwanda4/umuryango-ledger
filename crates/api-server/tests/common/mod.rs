@@ -2,19 +2,19 @@ pub mod network_sim;
 
 pub use network_sim::{FaultyNetworkProxy, NetworkMode};
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
+    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use chrono::Utc;
 use rust_decimal::Decimal;
-use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
 use umuryango_api_server::middleware::create_jwt;
-use umuryango_api_server::{configure_app, AppState, FamilyHub};
+use umuryango_api_server::{AppState, FamilyHub, configure_app};
 use umuryango_i18n::Locale;
 use umuryango_storage_local::db::LocalDatabase;
 use uuid::Uuid;

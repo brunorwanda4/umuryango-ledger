@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::models::{
@@ -9,23 +10,31 @@ use crate::models::{
 };
 use crate::scope::LedgerScope;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub struct CustodianWalletSummary {
+    #[schema(example = "415d18d4-5487-432a-bb3b-31d7f6b96e47")]
     pub custodian_id: Option<Uuid>,
+    #[schema(example = "MTN MoMo Main")]
     pub wallet_name: String,
     pub channel: WalletChannel,
+    #[schema(example = "250000.00")]
     pub balance: Decimal,
+    #[schema(example = "RWF")]
     pub currency: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub struct MothersReport {
     pub scope: LedgerScope,
     pub period_start: DateTime<Utc>,
     pub period_end: DateTime<Utc>,
+    #[schema(example = "100000.00")]
     pub opening_balance: Decimal,
+    #[schema(example = "450000.00")]
     pub total_income: Decimal,
+    #[schema(example = "150000.00")]
     pub total_expenses: Decimal,
+    #[schema(example = "400000.00")]
     pub closing_balance: Decimal,
     pub expenses_by_category: BTreeMap<String, Decimal>,
     pub custodian_balances: Vec<CustodianWalletSummary>,
@@ -111,7 +120,7 @@ pub fn generate_mothers_report(
         .cloned()
         .collect();
 
-    // 6. Filter active future plans
+    // 6. Filter unachieved future plans
     let future_plans = plans
         .iter()
         .filter(|p| p.scope == scope && !p.is_achieved)

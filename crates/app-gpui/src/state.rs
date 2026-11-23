@@ -1,14 +1,14 @@
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use umuryango_core_domain::DomainError;
 use umuryango_core_domain::ledger::LedgerValidator;
 use umuryango_core_domain::models::{
     FamilyMember, FamilyRole, FuturePlan, Loan, Project, Transaction, TransactionType, Wallet,
 };
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
-use umuryango_core_domain::DomainError;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 use umuryango_storage_local::{
     CacheRepository, LocalDatabase, SyncMutation, SyncQueueRepository, SyncStatus,
 };
@@ -169,7 +169,9 @@ impl AppState {
                 ThemeMode::Light
             };
             self.theme = SemanticTheme::from_config(&self.theme_config, self.theme_mode);
-            crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
+            crate::safe_area::platform::set_system_bars_contrast(
+                self.theme_mode != ThemeMode::Dark,
+            );
         }
 
         // Load sync status
@@ -443,9 +445,11 @@ mod tests {
         assert_eq!(state.wallets[0].balance, Decimal::new(70000, 0));
         assert_eq!(state.unread_notifications_count, 1);
         assert_eq!(state.notifications.len(), 1);
-        assert!(state.notifications[0]
-            .message
-            .contains("Alice yongeye 50000 RWF"));
+        assert!(
+            state.notifications[0]
+                .message
+                .contains("Alice yongeye 50000 RWF")
+        );
         assert_eq!(
             state.toast_message,
             Some((state.notifications[0].message.clone(), false))

@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use fluent_bundle::{FluentArgs, FluentValue};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -147,10 +147,7 @@ mod tests {
         };
 
         let en_str = event.format_notification(Locale::En);
-        assert_eq!(
-            en_str,
-            "Keza added 50000 RWF to MoMo Main (Agribusiness)."
-        );
+        assert_eq!(en_str, "Keza added 50000 RWF to MoMo Main (Agribusiness).");
 
         let rw_str = event.format_notification(Locale::Rw);
         assert_eq!(
@@ -163,7 +160,15 @@ mod tests {
             platform: "WINDOWS".to_string(),
             is_mandatory: false,
         };
-        assert!(update_event.format_notification(Locale::En).contains("0.2.0"));
-        assert!(update_event.format_notification(Locale::Rw).contains("0.2.0"));
+        assert!(
+            update_event
+                .format_notification(Locale::En)
+                .contains("0.2.0")
+        );
+        assert!(
+            update_event
+                .format_notification(Locale::Rw)
+                .contains("0.2.0")
+        );
     }
 }

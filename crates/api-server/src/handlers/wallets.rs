@@ -1,48 +1,84 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use umuryango_core_domain::models::{FamilyRole, Wallet, WalletChannel};
 use umuryango_core_domain::scope::LedgerScope;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
-use crate::error::ApiError;
-use crate::middleware::{require_family_membership, require_role, AuthenticatedUser};
+use crate::error::{ApiError, LocalizedErrorResponse};
+use crate::middleware::{AuthenticatedUser, require_family_membership, require_role};
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams, ToSchema)]
 pub struct ListWalletsQuery {
+    #[schema(example = "family")]
     pub scope: Option<String>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateWalletRequest {
+    #[schema(example = "family")]
     pub scope: String, // "personal" or "family"
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
     pub channel: WalletChannel,
+    #[schema(example = "BK Main Account")]
     pub name: String,
+    #[schema(example = "00040-023948-23")]
     pub account_number: Option<String>,
+    #[schema(example = "RWF")]
     pub currency: Option<String>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub custodian_id: Option<Uuid>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CustodyWalletView {
+    #[schema(value_type = String, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub id: Uuid,
     pub scope: LedgerScope,
     pub channel: WalletChannel,
+    #[schema(example = "BK Main Account")]
     pub name: String,
+    #[schema(example = "00040-023948-23")]
     pub account_number: Option<String>,
+    #[schema(example = "RWF")]
     pub currency: String,
+    #[schema(value_type = String, example = "250000.00")]
     pub balance: Decimal,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub custodian_id: Option<Uuid>,
+    #[schema(example = "Bruno Hapiman")]
     pub custodian_name: Option<String>,
+    #[schema(example = true)]
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
 
+/// List personal or family wallets with custody status
+#[utoipa::path(
+    get,
+    path = "/api/v1/wallets",
+    tag = "Wallets",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ListWalletsQuery,
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of wallets retrieved", body = Vec<CustodyWalletView>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Conflict or missing parameters", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn list_wallets(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -185,6 +221,26 @@ pub async fn list_wallets(
     }
 }
 
+/// Create a new personal or family custody wallet
+#[utoipa::path(
+    post,
+    path = "/api/v1/wallets",
+    tag = "Wallets",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = CreateWalletRequest,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Wallet created successfully", body = Wallet),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (insufficient role)", body = LocalizedErrorResponse),
+        (status = 409, description = "Conflict or validation error", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_wallet(
     data: web::Data<AppState>,
     user: AuthenticatedUser,

@@ -1,78 +1,140 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use umuryango_core_domain::models::{
     FuturePlan, Loan, LoanDirection, LoanStatus, Project, ProjectStatus,
 };
 use umuryango_core_domain::scope::LedgerScope;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
-use crate::error::ApiError;
-use crate::middleware::{require_family_membership, AuthenticatedUser};
+use crate::error::{ApiError, LocalizedErrorResponse};
+use crate::middleware::{AuthenticatedUser, require_family_membership};
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams, ToSchema)]
 pub struct ListProjectsQuery {
+    #[schema(value_type = String, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Uuid,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateProjectRequest {
+    #[schema(value_type = String, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Uuid,
+    #[schema(example = "House Renovation")]
     pub name: String,
+    #[schema(example = "Roof repair and kitchen expansion")]
     pub description: Option<String>,
+    #[schema(value_type = String, example = "1500000.00")]
     pub target_amount: Decimal,
     pub start_date: Option<NaiveDate>,
     pub target_end_date: Option<NaiveDate>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams, ToSchema)]
 pub struct ListLoansQuery {
+    #[schema(example = "family")]
     pub scope: Option<String>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateLoanRequest {
+    #[schema(example = "family")]
     pub scope: String, // "personal" or "family"
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
+    #[schema(example = "Uncle Peter")]
     pub counterparty_name: String,
+    #[schema(value_type = String, example = "200000.00")]
     pub principal_amount: Decimal,
+    #[schema(value_type = Option<String>, example = "0.05")]
     pub interest_rate: Option<Decimal>,
     pub due_date: Option<NaiveDate>,
     pub direction: LoanDirection,
+    #[schema(example = "Farm equipment purchase assistance")]
     pub notes: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct RepayLoanRequest {
+    #[schema(value_type = String, example = "50000.00")]
     pub amount: Decimal,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RepayLoanResponse {
+    #[schema(example = "repayment_recorded")]
+    pub status: String,
+    #[schema(value_type = String, example = "150000.00")]
+    pub balance_remaining: Decimal,
+    #[schema(example = "active")]
+    pub loan_status: String,
+}
+
+#[derive(Debug, Deserialize, IntoParams, ToSchema)]
 pub struct ListPlansQuery {
+    #[schema(example = "family")]
     pub scope: Option<String>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreatePlanRequest {
+    #[schema(example = "family")]
     pub scope: String,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
+    #[schema(example = "School Fees Term 1")]
     pub title: String,
+    #[schema(example = "Tuition and books for kids")]
     pub description: Option<String>,
+    #[schema(value_type = String, example = "350000.00")]
     pub estimated_cost: Decimal,
     pub target_date: Option<NaiveDate>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct AllocatePlanRequest {
+    #[schema(value_type = String, example = "100000.00")]
     pub amount: Decimal,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AllocatePlanResponse {
+    #[schema(example = "allocated")]
+    pub status: String,
+    #[schema(example = false)]
+    pub is_achieved: bool,
+    #[schema(value_type = String, example = "100000.00")]
+    pub allocated_amount: Decimal,
 }
 
 // ================= PROJECTS =================
 
+/// List family development projects
+#[utoipa::path(
+    get,
+    path = "/api/v1/projects",
+    tag = "Projects",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ListProjectsQuery,
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of projects retrieved", body = Vec<Project>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (not a family member)", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn list_projects(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -139,6 +201,25 @@ pub async fn list_projects(
     Ok(HttpResponse::Ok().json(projects))
 }
 
+/// Create a new family development project
+#[utoipa::path(
+    post,
+    path = "/api/v1/projects",
+    tag = "Projects",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = CreateProjectRequest,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Project created successfully", body = Project),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (not a family member)", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_project(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -191,6 +272,25 @@ pub async fn create_project(
 
 // ================= LOANS =================
 
+/// List personal or family loans
+#[utoipa::path(
+    get,
+    path = "/api/v1/loans",
+    tag = "Loans",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ListLoansQuery,
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of loans retrieved", body = Vec<Loan>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Missing family_id parameter", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn list_loans(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -288,6 +388,25 @@ pub async fn list_loans(
     Ok(HttpResponse::Ok().json(loans))
 }
 
+/// Create a new personal or family loan record
+#[utoipa::path(
+    post,
+    path = "/api/v1/loans",
+    tag = "Loans",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = CreateLoanRequest,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Loan recorded successfully", body = Loan),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Conflict or missing parameters", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_loan(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -318,7 +437,7 @@ pub async fn create_loan(
 
     sqlx::query(
         r#"
-        INSERT INTO loans (\
+        INSERT INTO loans (
             id, scope, family_id, user_id, counterparty_name,
             principal_amount, balance_remaining, interest_rate, due_date,
             loan_type, status, notes, created_at, updated_at
@@ -367,6 +486,27 @@ pub async fn create_loan(
     Ok(HttpResponse::Created().json(loan))
 }
 
+/// Record a repayment against an active loan
+#[utoipa::path(
+    post,
+    path = "/api/v1/loans/{id}/repay",
+    tag = "Loans",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Loan UUID"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    request_body = RepayLoanRequest,
+    responses(
+        (status = 200, description = "Repayment recorded successfully", body = RepayLoanResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden", body = LocalizedErrorResponse),
+        (status = 404, description = "Loan not found", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn repay_loan(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -427,15 +567,34 @@ pub async fn repay_loan(
     .await
     .map_err(|e| ApiError::database(e, user.locale))?;
 
-    Ok(HttpResponse::Ok().json(serde_json::json!({
-        "status": "repayment_recorded",
-        "balance_remaining": new_balance,
-        "loan_status": new_status
-    })))
+    Ok(HttpResponse::Ok().json(RepayLoanResponse {
+        status: "repayment_recorded".to_string(),
+        balance_remaining: new_balance,
+        loan_status: new_status.to_string(),
+    }))
 }
 
 // ================= FUTURE PLANS =================
 
+/// List personal or family future plans
+#[utoipa::path(
+    get,
+    path = "/api/v1/plans",
+    tag = "Plans",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ListPlansQuery,
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of plans retrieved", body = Vec<FuturePlan>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Missing family_id parameter", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn list_plans(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -516,6 +675,25 @@ pub async fn list_plans(
     Ok(HttpResponse::Ok().json(plans))
 }
 
+/// Create a new personal or family future plan
+#[utoipa::path(
+    post,
+    path = "/api/v1/plans",
+    tag = "Plans",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = CreatePlanRequest,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Future plan created successfully", body = FuturePlan),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Conflict or missing parameters", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_plan(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -583,6 +761,27 @@ pub async fn create_plan(
     Ok(HttpResponse::Created().json(plan))
 }
 
+/// Allocate funds toward achieving a future plan
+#[utoipa::path(
+    post,
+    path = "/api/v1/plans/{id}/allocate",
+    tag = "Plans",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Plan UUID"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    request_body = AllocatePlanRequest,
+    responses(
+        (status = 200, description = "Funds allocated toward plan", body = AllocatePlanResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden", body = LocalizedErrorResponse),
+        (status = 404, description = "Plan not found", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn allocate_plan(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -637,9 +836,9 @@ pub async fn allocate_plan(
     .await
     .map_err(|e| ApiError::database(e, user.locale))?;
 
-    Ok(HttpResponse::Ok().json(serde_json::json!({
-        "status": "allocated",
-        "is_achieved": is_met,
-        "allocated_amount": payload.amount
-    })))
+    Ok(HttpResponse::Ok().json(AllocatePlanResponse {
+        status: "allocated".to_string(),
+        is_achieved: is_met,
+        allocated_amount: payload.amount,
+    }))
 }

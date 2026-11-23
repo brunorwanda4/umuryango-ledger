@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use unic_langid::LanguageIdentifier;
+use utoipa::ToSchema;
 
 pub mod keys;
 pub use keys::{Locale, terms};
@@ -10,15 +11,19 @@ pub use keys::{Locale, terms};
 pub static EN_FTL: &str = include_str!("../../../locales/en.ftl");
 pub static RW_FTL: &str = include_str!("../../../locales/rw.ftl");
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub struct LocalizedError {
+    #[schema(example = "error-insufficient-custody")]
     pub code: String,
+    #[schema(example = "Amafaranga asigaye kuri iyi konti ntabwo ahagije.")]
     pub message: String,
 }
 
 pub trait LocalizableError {
     fn error_code(&self) -> &'static str;
-    fn to_fluent_args(&self) -> Option<FluentArgs<'static>>;
+    fn to_fluent_args(&self) -> Option<FluentArgs<'static>> {
+        None
+    }
 }
 
 pub fn localize_domain_error<E: LocalizableError>(locale: Locale, error: &E) -> LocalizedError {

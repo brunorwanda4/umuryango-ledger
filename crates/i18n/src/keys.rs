@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
+use utoipa::ToSchema;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, ToSchema)]
 #[serde(rename_all = "lowercase")]
+#[schema(example = "rw")]
 pub enum Locale {
     #[default]
     #[serde(rename = "rw")]

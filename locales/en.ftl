@@ -48,7 +48,8 @@ report-period = Period: {$start} to {$end}
 
 # Real-time Notifications
 notif-income-added = {$actor} added {$amount} RWF to {$wallet} ({$source}).
-notif-expense-logged = {$actor} spent {$amount} RWF from {$wallet} on {$category}.\nnotif-handover-completed = {$actor} transferred {$amount} RWF from {$from_wallet} to {$to_wallet}.
+notif-expense-logged = {$actor} spent {$amount} RWF from {$wallet} on {$category}.
+notif-handover-completed = {$actor} transferred {$amount} RWF from {$from_wallet} to {$to_wallet}.
 notif-project-loan-updated = {$entity_type} '{$title}' was updated.
 notif-app-update-available = A new version ({$version}) is available. Click to update.
 notif-app-update-mandatory = A required update ({$version}) is available. Please update now to continue.

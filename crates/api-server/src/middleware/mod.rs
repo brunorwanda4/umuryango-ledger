@@ -4,8 +4,8 @@ pub mod scope_guard;
 
 #[allow(unused_imports)]
 pub use auth_guard::{
-    create_jwt, decode_jwt, require_family_membership, require_role, set_current_user_context,
-    AuthenticatedUser, JwtClaims,
+    AuthenticatedUser, JwtClaims, create_jwt, decode_jwt, require_family_membership, require_role,
+    set_current_user_context,
 };
 pub use locale_extractor::RequestLocale;
 #[allow(unused_imports)]

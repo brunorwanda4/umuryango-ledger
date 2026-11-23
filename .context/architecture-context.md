@@ -1,87 +1,49 @@
 # Architecture Context — Umuryango Ledger
 
-## 1. Monorepo Structure
+## 1. System Vision & Domain Architecture
+Umuryango Ledger is a high-integrity, bilingual (`rw` & `en`) family financial management platform. It solves the critical domestic problem where money sent home to Rwanda or pooled within families vanishes into personal pockets without transparent, zero-embarrassment accounting.
+
+### Dual Financial Scope
+- **`PERSONAL` Scope:** Private ledger for individual custodians. Only visible to the owner.
+- **`FAMILY` Scope:** Shared multi-wallet custody ledger. Visible to all members of the family according to their roles (`HEAD`, `CUSTODIAN`, `MEMBER`, `OBSERVER`).
+- **Physical Custody Invariant:** Every family wallet is assigned a designated physical `custodian_id` (e.g., Mom's MoMo, Brother's BK account). Funds cannot move between custodians without an explicit custody handover record.
+
+---
+
+## 2. Monorepo Structure
 
 ```
 umuryango-ledger/
-├── AGENTS.md                   # Agent master instructions & 8 core rules
-├── .context/                   # System design, standards & progress tracking
-├── Cargo.toml                  # Workspace manifest (edition = "2024", resolver = "3")
-├── locales/                    # Fluent bilingual catalog (en.ftl, rw.ftl)
-├── migrations/                 # PostgreSQL migrations (SQLx with RLS)
-├── assets/                     # Master branding and multi-platform icon assets
 ├── crates/
-│   ├── i18n/                   # Bilingual translator & domain error catalog
-│   ├── core-domain/            # Pure business logic, models, ledger math, reports
-│   ├── storage-local/          # Offline SQLite cache & mutation sync queue
-│   ├── api-client/             # Typed HTTP & WebSocket client for Rust apps
-│   ├── api-server/             # Actix-web backend, SQLx PostgreSQL, auth, WS hub
-│   ├── wasm-bridge/            # WebAssembly bindings for browser calculations
-│   └── app-gpui/               # Desktop & mobile GPUI native application
-└── web/                        # Next.js 16 App Router (Bun 1.4+, React 19, Tailwind CSS v4)
-    ├── public/                 # Static web assets, manifests, icons
-    ├── src/
-    │   ├── app/                # Root layout, globals.css & bilingual routes (/[locale]/...)
-    │   ├── components/         # Shared web UI primitives, modals & charts
-    │   └── lib/                # LedgerContext, API clients, WASM bridge loaders
-    ├── postcss.config.js       # @tailwindcss/postcss pipeline
-    ├── next.config.ts          # Turbopack & WebAssembly configuration
-    ├── tsconfig.json           # TypeScript configuration with @types/bun
-    ├── bun.lock                # Bun lockfile (exclusive package manager)
-    └── package.json            # Web dependencies & bun scripts
+│   ├── core-domain/       # Pure domain models, ledger balance validation, financial math
+│   ├── storage-local/     # Rusqlite cache, offline sync_queue, conflict resolution
+│   ├── i18n/              # Fluent bilingual bundle (rw & en), localized error catalogs
+│   ├── api-client/        # Shared async HTTP & WebSocket client for native & web
+│   ├── api-server/        # Actix-web 4, PostgreSQL (SQLx 0.8), JWT, WebSocket hub
+│   ├── wasm-bridge/       # Wasm-bindgen bindings for Next.js web client
+│   └── app-gpui/          # High-performance desktop & mobile UI via Zed GPUI
+├── web/                   # Next.js 16 (App Router), React 19, Tailwind v4, Bun 1.4+
+├── locales/               # Bilingual Fluent translations (rw.ftl & en.ftl)
+└── migrations/            # Production PostgreSQL SQLx database migrations
 ```
 
 ---
 
-## 2. Framework & Library Versions
+## 3. Crate Responsibilities & Technologies
 
-| Layer | Framework / Library | Version | Notes |
-| :--- | :--- | :--- | :--- |
-| **Rust Toolchain** | Rust Edition | `2024` | Resolver `3` across all workspace crates |
-| **Error Handling** | `thiserror` | `2.0` | Deriving domain errors in core & local storage |
-| **JS/TS Runtime** | **Bun** | `1.4.4` | Exclusive runtime, package manager, and test runner |
-| **Web Framework** | Next.js | `16.4.6` | App Router with Turbopack native builds (`bun --bun next`) |
-| **Frontend UI** | React / React DOM | `19.3.1` | Native Server & Client components (`use()` hook) |
-| **Styling** | Tailwind CSS | `4.3.5` | CSS-first `@theme` design tokens via `@tailwindcss/postcss` |
-| **Icons** | `lucide-react` | `1.77.0` | Professional vector icons only, zero emojis |
-| **Language** | TypeScript | `7.0.2` | Full strict mode typing with `@types/bun` |
-
----
-
-## 3. Layer Responsibilities & Dependencies
-
-```mermaid
-graph TD
-    UI_GPUI[crates/app-gpui] --> Client[crates/api-client]
-    UI_GPUI --> Storage[crates/storage-local]
-    UI_GPUI --> Core[crates/core-domain]
-    UI_GPUI --> I18N[crates/i18n]
-
-    Web[web/ Next.js 16 on Bun] --> WASM[crates/wasm-bridge]
-    WASM --> Core
-    WASM --> I18N
-
-    Server[crates/api-server] --> Core
-    Server --> I18N
-    Server --> DB[(PostgreSQL 16)]
-
-    Client --> Server
-    Storage --> Core
-```
-
-### `crates/core-domain` (Pure Domain Layer)
-- Strictly zero network or database dependencies.
-- Contains all mathematical assertions:
-  - Total balance computation.
-  - Dual-scope integrity (`PERSONAL` cannot reference family wallets; `FAMILY` requires family tenancy).
-  - Custodian handovers (atomic source subtraction and target addition without changing total family net worth).
-  - Validation of transaction allowances based on `FamilyRole` (`Head`, `Admin`, `Member`, `Elder`).
+### `crates/core-domain` (Domain Engine)
+- Zero I/O, zero network dependencies.
+- Models: `User`, `Family`, `Wallet`, `Transaction`, `Project`, `Loan`, `FuturePlan`.
+- Mathematical guarantees: `rust_decimal::Decimal` with 4-decimal precision (e.g. `0.0000 RWF`). No floating-point math anywhere.
+- Ledger validation invariants: validates double-entry consistency and enforces custody constraints before persistence.
+- Implements `utoipa::ToSchema` across all models for OpenAPI 3.1 code generation.
 
 ### `crates/i18n` (Bilingual Localization)
 - Uses Mozilla Project Fluent (`fluent-bundle`).
 - Reads `locales/en.ftl` and `locales/rw.ftl`.
 - Provides static interpolation helper: `Translator::t(locale, key, args)`.
 - Defines domain error translation catalog (`LocalizableError`, `LocalizedError`).
+- Implements `utoipa::ToSchema` for `Locale` and `LocalizedError`.
 
 ### `crates/storage-local` (Offline SQLite)
 - Embeds SQLite via `rusqlite` bundled with UUID and chrono features.
@@ -95,6 +57,8 @@ graph TD
 - Stateless JWT authentication via `jsonwebtoken`.
 - Real-time `FamilyHub`: `DashMap<Uuid, broadcast::Sender<RealtimeEvent>>` keyed by `family_id`.
 - Zero-login magic link verification with cryptographic hash tokens.
+- Interactive Swagger UI and OpenAPI 3.1 documentation via `utoipa 6.0` and `utoipa-swagger-ui 10.0`.
+- Mounted at `/swagger-ui/` referencing `/api-docs/openapi.json`.
 
 ### `web/` (Next.js 16 Web Portal on Bun)
 - Driven exclusively by Bun (`bun run dev`, `bun run build`, `bun test`, `bunx`).

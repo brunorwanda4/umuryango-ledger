@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -8,43 +8,62 @@ use umuryango_core_domain::models::{
 };
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_core_domain::{DomainError, RealtimeEvent};
+use umuryango_i18n::Locale;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
-use crate::error::ApiError;
-use crate::middleware::{require_family_membership, set_current_user_context, AuthenticatedUser};
+use crate::error::{ApiError, LocalizedErrorResponse};
+use crate::middleware::{AuthenticatedUser, require_family_membership, set_current_user_context};
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateTransactionPayload {
+    #[schema(example = "family")]
     pub scope: String, // "personal" or "family"
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
+    #[schema(value_type = String, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440001")]
     pub source_wallet_id: Uuid,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440002")]
     pub destination_wallet_id: Option<Uuid>,
     pub tx_type: TransactionType,
+    #[schema(value_type = String, example = "45000.00")]
     pub amount: Decimal,
+    #[schema(example = "Groceries")]
     pub category: String,
+    #[schema(example = "Weekly market shopping")]
     pub description: Option<String>,
+    #[schema(example = "Kimironko Market Vendor")]
     pub paid_to: Option<String>,
+    #[schema(example = "https://storage.umuryango.rw/receipts/rec-123.jpg")]
     pub receipt_url: Option<String>,
     pub tx_date: Option<DateTime<Utc>>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440003")]
     pub idempotency_key: Option<Uuid>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams, ToSchema)]
 pub struct ListTransactionsQuery {
+    #[schema(example = "family")]
     pub scope: Option<String>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440001")]
     pub wallet_id: Option<Uuid>,
+    #[schema(example = "EXPENSE")]
     pub tx_type: Option<String>,
+    #[schema(example = "Groceries")]
     pub category: Option<String>,
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct TransactionExecutionResult {
     pub transaction: Transaction,
+    #[schema(value_type = String, example = "205000.00")]
     pub source_wallet_balance: Decimal,
+    #[schema(value_type = Option<String>, example = "45000.00")]
     pub destination_wallet_balance: Option<Decimal>,
 }
 
@@ -150,6 +169,77 @@ impl ExistingTxRow {
     }
 }
 
+async fn find_existing_by_idempotency_key(
+    db: &sqlx::PgPool,
+    key: Uuid,
+    loc: Locale,
+) -> Result<Option<TransactionExecutionResult>, ApiError> {
+    let existing = sqlx::query_as::<_, ExistingTxRow>(
+        r#"
+        SELECT id, scope::TEXT as scope, user_id, family_id, source_wallet_id, destination_wallet_id,
+               tx_type::TEXT as tx_type, amount, currency, category, description, NULL::TEXT as paid_to, tx_date, created_at
+        FROM transactions
+        WHERE idempotency_key = $1
+        "#,
+    )
+    .bind(key)
+    .fetch_optional(db)
+    .await
+    .map_err(|e| ApiError::database(e, loc))?;
+
+    if let Some(row) = existing {
+        let src_balance =
+            sqlx::query_scalar::<_, Decimal>("SELECT balance FROM wallets WHERE id = $1")
+                .bind(row.source_wallet_id)
+                .fetch_one(db)
+                .await
+                .unwrap_or(Decimal::ZERO);
+
+        let dest_balance = match row.destination_wallet_id {
+            Some(did) => {
+                sqlx::query_scalar::<_, Decimal>("SELECT balance FROM wallets WHERE id = $1")
+                    .bind(did)
+                    .fetch_optional(db)
+                    .await
+                    .ok()
+                    .flatten()
+            }
+            None => None,
+        };
+
+        Ok(Some(TransactionExecutionResult {
+            transaction: row.into_domain(),
+            source_wallet_balance: src_balance,
+            destination_wallet_balance: dest_balance,
+        }))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Create an idempotent double-entry or single-entry transaction
+#[utoipa::path(
+    post,
+    path = "/api/v1/transactions",
+    tag = "Transactions",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = CreateTransactionPayload,
+    params(
+        ("X-Idempotency-Key" = Option<String>, Header, description = "Optional idempotency key (UUID) to prevent duplicate transactions"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Transaction recorded successfully", body = TransactionExecutionResult),
+        (status = 200, description = "Transaction previously executed (idempotent result)", body = TransactionExecutionResult),
+        (status = 400, description = "Bad request or validation error", body = LocalizedErrorResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (insufficient wallet custody permission)", body = LocalizedErrorResponse),
+        (status = 409, description = "Insufficient funds or domain rule violation", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_transaction(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -167,44 +257,8 @@ pub async fn create_transaction(
         .or(payload.idempotency_key);
 
     if let Some(key) = idempotency_key {
-        let existing = sqlx::query_as::<_, ExistingTxRow>(
-            r#"
-            SELECT id, scope::TEXT as scope, user_id, family_id, source_wallet_id, destination_wallet_id,
-                   tx_type::TEXT as tx_type, amount, currency, category, description, NULL as paid_to, tx_date, created_at
-            FROM transactions
-            WHERE idempotency_key = $1
-            "#,
-        )
-        .bind(key)
-        .fetch_optional(&data.db)
-        .await
-        .map_err(|e| ApiError::database(e, loc))?;
-
-        if let Some(row) = existing {
-            let src_balance =
-                sqlx::query_scalar::<_, Decimal>("SELECT balance FROM wallets WHERE id = $1")
-                    .bind(row.source_wallet_id)
-                    .fetch_one(&data.db)
-                    .await
-                    .unwrap_or(Decimal::ZERO);
-
-            let dest_balance = match row.destination_wallet_id {
-                Some(did) => {
-                    sqlx::query_scalar::<_, Decimal>("SELECT balance FROM wallets WHERE id = $1")
-                        .bind(did)
-                        .fetch_optional(&data.db)
-                        .await
-                        .ok()
-                        .flatten()
-                }
-                None => None,
-            };
-
-            return Ok(HttpResponse::Ok().json(TransactionExecutionResult {
-                transaction: row.into_domain(),
-                source_wallet_balance: src_balance,
-                destination_wallet_balance: dest_balance,
-            }));
+        if let Some(res) = find_existing_by_idempotency_key(&data.db, key, loc).await? {
+            return Ok(HttpResponse::Ok().json(res));
         }
     }
 
@@ -325,7 +379,7 @@ pub async fn create_transaction(
     let fid_opt = scope.family_id();
     let scope_db = scope.as_str();
 
-    sqlx::query(
+    let insert_res = sqlx::query(
         r#"
         INSERT INTO transactions (
             id, scope, user_id, family_id, source_wallet_id, destination_wallet_id,
@@ -349,8 +403,21 @@ pub async fn create_transaction(
     .bind(tx_date)
     .bind(now)
     .execute(&mut *tx)
-    .await
-    .map_err(|e| ApiError::database(e, loc))?;
+    .await;
+
+    if let Err(e) = insert_res {
+        let _ = tx.rollback().await;
+        if let sqlx::Error::Database(ref db_err) = e {
+            if db_err.code().as_deref() == Some("23505") {
+                if let Some(key) = idempotency_key {
+                    if let Some(res) = find_existing_by_idempotency_key(&data.db, key, loc).await? {
+                        return Ok(HttpResponse::Ok().json(res));
+                    }
+                }
+            }
+        }
+        return Err(ApiError::database(e, loc));
+    }
 
     // If Handover, also record in custody_handovers table for formal tracking
     if payload.tx_type == TransactionType::Handover {
@@ -467,6 +534,25 @@ pub async fn create_transaction(
     }))
 }
 
+/// List transactions matching filters for personal or family scope
+#[utoipa::path(
+    get,
+    path = "/api/v1/transactions",
+    tag = "Transactions",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ListTransactionsQuery,
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of transactions retrieved", body = Vec<Transaction>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Conflict or missing parameters", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn list_transactions(
     data: web::Data<AppState>,
     user: AuthenticatedUser,

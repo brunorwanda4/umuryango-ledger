@@ -1,42 +1,78 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use chrono::{DateTime, Utc};
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 use serde::{Deserialize, Serialize};
 use umuryango_core_domain::models::{Family, FamilyRole};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::error::ApiError;
-use crate::middleware::{require_family_membership, require_role, AuthenticatedUser};
+use crate::error::{ApiError, LocalizedErrorResponse};
+use crate::middleware::{AuthenticatedUser, require_family_membership, require_role};
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateFamilyRequest {
+    #[schema(example = "Umuryango w'Abahire")]
     pub name: String,
+    #[schema(example = "Rwanda & Diaspora joint custody ledger")]
     pub description: Option<String>,
+    #[schema(example = "RWF")]
     pub currency: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct JoinFamilyRequest {
+    #[schema(example = "UMUR7890")]
     pub invite_code: String,
+    #[schema(example = "Eric Custodian")]
     pub display_name: Option<String>,
     pub role: Option<FamilyRole>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateMemberRoleRequest {
     pub role: FamilyRole,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct FamilyWithRole {
+    #[schema(example = "9a756613-263a-4467-9d7a-11239c04901f")]
     pub id: Uuid,
+    #[schema(example = "Umuryango w'Abahire")]
     pub name: String,
+    #[schema(example = "Rwanda & Diaspora joint custody ledger")]
     pub description: Option<String>,
+    #[schema(example = "RWF")]
     pub currency: String,
     pub role: FamilyRole,
+    #[schema(example = "UMUR7890")]
     pub invite_code: Option<String>,
     pub joined_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct CreateFamilyResponse {
+    pub family: Family,
+    #[schema(example = "UMUR7890")]
+    pub invite_code: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct JoinFamilyResponse {
+    #[schema(example = "joined")]
+    pub status: String,
+    #[schema(example = "9a756613-263a-4467-9d7a-11239c04901f")]
+    pub family_id: Uuid,
+    #[schema(example = "Umuryango w'Abahire")]
+    pub family_name: String,
+    pub role: FamilyRole,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UpdateMemberRoleResponse {
+    #[schema(example = "updated")]
+    pub status: String,
+    pub role: FamilyRole,
 }
 
 fn generate_invite_code() -> String {
@@ -48,6 +84,21 @@ fn generate_invite_code() -> String {
         .to_uppercase()
 }
 
+/// List all families where the authenticated user is an active member
+#[utoipa::path(
+    get,
+    path = "/api/v1/families",
+    tag = "Families",
+    security(("bearer_auth" = [])),
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of user families with roles", body = Vec<FamilyWithRole>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn list_families(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -100,6 +151,22 @@ pub async fn list_families(
     Ok(HttpResponse::Ok().json(families))
 }
 
+/// Create a new family group with the caller as HEAD and provision the primary vault wallet
+#[utoipa::path(
+    post,
+    path = "/api/v1/families",
+    tag = "Families",
+    security(("bearer_auth" = [])),
+    request_body = CreateFamilyRequest,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Family created successfully", body = CreateFamilyResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_family(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -184,12 +251,29 @@ pub async fn create_family(
         updated_at: now,
     };
 
-    Ok(HttpResponse::Created().json(serde_json::json!({
-        "family": family,
-        "invite_code": invite_code,
-    })))
+    Ok(HttpResponse::Created().json(CreateFamilyResponse {
+        family,
+        invite_code,
+    }))
 }
 
+/// Join an existing family via invite code
+#[utoipa::path(
+    post,
+    path = "/api/v1/families/join",
+    tag = "Families",
+    security(("bearer_auth" = [])),
+    request_body = JoinFamilyRequest,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "Joined family successfully", body = JoinFamilyResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 404, description = "Family not found", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn join_family(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -284,14 +368,34 @@ pub async fn join_family(
         .await
         .map_err(|e| ApiError::database(e, user.locale))?;
 
-    Ok(HttpResponse::Ok().json(serde_json::json!({
-        "status": "joined",
-        "family_id": fam.id,
-        "family_name": fam.name,
-        "role": assigned_role
-    })))
+    Ok(HttpResponse::Ok().json(JoinFamilyResponse {
+        status: "joined".to_string(),
+        family_id: fam.id,
+        family_name: fam.name,
+        role: assigned_role,
+    }))
 }
 
+/// Update member authorization role within a family (Head only)
+#[utoipa::path(
+    put,
+    path = "/api/v1/families/{family_id}/members/{member_id}/role",
+    tag = "Families",
+    security(("bearer_auth" = [])),
+    params(
+        ("family_id" = Uuid, Path, description = "Family UUID"),
+        ("member_id" = Uuid, Path, description = "Family Member UUID"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    request_body = UpdateMemberRoleRequest,
+    responses(
+        (status = 200, description = "Member role updated successfully", body = UpdateMemberRoleResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (requires Head role)", body = LocalizedErrorResponse),
+        (status = 404, description = "Member or family not found", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn update_member_role(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -329,8 +433,8 @@ pub async fn update_member_role(
         return Err(ApiError::not_found(user.locale));
     }
 
-    Ok(HttpResponse::Ok().json(serde_json::json!({
-        "status": "updated",
-        "role": payload.role
-    })))
+    Ok(HttpResponse::Ok().json(UpdateMemberRoleResponse {
+        status: "updated".to_string(),
+        role: payload.role,
+    }))
 }

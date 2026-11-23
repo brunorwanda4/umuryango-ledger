@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
-use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, Ordering};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::task::JoinHandle;
@@ -69,7 +69,10 @@ impl FaultyNetworkProxy {
                                         let header_str = String::from_utf8_lossy(&buf[..n]);
                                         let mut expected_len = None;
                                         for line in header_str.lines() {
-                                            if line.to_ascii_lowercase().starts_with("content-length:") {
+                                            if line
+                                                .to_ascii_lowercase()
+                                                .starts_with("content-length:")
+                                            {
                                                 if let Some(val) = line.split(':').nth(1) {
                                                     if let Ok(len) = val.trim().parse::<usize>() {
                                                         expected_len = Some(len);
@@ -81,7 +84,8 @@ impl FaultyNetworkProxy {
                                         if let Some(content_len) = expected_len {
                                             if let Some(body_start) = header_str.find("\r\n\r\n") {
                                                 let body_read = n - (body_start + 4);
-                                                let mut remaining = content_len.saturating_sub(body_read);
+                                                let mut remaining =
+                                                    content_len.saturating_sub(body_read);
                                                 while remaining > 0 {
                                                     let mut b = vec![0u8; remaining.min(8192)];
                                                     if let Ok(rn) = c_read.read(&mut b).await {
@@ -97,7 +101,8 @@ impl FaultyNetworkProxy {
                                             }
                                         }
                                         // Wait a brief moment for the target server to process
-                                        tokio::time::sleep(tokio::time::Duration::from_millis(80)).await;
+                                        tokio::time::sleep(tokio::time::Duration::from_millis(150))
+                                            .await;
                                     }
                                 }
                             }

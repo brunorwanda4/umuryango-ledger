@@ -1,14 +1,18 @@
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::error;
 use umuryango_core_domain::DomainError;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
+use utoipa::ToSchema;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct LocalizedErrorResponse {
+    #[schema(example = "INSUFFICIENT_CUSTODY")]
     pub code: String,
+    #[schema(example = "rw")]
     pub locale: String,
+    #[schema(example = "Amafaranga asigaye kuri iyi konti ntabwo ahagije.")]
     pub message: String,
 }
 
@@ -161,11 +165,11 @@ impl ResponseError for ApiError {
             ApiErrorKind::Conflict(msg) => ("CONFLICT".to_string(), msg.clone()),
             ApiErrorKind::Database(_) => {
                 let msg = if self.locale == Locale::Rw {
-                    "Habaye ikibazo mu bubiko bw'amakuru. Ongera ugerageze."
+                    "Habaye ikibazo mu bubiko bw'amakuru. Ongera ugerageze.".to_string()
                 } else {
-                    "A database error occurred. Please try again."
+                    "A database error occurred. Please try again.".to_string()
                 };
-                ("DATABASE_ERROR".to_string(), msg.to_string())
+                ("DATABASE_ERROR".to_string(), msg)
             }
             ApiErrorKind::Internal(msg) => ("INTERNAL_ERROR".to_string(), msg.clone()),
         };

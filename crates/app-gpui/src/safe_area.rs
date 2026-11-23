@@ -1,4 +1,4 @@
-use gpui_kit::{px, Pixels};
+use gpui_kit::{Pixels, px};
 use serde::{Deserialize, Serialize};
 
 /// Safe area insets representing system window bars (status bar, navigation bar, display cutouts, and IME)
@@ -82,7 +82,11 @@ impl SafeAreaInsets {
     }
 
     pub fn has_insets(&self) -> bool {
-        self.top > 0.0 || self.bottom > 0.0 || self.left > 0.0 || self.right > 0.0 || self.ime_height > 0.0
+        self.top > 0.0
+            || self.bottom > 0.0
+            || self.left > 0.0
+            || self.right > 0.0
+            || self.ime_height > 0.0
     }
 }
 
@@ -111,7 +115,10 @@ pub mod platform {
     /// When dark_icons is true, dark icons are set for light status bar backgrounds (#fdf0d5)
     /// When dark_icons is false, light icons are set for dark status bar backgrounds (#003049)
     pub fn set_system_bars_contrast(dark_icons: bool) {
-        info!("Set Android WindowInsetsController appearance light_status_bars: {}", dark_icons);
+        info!(
+            "Set Android WindowInsetsController appearance light_status_bars: {}",
+            dark_icons
+        );
     }
 }
 

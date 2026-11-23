@@ -1,5 +1,5 @@
 use std::fmt::Write;
-use umuryango_i18n::{terms, Locale, Translator};
+use umuryango_i18n::{Locale, Translator, terms};
 
 use super::summary::MothersReport;
 use crate::models::WalletChannel;

@@ -1,7 +1,7 @@
-use actix_web::{web, Error, HttpRequest, HttpResponse};
+use actix_web::{Error, HttpRequest, HttpResponse, web};
 use dashmap::DashMap;
 use futures_util::StreamExt;
-use jsonwebtoken::{decode, DecodingKey, Validation};
+use jsonwebtoken::{DecodingKey, Validation, decode};
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::time::Duration;

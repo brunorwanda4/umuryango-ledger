@@ -1,11 +1,11 @@
-use actix_web::{dev::Payload, web, FromRequest, HttpRequest};
+use actix_web::{FromRequest, HttpRequest, dev::Payload, web};
 use chrono::{Duration, Utc};
-use futures::future::{err, ok, Ready};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use futures::future::{Ready, err, ok};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use umuryango_core_domain::models::{FamilyMember, FamilyRole};
 use umuryango_core_domain::DomainError;
+use umuryango_core_domain::models::{FamilyMember, FamilyRole};
 use umuryango_i18n::Locale;
 use uuid::Uuid;
 

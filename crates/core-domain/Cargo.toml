@@ -14,3 +14,4 @@ uuid = { workspace = true }
 chrono = { workspace = true }
 rust_decimal = { workspace = true }
 thiserror = { workspace = true }
+utoipa = { workspace = true, features = ["uuid", "chrono", "decimal"] }

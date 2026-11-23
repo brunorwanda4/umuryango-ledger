@@ -1,45 +1,70 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use umuryango_core_domain::models::User;
 use umuryango_i18n::Locale;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::error::ApiError;
-use crate::middleware::{create_jwt, AuthenticatedUser, RequestLocale};
+use crate::error::{ApiError, LocalizedErrorResponse};
+use crate::middleware::{AuthenticatedUser, RequestLocale, create_jwt};
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct RegisterPayload {
+    #[schema(example = "bruno@example.rw")]
     pub email: Option<String>,
+    #[schema(example = "+250788123456")]
     pub phone_number: Option<String>,
+    #[schema(example = "Bruno Hapiman")]
     pub full_name: String,
+    #[schema(example = "Secret123!")]
     pub password: String,
+    #[schema(example = "rw")]
     pub preferred_locale: Option<Locale>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct LoginPayload {
+    #[schema(example = "bruno@example.rw")]
     pub login: String, // email or phone_number
+    #[schema(example = "Secret123!")]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateLocalePayload {
+    #[schema(example = "en")]
     pub locale: Locale,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct AuthResponse {
+    #[schema(example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")]
     pub token: String,
     pub user: User,
 }
 
+/// Register a new user and provision their default personal cash wallet
+#[utoipa::path(
+    post,
+    path = "/api/v1/auth/register",
+    tag = "Auth",
+    request_body = RegisterPayload,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "User registered successfully", body = AuthResponse),
+        (status = 409, description = "Validation or duplicate conflict", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn register(
     data: web::Data<AppState>,
     locale: RequestLocale,
@@ -140,6 +165,22 @@ pub async fn register(
     Ok(HttpResponse::Created().json(AuthResponse { token, user }))
 }
 
+/// Authenticate via email/phone and password, returning a JWT token
+#[utoipa::path(
+    post,
+    path = "/api/v1/auth/login",
+    tag = "Auth",
+    request_body = LoginPayload,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "User authenticated successfully", body = AuthResponse),
+        (status = 401, description = "Invalid credentials", body = LocalizedErrorResponse),
+        (status = 403, description = "Account disabled", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn login(
     data: web::Data<AppState>,
     locale: RequestLocale,
@@ -224,6 +265,22 @@ pub async fn login(
     Ok(HttpResponse::Ok().json(AuthResponse { token, user }))
 }
 
+/// Update preferred language (rw / en) for the authenticated user
+#[utoipa::path(
+    put,
+    path = "/api/v1/auth/locale",
+    tag = "Auth",
+    security(("bearer_auth" = [])),
+    request_body = UpdateLocalePayload,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "Locale updated successfully"),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn update_locale(
     data: web::Data<AppState>,
     user: AuthenticatedUser,

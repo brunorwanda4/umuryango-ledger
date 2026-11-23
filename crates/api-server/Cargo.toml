@@ -30,6 +30,8 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 tracing-actix-web = { workspace = true }
+utoipa = { workspace = true, features = ["actix_extras", "uuid", "chrono", "decimal"] }
+utoipa-swagger-ui = { workspace = true, features = ["actix-web"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
@@ -37,5 +39,5 @@ tokio = { workspace = true, features = ["full"] }
 reqwest = { workspace = true }
 umuryango-storage-local = { workspace = true }
 umuryango-api-client = { workspace = true }
-umuryango-core-domain = { workspace = true }
-umuryango-i18n = { workspace = true }
+async-trait = { workspace = true }
+serial_test = "3.2"

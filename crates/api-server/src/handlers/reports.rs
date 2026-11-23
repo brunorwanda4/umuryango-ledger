@@ -1,6 +1,6 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use chrono::{DateTime, Duration, NaiveDate, Utc};
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -8,42 +8,52 @@ use umuryango_core_domain::models::{
     FamilyRole, FuturePlan, Loan, LoanDirection, LoanStatus, Project, ProjectStatus, Transaction,
     TransactionType, Wallet, WalletChannel,
 };
-use umuryango_core_domain::reporting::{generate_mothers_report, LocalizedExporter, MothersReport};
+use umuryango_core_domain::reporting::{LocalizedExporter, MothersReport, generate_mothers_report};
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::Locale;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
-use crate::error::ApiError;
+use crate::error::{ApiError, LocalizedErrorResponse};
 use crate::middleware::{
-    require_family_membership, require_role, AuthenticatedUser, RequestLocale,
+    AuthenticatedUser, RequestLocale, require_family_membership, require_role,
 };
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, IntoParams, ToSchema)]
 pub struct ReportSummaryQuery {
+    #[schema(example = "family")]
     pub scope: Option<String>,
+    #[schema(value_type = Option<String>, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Option<Uuid>,
     pub period_start: Option<DateTime<Utc>>,
     pub period_end: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct CreateShareLinkPayload {
+    #[schema(value_type = String, format = "uuid", example = "550e8400-e29b-41d4-a716-446655440000")]
     pub family_id: Uuid,
+    #[schema(example = "rw")]
     pub locale: Option<Locale>,
+    #[schema(example = 7)]
     pub valid_days: Option<i64>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct SummaryReportResponse {
     pub report: MothersReport,
+    #[schema(example = "RAPORO Y'UMURYANGO...")]
     pub whatsapp_summary: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ShareLinkResponse {
+    #[schema(example = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
     pub share_token: String,
+    #[schema(example = "https://umuryango.rw/rw/report/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6")]
     pub share_url: String,
+    #[schema(example = "Raporo y'umuryango wacu...")]
     pub whatsapp_preview_text: String,
     pub expires_at: DateTime<Utc>,
 }
@@ -56,6 +66,25 @@ fn generate_share_token() -> String {
         .collect()
 }
 
+/// Generate financial summary report for a period
+#[utoipa::path(
+    get,
+    path = "/api/v1/reports/summary",
+    tag = "Reports",
+    security(
+        ("bearer_auth" = [])
+    ),
+    params(
+        ReportSummaryQuery,
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "Summary report generated successfully", body = SummaryReportResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Conflict or missing parameters", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn get_summary_report(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -98,6 +127,25 @@ pub async fn get_summary_report(
     }))
 }
 
+/// Create a shareable magic link for family elders with no login needed
+#[utoipa::path(
+    post,
+    path = "/api/v1/reports/share",
+    tag = "Reports",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = CreateShareLinkPayload,
+    params(
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 201, description = "Share link created successfully", body = ShareLinkResponse),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (insufficient role)", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn create_share_link(
     data: web::Data<AppState>,
     user: AuthenticatedUser,
@@ -139,7 +187,7 @@ pub async fn create_share_link(
     let report =
         fetch_and_generate_report(&data.db, scope, now - Duration::days(30), now, loc).await?;
     let whatsapp_preview_text = format!(
-        "{}\n\n🔗 Fungura raporo hano / Open report here:\n{}",
+        "{}\n\nFungura raporo hano / Open report here:\n{}",
         LocalizedExporter::format_mothers_report(&report, loc),
         share_url
     );
@@ -152,7 +200,22 @@ pub async fn create_share_link(
     }))
 }
 
-/// Public endpoint (NO AUTH REQUIRED) for elders and family members using magic links
+/// Access a public family report via magic link token without authentication
+#[utoipa::path(
+    get,
+    path = "/api/v1/reports/shared/{token}",
+    tag = "Reports",
+    security(),
+    params(
+        ("token" = String, Path, description = "32-character alphanumeric share token"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "Public report retrieved successfully", body = SummaryReportResponse),
+        (status = 404, description = "Report link expired or invalid", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
 pub async fn get_public_report(
     data: web::Data<AppState>,
     path: web::Path<String>,
@@ -251,7 +314,7 @@ async fn fetch_and_generate_report(
             };
             Wallet {
                 id: r.id,
-                scope,
+                scope: scope.clone(),
                 channel,
                 name: r.name,
                 account_number: None,
@@ -267,7 +330,7 @@ async fn fetch_and_generate_report(
 
     // 2. Transactions
     #[derive(sqlx::FromRow)]
-    struct TRow {
+    struct TxRow {
         id: Uuid,
         source_wallet_id: Uuid,
         destination_wallet_id: Option<Uuid>,
@@ -276,46 +339,50 @@ async fn fetch_and_generate_report(
         currency: String,
         category: String,
         description: Option<String>,
-        user_id: Uuid,
+        authorized_by: Uuid,
         tx_date: DateTime<Utc>,
         created_at: DateTime<Utc>,
     }
 
-    let t_rows = sqlx::query_as::<_, TRow>(
+    let tx_rows = sqlx::query_as::<_, TxRow>(
         r#"
         SELECT id, source_wallet_id, destination_wallet_id, tx_type::TEXT as tx_type,
-               amount, currency, category, description, user_id, tx_date, created_at
+               amount, currency, category, description, user_id as authorized_by, tx_date, created_at
         FROM transactions
-        WHERE ($1 = TRUE AND scope = 'family' AND family_id = $2)
-           OR ($1 = FALSE AND scope = 'personal' AND user_id = $3)
+        WHERE (($1 = TRUE AND scope = 'family' AND family_id = $2)
+           OR ($1 = FALSE AND scope = 'personal' AND user_id = $3))
+           AND tx_date >= $4 AND tx_date <= $5
+        ORDER BY tx_date ASC
         "#,
     )
     .bind(is_family)
     .bind(fid)
     .bind(uid)
+    .bind(period_start)
+    .bind(period_end)
     .fetch_all(pool)
     .await
     .map_err(|e| ApiError::database(e, locale))?;
 
-    let transactions = t_rows
+    let transactions = tx_rows
         .into_iter()
         .map(|r| {
-            let tx_type = match r.tx_type.to_lowercase().as_str() {
+            let t_type = match r.tx_type.to_lowercase().as_str() {
                 "income" => TransactionType::Income,
                 "expense" => TransactionType::Expense,
                 _ => TransactionType::Handover,
             };
             Transaction {
                 id: r.id,
-                scope,
+                scope: scope.clone(),
                 source_wallet_id: r.source_wallet_id,
                 destination_wallet_id: r.destination_wallet_id,
-                tx_type,
+                tx_type: t_type,
                 amount: r.amount,
                 currency: r.currency,
                 category: r.category,
                 description: r.description,
-                authorized_by: r.user_id,
+                authorized_by: r.authorized_by,
                 paid_to: None,
                 tx_date: r.tx_date,
                 created_at: r.created_at,
@@ -325,8 +392,9 @@ async fn fetch_and_generate_report(
 
     // 3. Projects
     #[derive(sqlx::FromRow)]
-    struct PRow {
+    struct PRRow {
         id: Uuid,
+        family_id: Uuid,
         name: String,
         description: Option<String>,
         target_amount: Decimal,
@@ -340,10 +408,10 @@ async fn fetch_and_generate_report(
     }
 
     let p_rows = if is_family {
-        sqlx::query_as::<_, PRow>(
+        sqlx::query_as::<_, PRRow>(
             r#"
-            SELECT id, name, description, target_amount, allocated_amount, status::TEXT as status,
-                   start_date, target_end_date, created_by, created_at, updated_at
+            SELECT id, family_id, name, description, target_amount, allocated_amount,
+                   status::TEXT as status, start_date, target_end_date, created_by, created_at, updated_at
             FROM projects
             WHERE family_id = $1
             "#,
@@ -367,7 +435,7 @@ async fn fetch_and_generate_report(
             };
             Project {
                 id: r.id,
-                family_id: fid.unwrap_or_default(),
+                family_id: r.family_id,
                 name: r.name,
                 description: r.description,
                 target_amount: r.target_amount,
@@ -412,7 +480,7 @@ async fn fetch_and_generate_report(
     .bind(uid)
     .fetch_all(pool)
     .await
-    .map_err(|e| ApiError::database(e, locale))? ;
+    .map_err(|e| ApiError::database(e, locale))?;
 
     let loans = l_rows
         .into_iter()
@@ -429,7 +497,7 @@ async fn fetch_and_generate_report(
             };
             Loan {
                 id: r.id,
-                scope,
+                scope: scope.clone(),
                 counterparty_name: r.counterparty_name,
                 principal_amount: r.principal_amount,
                 balance_remaining: r.balance_remaining,
@@ -476,7 +544,7 @@ async fn fetch_and_generate_report(
         .into_iter()
         .map(|r| FuturePlan {
             id: r.id,
-            scope,
+            scope: scope.clone(),
             title: r.title,
             description: r.description,
             estimated_cost: r.estimated_cost,

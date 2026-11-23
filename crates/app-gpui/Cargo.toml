@@ -1,9 +1,13 @@
 [package]
-name = "app-gpui"
+name = "umuryango-app"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+
+[[bin]]
+name = "umuryango-app"
+path = "src/main.rs"
 
 [dependencies]
 umuryango-core-domain = { workspace = true }

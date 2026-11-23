@@ -1,9 +1,9 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tracing_actix_web::TracingLogger;
-use umuryango_api_server::{configure_app, AppState};
+use umuryango_api_server::{AppState, configure_app};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -36,6 +36,10 @@ async fn main() -> std::io::Result<()> {
 
     println!(
         "[Umuryango Ledger] API server starting on http://{}:{}",
+        host, port
+    );
+    println!(
+        "[Umuryango Ledger] Swagger UI documentation available at http://{}:{}/swagger-ui/",
         host, port
     );
 

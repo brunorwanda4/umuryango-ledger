@@ -34,9 +34,7 @@ pub async fn fetch_latest_ota_bundle(
 
     let response = client.get(&url).send().await?;
     if !response.status().is_success() {
-        return Err(OtaError::Network(
-            response.error_for_status().unwrap_err(),
-        ));
+        return Err(OtaError::Network(response.error_for_status().unwrap_err()));
     }
 
     let bundle: OtaBundleResponse = response.json().await?;
