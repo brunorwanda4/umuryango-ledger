@@ -1,9 +1,10 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use umuryango_core_domain::models::Project;
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -15,6 +16,7 @@ impl ProjectsScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let title = Translator::t(state.locale, terms::ACTIVE_PROJECTS, None);
 
@@ -46,6 +48,7 @@ impl ProjectsScreen {
                     )
                     .child(
                         div()
+                            .id("projects-add-btn")
                             .flex()
                             .items_center()
                             .gap(px(6.0))
@@ -57,6 +60,9 @@ impl ProjectsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.open_quick_entry(cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Add,
                                 IconSize::Xs,
@@ -70,15 +76,36 @@ impl ProjectsScreen {
                             }),
                     ),
             )
-            // Projects Grid
-            .child(
-                div().grid().grid_cols(2).gap(px(16.0)).children(
-                    state
-                        .projects
-                        .iter()
-                        .map(|p| Self::render_project_card(p, theme)),
-                ),
-            )
+            // Projects Grid or Empty State
+            .child(if state.projects.is_empty() {
+                div()
+                    .p(px(24.0))
+                    .rounded(px(8.0))
+                    .bg(theme.bg_surface)
+                    .border_1()
+                    .border_color(theme.border_subtle)
+                    .text_sm()
+                    .text_center()
+                    .text_color(theme.text_muted)
+                    .child(if state.locale == Locale::Rw {
+                        "Nta mishinga y'umuryango irandikwa. Kanda kuri 'Umushinga Mushya' utangire."
+                    } else {
+                        "No family projects recorded yet. Click 'New Project' above to create one."
+                    })
+                    .into_any_element()
+            } else {
+                div()
+                    .grid()
+                    .grid_cols(2)
+                    .gap(px(16.0))
+                    .children(
+                        state
+                            .projects
+                            .iter()
+                            .map(|p| Self::render_project_card(p, theme)),
+                    )
+                    .into_any_element()
+            })
     }
 
     fn render_project_card(project: &Project, theme: &SemanticTheme) -> impl IntoElement {

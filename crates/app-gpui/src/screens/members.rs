@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::FamilyRole;
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -14,8 +15,15 @@ impl MembersScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let title = Translator::t(state.locale, terms::NAV_MEMBERS, None);
+
+        let copy_code_msg = if state.locale == Locale::Rw {
+            "Kode y'ubutumire yakoporowe!".to_string()
+        } else {
+            "Invite code copied to clipboard!".to_string()
+        };
 
         div()
             .id(id)
@@ -82,6 +90,7 @@ impl MembersScreen {
                             )
                             .child(
                                 div()
+                                    .id("members-copy-code-btn")
                                     .flex()
                                     .items_center()
                                     .gap(px(4.0))
@@ -92,6 +101,13 @@ impl MembersScreen {
                                     .text_xs()
                                     .text_color(theme.bg_canvas)
                                     .cursor_pointer()
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        this.copy_to_clipboard(
+                                            "UMUR7890".to_string(),
+                                            copy_code_msg.clone(),
+                                            cx,
+                                        );
+                                    }))
                                     .child(app_icon(
                                         AppIcon::Copy,
                                         IconSize::Xs,
@@ -118,23 +134,23 @@ impl MembersScreen {
                     ))
                     .child(Self::render_member_row(
                         "Mama Hapiman",
-                        "Family Elder / Approver",
-                        FamilyRole::Head,
-                        false,
-                        state.locale,
-                        theme,
-                    ))
-                    .child(Self::render_member_row(
-                        "Brother Eric",
-                        "Cash Custodian",
+                        "Co-Custodian (Main MoMo)",
                         FamilyRole::Custodian,
                         false,
                         state.locale,
                         theme,
                     ))
                     .child(Self::render_member_row(
-                        "Sister Divine",
-                        "Contributor",
+                        "Uncle Jean",
+                        "Audit & Transparency",
+                        FamilyRole::Member,
+                        false,
+                        state.locale,
+                        theme,
+                    ))
+                    .child(Self::render_member_row(
+                        "Grace Ingabire",
+                        "Family Elder Advisory",
                         FamilyRole::Member,
                         false,
                         state.locale,
@@ -152,38 +168,33 @@ impl MembersScreen {
         theme: &SemanticTheme,
     ) -> impl IntoElement {
         let (role_label, role_color) = match role {
-            FamilyRole::Head => {
-                let lbl = if locale == Locale::Rw {
-                    "Umukuru"
+            FamilyRole::Head => (
+                if locale == Locale::Rw {
+                    "Umukuru w'Umuryango"
                 } else {
-                    "Head"
-                };
-                (lbl, theme.accent_primary)
-            }
-            FamilyRole::Custodian => {
-                let lbl = if locale == Locale::Rw {
-                    "Umubitsi"
+                    "Family Head"
+                },
+                theme.accent_primary,
+            ),
+            FamilyRole::Custodian => (
+                if locale == Locale::Rw {
+                    "Umubikizi w'Imari"
                 } else {
                     "Custodian"
-                };
-                (lbl, theme.income_color)
-            }
-            FamilyRole::Member => {
-                let lbl = if locale == Locale::Rw {
+                },
+                theme.income_color,
+            ),
+            FamilyRole::Member => (
+                if locale == Locale::Rw {
                     "Umunyamuryango"
                 } else {
                     "Member"
-                };
-                (lbl, theme.text_muted)
-            }
+                },
+                theme.text_muted,
+            ),
         };
 
-        let initial = name
-            .chars()
-            .next()
-            .unwrap_or('M')
-            .to_uppercase()
-            .to_string();
+        let initial = name.chars().next().unwrap_or('?').to_string();
 
         div()
             .flex()

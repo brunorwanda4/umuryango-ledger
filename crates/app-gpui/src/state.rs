@@ -5,6 +5,7 @@ use umuryango_core_domain::DomainError;
 use umuryango_core_domain::ledger::LedgerValidator;
 use umuryango_core_domain::models::{
     FamilyMember, FamilyRole, FuturePlan, Loan, Project, Transaction, TransactionType, Wallet,
+    WalletChannel,
 };
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
@@ -132,30 +133,29 @@ impl Default for AppState {
             unread_notifications_count: 0,
 
             safe_area,
-            updater: AppUpdater::new("0.1.0"),
+            updater: AppUpdater::new(env!("CARGO_PKG_VERSION").to_string()),
         }
     }
 }
 
 impl AppState {
     pub fn new(user_id: Uuid, user_name: String) -> Self {
-        let mut state = Self::default();
-        state.user_id = user_id;
-        state.user_name = user_name;
-        state
+        Self {
+            user_id,
+            user_name,
+            ..Default::default()
+        }
     }
 
-    /// Update safe area insets dynamically upon window resize, orientation change, or nav bar toggle
     pub fn update_safe_area(&mut self, insets: SafeAreaInsets) {
         self.safe_area = insets;
     }
 
-    /// Update software keyboard (IME) height
     pub fn update_ime_height(&mut self, height: f32) {
         self.safe_area.ime_height = height;
     }
 
-    /// Load cached state and theme preferences from the local offline SQLite database
+    /// Reloads cached entities matching active scope from the local database
     pub fn load_from_db(&mut self, db: &LocalDatabase) {
         let repo = CacheRepository::new(db);
         let queue = SyncQueueRepository::new(db);
@@ -181,9 +181,44 @@ impl AppState {
 
         // Load cached wallets & transactions matching active scope
         match self.active_scope {
-            LedgerScope::Personal { .. } => {
+            LedgerScope::Personal { user_id } => {
                 if let Ok(w) = repo.list_wallets(&self.active_scope) {
-                    self.wallets = w;
+                    if w.is_empty() {
+                        let seed_wallets = vec![
+                            Wallet {
+                                id: Uuid::new_v4(),
+                                scope: self.active_scope,
+                                channel: WalletChannel::MobileMoney,
+                                name: "Personal MTN MoMo".to_string(),
+                                account_number: Some("+250788112233".to_string()),
+                                currency: "RWF".to_string(),
+                                balance: Decimal::from(65_000),
+                                custodian_id: Some(user_id),
+                                is_active: true,
+                                created_at: Utc::now(),
+                                updated_at: Utc::now(),
+                            },
+                            Wallet {
+                                id: Uuid::new_v4(),
+                                scope: self.active_scope,
+                                channel: WalletChannel::CashInHand,
+                                name: "Personal Cash".to_string(),
+                                account_number: None,
+                                currency: "RWF".to_string(),
+                                balance: Decimal::from(20_000),
+                                custodian_id: Some(user_id),
+                                is_active: true,
+                                created_at: Utc::now(),
+                                updated_at: Utc::now(),
+                            },
+                        ];
+                        for sw in &seed_wallets {
+                            let _ = repo.upsert_wallet(sw);
+                        }
+                        self.wallets = seed_wallets;
+                    } else {
+                        self.wallets = w;
+                    }
                 }
                 if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
                     self.transactions = txs;
@@ -191,7 +226,55 @@ impl AppState {
             }
             LedgerScope::Family { family_id } => {
                 if let Ok(w) = repo.list_wallets(&self.active_scope) {
-                    self.wallets = w;
+                    if w.is_empty() {
+                        let seed_wallets = vec![
+                            Wallet {
+                                id: Uuid::new_v4(),
+                                scope: self.active_scope,
+                                channel: WalletChannel::MobileMoney,
+                                name: "MTN MoMo Family Custody".to_string(),
+                                account_number: Some("+250788123456".to_string()),
+                                currency: "RWF".to_string(),
+                                balance: Decimal::from(350_000),
+                                custodian_id: Some(self.user_id),
+                                is_active: true,
+                                created_at: Utc::now(),
+                                updated_at: Utc::now(),
+                            },
+                            Wallet {
+                                id: Uuid::new_v4(),
+                                scope: self.active_scope,
+                                channel: WalletChannel::Bank,
+                                name: "BK Family Operating Account".to_string(),
+                                account_number: Some("00045-0123456-78".to_string()),
+                                currency: "RWF".to_string(),
+                                balance: Decimal::from(1_200_000),
+                                custodian_id: Some(self.user_id),
+                                is_active: true,
+                                created_at: Utc::now(),
+                                updated_at: Utc::now(),
+                            },
+                            Wallet {
+                                id: Uuid::new_v4(),
+                                scope: self.active_scope,
+                                channel: WalletChannel::CashInHand,
+                                name: "Cash in Hand / Ntoki".to_string(),
+                                account_number: None,
+                                currency: "RWF".to_string(),
+                                balance: Decimal::from(80_000),
+                                custodian_id: Some(self.user_id),
+                                is_active: true,
+                                created_at: Utc::now(),
+                                updated_at: Utc::now(),
+                            },
+                        ];
+                        for sw in &seed_wallets {
+                            let _ = repo.upsert_wallet(sw);
+                        }
+                        self.wallets = seed_wallets;
+                    } else {
+                        self.wallets = w;
+                    }
                 }
                 if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
                     self.transactions = txs;
@@ -223,6 +306,14 @@ impl AppState {
         if let Some(database) = db {
             self.load_from_db(database);
         }
+    }
+
+    pub fn select_screen(&mut self, screen: Screen) {
+        self.current_screen = screen;
+    }
+
+    pub fn active_wallets(&self) -> &[Wallet] {
+        &self.wallets
     }
 
     pub fn switch_locale(&mut self, locale: Locale) {
@@ -324,7 +415,6 @@ impl AppState {
     ) -> Result<(), DomainError> {
         // 1. Validate and apply financial invariants
         LedgerValidator::validate_and_apply_transaction(&tx, actor_role, &mut self.wallets)?;
-
         // 2. Persist locally if DB provided
         if let Some(database) = db {
             let repo = CacheRepository::new(database);

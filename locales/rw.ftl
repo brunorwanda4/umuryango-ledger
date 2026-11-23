@@ -60,6 +60,32 @@ update-downloading = Birimo gukururwa ({$progress}%)...
 update-mandatory-title = Amavugurura Ategetswe
 update-restart-now = Funga Wongere Ufungure Ubu
 
+# Kwinjira n'Iyandikisha
+login-title = Injira muri Konti
+register-title = Fungura Konti Nshya
+full-name = Amazina Yombi
+phone-number = Nimero ya Telefoni
+gender = Igitsina
+gender-male = Gabo
+gender-female = Gore
+gender-other = Ikindi
+password = Ijambo ry'Ibanga
+confirm-password = Ongera Wandike Ijambo ry'Ibanga
+create-account = Fungura Konti
+already-have-account = Usanzwe ufite konti? Injira
+onboarding-title = Murakaza neza muri Umuryango Ledger
+create-family = Kurema Umuryango
+family-name = Izina ry'Umuryango
+add-member-phone = Ongeraho Umunyamuryango ukoresheje Nimero ya Telefoni
+add-phone-btn = + Ongeraho Nimero
+join-family = Injira mu Muryango
+pending-family-invites = Ubutumire Butegereje Kwemezwa
+enter-4-char-code = Shyiramo kode y'inyuguti 4 (urugero: HK0N)
+skip-for-now = Simbuka ubu
+continue-to-dashboard = Komeza kuri Dashboard
+you-were-added-to = Washyizwe mu muryango wa {$family_name}
+join-btn = Injira
+
 # Urutonde rw'Amakosa (Domain & Localized API Errors)
 error-insufficient-custody = Konti '{$wallet}' ifite {$available} RWF gusa; ntihagije ngo ukoreshe {$requested} RWF.
 error-unauthorized-role = Inshingano zawe muri uyu muryango ntizikwemerera gukora iki gikorwa.
@@ -68,3 +94,7 @@ error-scope-mismatch = Ntushobora kuvanga amafaranga yawe bwite n'ay'umuryango.
 error-invalid-amount = Umubare w'amafaranga ugomba kuba urenga zeru.
 error-not-found = Ibyo ushaka ntibibonetse.
 error-validation = Habaye ikosa mu kugenzura amakuru: {$message}
+error-password-mismatch = Amagambo banga ntabwo ahura. Ongera uyandike neza.
+error-phone-already-exists = Konti ikoresha iyi nimero ya telefoni isanzwe ibaho.
+error-invalid-credentials = Nimero ya telefoni cyangwa ijambo banga sibyo.
+error-invalid-invite-code = Kode y'umuryango y'inyuguti 4 ntabwo ari yo. Ongera ugerageze.

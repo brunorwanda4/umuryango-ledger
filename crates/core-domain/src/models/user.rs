@@ -13,7 +13,12 @@ pub struct User {
     #[schema(example = "bruno@example.rw")]
     pub email: Option<String>,
     #[schema(example = "+250788123456")]
+    pub phone: String,
+    #[serde(default)]
+    #[schema(example = "+250788123456")]
     pub phone_number: Option<String>,
+    #[schema(example = "MALE")]
+    pub gender: String,
     pub preferred_locale: Locale,
     #[schema(example = true)]
     pub is_active: bool,

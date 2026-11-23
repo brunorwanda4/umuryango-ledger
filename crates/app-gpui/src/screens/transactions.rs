@@ -1,7 +1,8 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::tx_row::TxRow;
 use crate::state::AppState;
@@ -14,6 +15,7 @@ impl TransactionsScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let title = Translator::t(state.locale, terms::NAV_TRANSACTIONS, None);
 
@@ -45,6 +47,7 @@ impl TransactionsScreen {
                     )
                     .child(
                         div()
+                            .id("transactions-quick-entry-btn")
                             .flex()
                             .items_center()
                             .gap(px(6.0))
@@ -56,6 +59,9 @@ impl TransactionsScreen {
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.open_quick_entry(cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Add,
                                 IconSize::Xs,
@@ -69,17 +75,43 @@ impl TransactionsScreen {
                             }),
                     ),
             )
-            // Transactions full list
+            // Transactions full list or empty state
             .child(div().flex().flex_col().gap(px(8.0)).children(
-                state.transactions.iter().enumerate().map(|(idx, tx)| {
-                    TxRow::render(
-                        format!("txs-row-{}", idx),
-                        tx,
-                        Some(&state.user_name),
-                        state.locale,
-                        theme,
-                    )
-                }),
+                if state.transactions.is_empty() {
+                    vec![
+                        div()
+                            .p(px(24.0))
+                            .rounded(px(8.0))
+                            .bg(theme.bg_surface)
+                            .border_1()
+                            .border_color(theme.border_subtle)
+                            .text_sm()
+                            .text_center()
+                            .text_color(theme.text_muted)
+                            .child(if state.locale == Locale::Rw {
+                                "Nta bikorwa by'imari birandikwa muri uyu mushinga/umuryango."
+                            } else {
+                                "No transactions recorded yet in this scope."
+                            })
+                            .into_any_element(),
+                    ]
+                } else {
+                    state
+                        .transactions
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, tx)| {
+                            TxRow::render(
+                                format!("txs-row-{}", idx),
+                                tx,
+                                Some(&state.user_name),
+                                state.locale,
+                                theme,
+                            )
+                            .into_any_element()
+                        })
+                        .collect()
+                },
             ))
     }
 }

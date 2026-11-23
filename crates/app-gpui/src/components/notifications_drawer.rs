@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_i18n::Locale;
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{AppState, NotificationItem};
 use crate::theme::SemanticTheme;
@@ -14,6 +15,7 @@ impl NotificationsDrawer {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let (title, mark_all_label, empty_text) = match state.locale {
             Locale::Rw => (
@@ -86,11 +88,38 @@ impl NotificationsDrawer {
                     )
                     .child(
                         div()
-                            .cursor_pointer()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.income_color)
-                            .child(mark_all_label),
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap(px(10.0))
+                            .child(
+                                div()
+                                    .id("drawer-mark-all-read")
+                                    .cursor_pointer()
+                                    .text_xs()
+                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                    .text_color(theme.income_color)
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.mark_all_notifications_read(cx);
+                                    }))
+                                    .child(mark_all_label),
+                            )
+                            .child(
+                                div()
+                                    .id("drawer-close-btn")
+                                    .p(px(4.0))
+                                    .rounded(px(4.0))
+                                    .cursor_pointer()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.close_notifications(cx);
+                                    }))
+                                    .child(app_icon(
+                                        AppIcon::Close,
+                                        IconSize::Xs,
+                                        IconTone::Default,
+                                        theme,
+                                    )),
+                            ),
                     ),
             )
             // Notifications List

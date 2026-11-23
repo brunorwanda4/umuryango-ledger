@@ -1,5 +1,5 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use std::str::FromStr;
 use umuryango_core_domain::models::{Transaction, TransactionType, Wallet};
@@ -7,6 +7,7 @@ use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
@@ -36,7 +37,7 @@ impl Default for QuickEntryForm {
             mode: QuickEntryMode::Expense,
             source_wallet_id: None,
             destination_wallet_id: None,
-            amount_input: String::new(),
+            amount_input: "5000".to_string(),
             category: "Food".to_string(),
             description: String::new(),
             authorized_by: None,
@@ -56,6 +57,7 @@ impl QuickEntryDialog {
         _is_family: bool,
         locale: Locale,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let income_label = Translator::t(locale, terms::INCOME, None);
         let expense_label = Translator::t(locale, terms::EXPENSE, None);
@@ -75,14 +77,16 @@ impl QuickEntryDialog {
 
         div()
             .id(id)
-            .w(px(480.0))
+            .w(px(500.0))
+            .max_h(px(640.0))
+            .overflow_y_scroll()
             .p(px(24.0))
             .rounded(px(14.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
             .font_family(theme.font_family)
-            // Header with vector icon
+            // Header with vector icon & Close button
             .child(
                 div()
                     .flex()
@@ -112,6 +116,22 @@ impl QuickEntryDialog {
                                         "Log New Transaction"
                                     }),
                             ),
+                    )
+                    .child(
+                        div()
+                            .id("quick-entry-header-close")
+                            .p(px(4.0))
+                            .rounded(px(4.0))
+                            .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.close_quick_entry(cx);
+                            }))
+                            .child(app_icon(
+                                AppIcon::Close,
+                                IconSize::Sm,
+                                IconTone::Muted,
+                                theme,
+                            )),
                     ),
             )
             // Mode selector tabs
@@ -124,6 +144,7 @@ impl QuickEntryDialog {
                     // Expense tab
                     .child(
                         div()
+                            .id("quick-entry-tab-expense")
                             .flex_1()
                             .flex()
                             .items_center()
@@ -144,6 +165,9 @@ impl QuickEntryDialog {
                                 theme.text_primary
                             })
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.set_quick_entry_mode(QuickEntryMode::Expense, cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Expense,
                                 IconSize::Xs,
@@ -159,6 +183,7 @@ impl QuickEntryDialog {
                     // Income tab
                     .child(
                         div()
+                            .id("quick-entry-tab-income")
                             .flex_1()
                             .flex()
                             .items_center()
@@ -179,6 +204,9 @@ impl QuickEntryDialog {
                                 theme.text_primary
                             })
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.set_quick_entry_mode(QuickEntryMode::Income, cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Income,
                                 IconSize::Xs,
@@ -191,9 +219,10 @@ impl QuickEntryDialog {
                             ))
                             .child(income_label),
                     )
-                    // Handover tab (only in Family mode)
+                    // Handover tab
                     .child(
                         div()
+                            .id("quick-entry-tab-handover")
                             .flex_1()
                             .flex()
                             .items_center()
@@ -214,6 +243,9 @@ impl QuickEntryDialog {
                                 theme.text_primary
                             })
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.set_quick_entry_mode(QuickEntryMode::Handover, cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Handover,
                                 IconSize::Xs,
@@ -248,17 +280,65 @@ impl QuickEntryDialog {
                             ))
                             .child(
                                 div()
-                                    .p(px(10.0))
+                                    .p(px(8.0))
                                     .rounded(px(8.0))
                                     .bg(theme.bg_canvas)
                                     .border_1()
                                     .border_color(theme.border_subtle)
                                     .text_sm()
+                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
                                     .text_color(theme.text_primary)
                                     .child(selected_source),
-                            ),
+                            )
+                            // Wallets quick picker list
+                            .child(div().flex().flex_col().gap(px(4.0)).children(
+                                wallets.iter().map(|w| {
+                                    let is_sel = Some(w.id) == form.source_wallet_id;
+                                    let wid = w.id;
+                                    div()
+                                        .id(format!("wallet-pick-{}", w.id))
+                                        .p(px(6.0))
+                                        .rounded(px(6.0))
+                                        .bg(if is_sel {
+                                            theme.accent_primary.opacity(0.12)
+                                        } else {
+                                            theme.bg_canvas
+                                        })
+                                        .border_1()
+                                        .border_color(if is_sel {
+                                            theme.accent_primary
+                                        } else {
+                                            theme.border_subtle
+                                        })
+                                        .cursor_pointer()
+                                        .on_click(cx.listener(move |this, _, _, cx| {
+                                            this.quick_entry_form.source_wallet_id = Some(wid);
+                                            cx.notify();
+                                        }))
+                                        .child(
+                                            div()
+                                                .flex()
+                                                .justify_between()
+                                                .items_center()
+                                                .child(
+                                                    div()
+                                                        .text_xs()
+                                                        .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                                        .text_color(theme.text_primary)
+                                                        .child(w.name.clone()),
+                                                )
+                                                .child(
+                                                    div()
+                                                        .text_xs()
+                                                        .font_weight(gpui_kit::FontWeight::BOLD)
+                                                        .text_color(theme.income_color)
+                                                        .child(format!("{} RWF", w.balance)),
+                                                ),
+                                        )
+                                }),
+                            )),
                     )
-                    // Amount input
+                    // Amount input & quick presets
                     .child(
                         div()
                             .flex()
@@ -283,96 +363,157 @@ impl QuickEntryDialog {
                                     .child(if form.amount_input.is_empty() {
                                         "0 RWF".to_string()
                                     } else {
-                                        form.amount_input.clone()
+                                        format!("{} RWF", form.amount_input)
                                     }),
-                            ),
+                            )
+                            // Amount quick chips
+                            .child(div().flex().flex_row().gap(px(6.0)).children(
+                                ["1000", "5000", "10000", "25000", "50000"].into_iter().map(
+                                    |amt| {
+                                        let is_sel = form.amount_input == amt;
+                                        let amt_val = amt.to_string();
+                                        div()
+                                            .id(format!("amt-preset-{}", amt))
+                                            .px(px(8.0))
+                                            .py(px(4.0))
+                                            .rounded(px(4.0))
+                                            .bg(if is_sel {
+                                                theme.accent_primary
+                                            } else {
+                                                theme.bg_elevated
+                                            })
+                                            .border_1()
+                                            .border_color(theme.border_subtle)
+                                            .text_xs()
+                                            .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                            .text_color(if is_sel {
+                                                theme.bg_canvas
+                                            } else {
+                                                theme.text_primary
+                                            })
+                                            .cursor_pointer()
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.quick_entry_form.amount_input =
+                                                    amt_val.clone();
+                                                cx.notify();
+                                            }))
+                                            .child(format!("{} RWF", amt))
+                                    },
+                                ),
+                            )),
                     )
-                    // Category & description row
+                    // Category & quick chips
                     .child(
                         div()
                             .flex()
-                            .flex_row()
-                            .gap(px(8.0))
+                            .flex_col()
+                            .gap(px(4.0))
                             .child(
                                 div()
-                                    .flex_1()
-                                    .flex()
-                                    .flex_col()
-                                    .gap(px(4.0))
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child("Category / Icyiciro"),
-                                    )
-                                    .child(
-                                        div()
-                                            .p(px(8.0))
-                                            .rounded(px(6.0))
-                                            .bg(theme.bg_canvas)
-                                            .border_1()
-                                            .border_color(theme.border_subtle)
-                                            .text_sm()
-                                            .text_color(theme.text_primary)
-                                            .child(form.category.clone()),
-                                    ),
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child("Category / Icyiciro"),
                             )
                             .child(
-                                div()
-                                    .flex_1()
-                                    .flex()
-                                    .flex_col()
-                                    .gap(px(4.0))
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child("Paid To / Wishyuwe"),
-                                    )
-                                    .child(
-                                        div()
-                                            .p(px(8.0))
-                                            .rounded(px(6.0))
-                                            .bg(theme.bg_canvas)
-                                            .border_1()
-                                            .border_color(theme.border_subtle)
-                                            .text_sm()
-                                            .text_color(theme.text_primary)
-                                            .child(if form.paid_to.is_empty() {
-                                                "-".to_string()
-                                            } else {
-                                                form.paid_to.clone()
-                                            }),
-                                    ),
+                                div().flex().flex_row().gap(px(6.0)).children(
+                                    ["Food", "Utilities", "Health", "Education", "Transport"]
+                                        .into_iter()
+                                        .map(|cat| {
+                                            let is_sel = form.category == cat;
+                                            let cat_val = cat.to_string();
+                                            div()
+                                                .id(format!("cat-preset-{}", cat))
+                                                .px(px(8.0))
+                                                .py(px(4.0))
+                                                .rounded(px(4.0))
+                                                .bg(if is_sel {
+                                                    theme.accent_primary
+                                                } else {
+                                                    theme.bg_elevated
+                                                })
+                                                .border_1()
+                                                .border_color(theme.border_subtle)
+                                                .text_xs()
+                                                .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                                .text_color(if is_sel {
+                                                    theme.bg_canvas
+                                                } else {
+                                                    theme.text_primary
+                                                })
+                                                .cursor_pointer()
+                                                .on_click(cx.listener(move |this, _, _, cx| {
+                                                    this.quick_entry_form.category =
+                                                        cat_val.clone();
+                                                    cx.notify();
+                                                }))
+                                                .child(cat)
+                                        }),
+                                ),
                             ),
                     ),
             )
-            // Action button with vector check icon
+            // Action buttons row: Confirm + Cancel
             .child(
                 div()
                     .mt(px(20.0))
-                    .py(px(10.0))
-                    .rounded(px(8.0))
-                    .bg(theme.accent_primary)
                     .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.0))
-                    .text_sm()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(theme.bg_canvas)
-                    .cursor_pointer()
-                    .child(app_icon(
-                        AppIcon::Check,
-                        IconSize::Sm,
-                        IconTone::OnPrimaryButton,
-                        theme,
-                    ))
-                    .child(if locale == Locale::Rw {
-                        "Emeza Igikorwa"
-                    } else {
-                        "Confirm Transaction"
-                    }),
+                    .flex_row()
+                    .gap(px(12.0))
+                    .child(
+                        div()
+                            .id("quick-entry-cancel-btn")
+                            .flex_1()
+                            .py(px(10.0))
+                            .rounded(px(8.0))
+                            .bg(theme.bg_elevated)
+                            .border_1()
+                            .border_color(theme.border_subtle)
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .text_sm()
+                            .font_weight(gpui_kit::FontWeight::MEDIUM)
+                            .text_color(theme.text_primary)
+                            .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.close_quick_entry(cx);
+                            }))
+                            .child(if locale == Locale::Rw {
+                                "Hagarika"
+                            } else {
+                                "Cancel"
+                            }),
+                    )
+                    .child(
+                        div()
+                            .id("quick-entry-confirm-btn")
+                            .flex_1()
+                            .py(px(10.0))
+                            .rounded(px(8.0))
+                            .bg(theme.accent_primary)
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .gap(px(8.0))
+                            .text_sm()
+                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .text_color(theme.bg_canvas)
+                            .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.submit_quick_entry(cx);
+                            }))
+                            .child(app_icon(
+                                AppIcon::Check,
+                                IconSize::Sm,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
+                            .child(if locale == Locale::Rw {
+                                "Emeza Igikorwa"
+                            } else {
+                                "Confirm"
+                            }),
+                    ),
             )
     }
 
@@ -404,7 +545,7 @@ impl QuickEntryDialog {
         let now = chrono::Utc::now();
         Ok(Transaction {
             id: Uuid::new_v4(),
-            scope: scope.clone(),
+            scope: *scope,
             source_wallet_id: source_id,
             destination_wallet_id: form.destination_wallet_id,
             tx_type,

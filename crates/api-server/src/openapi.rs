@@ -28,8 +28,9 @@ use crate::handlers::{
     wallets::{self, CreateWalletRequest, CustodyWalletView, ListWalletsQuery},
 };
 use umuryango_core_domain::models::{
-    Family, FamilyMember, FamilyRole, FuturePlan, Loan, LoanDirection, LoanStatus, Project,
-    ProjectStatus, Transaction, TransactionType, User, Wallet, WalletChannel,
+    Family, FamilyMember, FamilyRole, FuturePlan, Loan, LoanDirection, LoanStatus,
+    PendingFamilyInvite, Project, ProjectStatus, Transaction, TransactionType, User, Wallet,
+    WalletChannel,
 };
 use umuryango_core_domain::reporting::{CustodianWalletSummary, MothersReport};
 use umuryango_core_domain::scope::LedgerScope;
@@ -65,6 +66,7 @@ impl Modify for SecurityAddon {
         auth::login,
         auth::update_locale,
         families::list_families,
+        families::list_pending_invites,
         families::create_family,
         families::join_family,
         families::update_member_role,
@@ -102,6 +104,7 @@ impl Modify for SecurityAddon {
             User,
             Family,
             FamilyMember,
+            PendingFamilyInvite,
             Wallet,
             Transaction,
             Project,

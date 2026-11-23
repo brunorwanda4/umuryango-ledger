@@ -1,9 +1,10 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
@@ -15,6 +16,7 @@ impl ScopeSwitcher {
         current_scope: &LedgerScope,
         locale: Locale,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let is_family = current_scope.is_family();
         let personal_label = Translator::t(locale, terms::PERSONAL_SCOPE, None);
@@ -39,6 +41,7 @@ impl ScopeSwitcher {
             // Family scope button
             .child(
                 div()
+                    .id("scope-family-btn")
                     .flex_1()
                     .flex()
                     .items_center()
@@ -60,6 +63,9 @@ impl ScopeSwitcher {
                         inactive_text
                     })
                     .cursor_pointer()
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.switch_to_family_scope(cx);
+                    }))
                     .child(app_icon(
                         AppIcon::FamilyLedger,
                         IconSize::Xs,
@@ -75,6 +81,7 @@ impl ScopeSwitcher {
             // Personal scope button
             .child(
                 div()
+                    .id("scope-personal-btn")
                     .flex_1()
                     .flex()
                     .items_center()
@@ -96,6 +103,9 @@ impl ScopeSwitcher {
                         inactive_text
                     })
                     .cursor_pointer()
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.switch_to_personal_scope(cx);
+                    }))
                     .child(app_icon(
                         AppIcon::PersonalWallet,
                         IconSize::Xs,

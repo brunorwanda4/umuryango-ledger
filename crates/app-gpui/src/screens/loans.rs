@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::{Loan, LoanDirection};
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -14,6 +15,7 @@ impl LoansScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let title = Translator::t(state.locale, terms::LOANS_SUMMARY, None);
 
@@ -57,6 +59,7 @@ impl LoansScreen {
                     )
                     .child(
                         div()
+                            .id("loans-add-btn")
                             .flex()
                             .items_center()
                             .gap(px(6.0))
@@ -68,6 +71,9 @@ impl LoansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.open_quick_entry(cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Add,
                                 IconSize::Xs,
@@ -97,13 +103,34 @@ impl LoansScreen {
                                 "Money Lent Out"
                             }),
                     )
-                    .child(
-                        div().flex().flex_col().gap(px(10.0)).children(
+                    .child(div().flex().flex_col().gap(px(10.0)).children(
+                        if lent_loans.is_empty() {
+                            vec![
+                                div()
+                                    .p(px(16.0))
+                                    .rounded(px(8.0))
+                                    .bg(theme.bg_surface)
+                                    .border_1()
+                                    .border_color(theme.border_subtle)
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child(if state.locale == Locale::Rw {
+                                        "Nta mwenda wahawe abandi wanditswe."
+                                    } else {
+                                        "No money lent out recorded yet."
+                                    })
+                                    .into_any_element(),
+                            ]
+                        } else {
                             lent_loans
                                 .into_iter()
-                                .map(|l| Self::render_loan_row(l, true, state.locale, theme)),
-                        ),
-                    ),
+                                .map(|l| {
+                                    Self::render_loan_row(l, true, state.locale, theme)
+                                        .into_any_element()
+                                })
+                                .collect()
+                        },
+                    )),
             )
             // Section 2: Borrowed (Ayo twagujije)
             .child(
@@ -120,13 +147,34 @@ impl LoansScreen {
                                 "Money Borrowed"
                             }),
                     )
-                    .child(
-                        div().flex().flex_col().gap(px(10.0)).children(
+                    .child(div().flex().flex_col().gap(px(10.0)).children(
+                        if borrowed_loans.is_empty() {
+                            vec![
+                                div()
+                                    .p(px(16.0))
+                                    .rounded(px(8.0))
+                                    .bg(theme.bg_surface)
+                                    .border_1()
+                                    .border_color(theme.border_subtle)
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child(if state.locale == Locale::Rw {
+                                        "Nta mwenda twagujije wanditswe."
+                                    } else {
+                                        "No borrowed debt recorded yet."
+                                    })
+                                    .into_any_element(),
+                            ]
+                        } else {
                             borrowed_loans
                                 .into_iter()
-                                .map(|l| Self::render_loan_row(l, false, state.locale, theme)),
-                        ),
-                    ),
+                                .map(|l| {
+                                    Self::render_loan_row(l, false, state.locale, theme)
+                                        .into_any_element()
+                                })
+                                .collect()
+                        },
+                    )),
             )
     }
 

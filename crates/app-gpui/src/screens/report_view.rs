@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::reporting::{LocalizedExporter, generate_mothers_report};
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -14,6 +15,7 @@ impl ReportViewScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let now = chrono::Utc::now();
         let period_start = now - chrono::Duration::days(30);
@@ -32,6 +34,26 @@ impl ReportViewScreen {
 
         let whatsapp_text = LocalizedExporter::format_mothers_report(&report, state.locale);
         let title = Translator::t(state.locale, terms::MOTHERS_REPORT_TITLE, None);
+
+        let share_text = whatsapp_text.clone();
+        let share_success = if state.locale == Locale::Rw {
+            "Raporo y'umuryango yakoporowe neza! Mushobora kuyisangiza kuri WhatsApp.".to_string()
+        } else {
+            "Mother's Report copied to clipboard! Ready to share on WhatsApp.".to_string()
+        };
+
+        let magic_link = format!(
+            "https://ledger.umuryango.rw/reports/magic/{}",
+            state.active_scope.family_id().unwrap_or(state.user_id)
+        );
+        let link_success = if state.locale == Locale::Rw {
+            "Ihuza rya raporo ryakoporowe! Mushobora kurifungura muri browser.".to_string()
+        } else {
+            "Report Magic Link copied to clipboard!".to_string()
+        };
+
+        let copy_preview_text = whatsapp_text.clone();
+        let copy_preview_success = share_success.clone();
 
         div()
             .id(id)
@@ -80,6 +102,7 @@ impl ReportViewScreen {
                             .gap(px(10.0))
                             .child(
                                 div()
+                                    .id("report-whatsapp-share-btn")
                                     .flex()
                                     .items_center()
                                     .gap(px(6.0))
@@ -91,6 +114,9 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        this.copy_to_clipboard(share_text.clone(), share_success.clone(), cx);
+                                    }))
                                     .child(app_icon(
                                         AppIcon::Share,
                                         IconSize::Xs,
@@ -101,6 +127,7 @@ impl ReportViewScreen {
                             )
                             .child(
                                 div()
+                                    .id("report-magic-link-btn")
                                     .flex()
                                     .items_center()
                                     .gap(px(6.0))
@@ -112,6 +139,9 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        this.copy_to_clipboard(magic_link.clone(), link_success.clone(), cx);
+                                    }))
                                     .child(app_icon(
                                         AppIcon::Language,
                                         IconSize::Xs,
@@ -343,6 +373,7 @@ impl ReportViewScreen {
                             )
                             .child(
                                 div()
+                                    .id("report-copy-preview-btn")
                                     .flex()
                                     .items_center()
                                     .gap(px(4.0))
@@ -353,6 +384,9 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .text_color(theme.text_muted)
                                     .cursor_pointer()
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        this.copy_to_clipboard(copy_preview_text.clone(), copy_preview_success.clone(), cx);
+                                    }))
                                     .child(app_icon(
                                         AppIcon::Copy,
                                         IconSize::Xs,

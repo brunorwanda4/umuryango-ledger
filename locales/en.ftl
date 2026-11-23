@@ -60,6 +60,32 @@ update-downloading = Downloading update ({$progress}%)...
 update-mandatory-title = Required Update Available
 update-restart-now = Restart & Update Now
 
+# Authentication & Onboarding
+login-title = Log In
+register-title = Create Account
+full-name = Full Name
+phone-number = Phone Number
+gender = Gender
+gender-male = Male
+gender-female = Female
+gender-other = Other
+password = Password
+confirm-password = Password Again
+create-account = Create Account
+already-have-account = Already have an account? Log in
+onboarding-title = Welcome to Umuryango Ledger
+create-family = Create Family
+family-name = Family Name
+add-member-phone = Add Member by Phone Number
+add-phone-btn = + Add Phone
+join-family = Join Family
+pending-family-invites = Pending Family Invites
+enter-4-char-code = Enter 4-character code (e.g. HK0N)
+skip-for-now = Skip for now
+continue-to-dashboard = Continue to Dashboard
+you-were-added-to = You were added to {$family_name}
+join-btn = Join
+
 # Domain & Localized API Errors
 error-insufficient-custody = Wallet '{$wallet}' only holds {$available} RWF, which is not enough for {$requested} RWF.
 error-unauthorized-role = Your role in this family does not allow performing this action.
@@ -68,3 +94,7 @@ error-scope-mismatch = Cannot mix personal wallet funds with family ledger trans
 error-invalid-amount = Transaction amount must be greater than zero.
 error-not-found = The requested record was not found.
 error-validation = Validation error: {$message}
+error-password-mismatch = Passwords do not match. Please enter the same password twice.
+error-phone-already-exists = An account with this phone number already exists.
+error-invalid-credentials = Invalid phone number or password.
+error-invalid-invite-code = Invalid 4-character family code. Please check and try again.

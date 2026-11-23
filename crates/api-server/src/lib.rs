@@ -41,6 +41,10 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
                 web::scope("/families")
                     .route("", web::get().to(handlers::families::list_families))
                     .route("", web::post().to(handlers::families::create_family))
+                    .route(
+                        "/pending-invites",
+                        web::get().to(handlers::families::list_pending_invites),
+                    )
                     .route("/join", web::post().to(handlers::families::join_family))
                     .route(
                         "/{family_id}/members/{member_id}/role",

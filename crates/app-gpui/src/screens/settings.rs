@@ -1,7 +1,8 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::Locale;
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::{SemanticTheme, hex_to_hsla};
@@ -13,6 +14,7 @@ impl SettingsScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let is_rw = state.locale == Locale::Rw;
 
@@ -93,6 +95,7 @@ impl SettingsScreen {
                             // Light mode card
                             .child(
                                 div()
+                                    .id("settings-light-mode-card")
                                     .flex_1()
                                     .p(px(14.0))
                                     .rounded(px(8.0))
@@ -109,6 +112,9 @@ impl SettingsScreen {
                                     .border_1()
                                     .border_color(theme.border_subtle)
                                     .cursor_pointer()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.set_theme_mode(false, cx);
+                                    }))
                                     .child(
                                         div()
                                             .flex()
@@ -141,6 +147,7 @@ impl SettingsScreen {
                             // Dark mode card
                             .child(
                                 div()
+                                    .id("settings-dark-mode-card")
                                     .flex_1()
                                     .p(px(14.0))
                                     .rounded(px(8.0))
@@ -157,6 +164,9 @@ impl SettingsScreen {
                                     .border_1()
                                     .border_color(theme.border_subtle)
                                     .cursor_pointer()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.set_theme_mode(true, cx);
+                                    }))
                                     .child(
                                         div()
                                             .flex()

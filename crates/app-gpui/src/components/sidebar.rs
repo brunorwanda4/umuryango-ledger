@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::Locale;
 use umuryango_storage_local::SyncStatus;
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::lang_toggle::LangToggle;
 use crate::components::scope_switcher::ScopeSwitcher;
@@ -16,6 +17,7 @@ impl Sidebar {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let screens = [
             (Screen::Dashboard, AppIcon::Dashboard, state.locale),
@@ -129,6 +131,7 @@ impl Sidebar {
                             // Notification Bell Icon with dynamic Badge
                             .child(
                                 div()
+                                    .id("sidebar-bell-btn")
                                     .flex()
                                     .items_center()
                                     .gap(px(4.0))
@@ -146,6 +149,9 @@ impl Sidebar {
                                         theme.border_subtle
                                     })
                                     .cursor_pointer()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.toggle_notifications(cx);
+                                    }))
                                     .child(app_icon(
                                         AppIcon::Bell,
                                         IconSize::Sm,
@@ -181,6 +187,7 @@ impl Sidebar {
                         &state.active_scope,
                         state.locale,
                         theme,
+                        cx,
                     ))
                     // Sync status badge
                     .child(
@@ -222,7 +229,9 @@ impl Sidebar {
                         IconTone::Default
                     };
 
+                    let target_screen = screen;
                     div()
+                        .id(format!("sidebar-nav-{:?}", screen))
                         .flex()
                         .items_center()
                         .gap(px(10.0))
@@ -231,6 +240,9 @@ impl Sidebar {
                         .rounded(px(8.0))
                         .bg(bg)
                         .cursor_pointer()
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            this.select_screen(target_screen, cx);
+                        }))
                         .child(app_icon(icon, IconSize::Md, icon_tone, theme))
                         .child(
                             div()
@@ -260,10 +272,12 @@ impl Sidebar {
                         "sidebar-lang-toggle",
                         state.locale,
                         theme,
+                        cx,
                     ))
                     // Mode toggle
                     .child(
                         div()
+                            .id("sidebar-theme-toggle")
                             .flex()
                             .items_center()
                             .gap(px(6.0))
@@ -277,6 +291,9 @@ impl Sidebar {
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(theme.text_primary)
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.toggle_theme(cx);
+                            }))
                             .child(app_icon(
                                 if state.theme_mode.is_dark() {
                                     AppIcon::Sun
@@ -301,6 +318,7 @@ impl Sidebar {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let mobile_screens = [
             (Screen::Dashboard, AppIcon::Dashboard),
@@ -334,12 +352,17 @@ impl Sidebar {
                 } else {
                     theme.text_muted
                 };
+                let target_screen = screen;
                 div()
+                    .id(format!("mobile-nav-{:?}", screen))
                     .flex()
                     .flex_col()
                     .items_center()
                     .gap(px(2.0))
                     .cursor_pointer()
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        this.select_screen(target_screen, cx);
+                    }))
                     .child(app_icon(icon, IconSize::Lg, tone, theme))
                     .child(
                         div()

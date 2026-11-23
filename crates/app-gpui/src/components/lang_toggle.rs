@@ -1,7 +1,8 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::Locale;
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
@@ -26,6 +27,7 @@ impl LangToggle {
         id: impl Into<ElementId>,
         current: Locale,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let label = Self::display_badge(current);
 
@@ -46,6 +48,9 @@ impl LangToggle {
             .text_sm()
             .font_weight(gpui_kit::FontWeight::MEDIUM)
             .cursor_pointer()
+            .on_click(cx.listener(|this, _, _, cx| {
+                this.toggle_locale(cx);
+            }))
             .child(app_icon(
                 AppIcon::Language,
                 IconSize::Xs,

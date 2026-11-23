@@ -6,7 +6,7 @@ pub mod transaction;
 pub mod user;
 pub mod wallet;
 
-pub use family::{Family, FamilyMember, FamilyRole};
+pub use family::{Family, FamilyMember, FamilyRole, PendingFamilyInvite};
 pub use loan::{Loan, LoanDirection, LoanStatus};
 pub use plan::FuturePlan;
 pub use project::{Project, ProjectStatus};

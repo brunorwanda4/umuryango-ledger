@@ -1,8 +1,9 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::FuturePlan;
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -14,6 +15,7 @@ impl FuturePlansScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let title = Translator::t(state.locale, terms::FUTURE_PLANS, None);
 
@@ -45,6 +47,7 @@ impl FuturePlansScreen {
                     )
                     .child(
                         div()
+                            .id("future-plans-add-btn")
                             .flex()
                             .items_center()
                             .gap(px(6.0))
@@ -56,6 +59,9 @@ impl FuturePlansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.open_quick_entry(cx);
+                            }))
                             .child(app_icon(
                                 AppIcon::Add,
                                 IconSize::Xs,
@@ -69,13 +75,34 @@ impl FuturePlansScreen {
                             }),
                     ),
             )
-            // Plans list
+            // Plans list or empty state
             .child(
                 div().flex().flex_col().gap(px(12.0)).children(
-                    state
-                        .future_plans
-                        .iter()
-                        .map(|p| Self::render_plan_card(p, state.locale, theme)),
+                    if state.future_plans.is_empty() {
+                        vec![
+                            div()
+                                .p(px(24.0))
+                                .rounded(px(8.0))
+                                .bg(theme.bg_surface)
+                                .border_1()
+                                .border_color(theme.border_subtle)
+                                .text_sm()
+                                .text_center()
+                                .text_color(theme.text_muted)
+                                .child(if state.locale == Locale::Rw {
+                                    "Nta migambi y'ejo hazaza irandikwa. Kanda kuri 'Umugambi Mushya' utangire."
+                                } else {
+                                    "No future plans or goals recorded yet. Click 'New Goal' to start."
+                                })
+                                .into_any_element(),
+                        ]
+                    } else {
+                        state
+                            .future_plans
+                            .iter()
+                            .map(|p| Self::render_plan_card(p, state.locale, theme, cx).into_any_element())
+                            .collect()
+                    },
                 ),
             )
     }
@@ -84,6 +111,7 @@ impl FuturePlansScreen {
         plan: &FuturePlan,
         locale: Locale,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let status_badge = if plan.is_achieved {
             ("Byagezweho / Achieved", theme.income_color)
@@ -155,6 +183,7 @@ impl FuturePlansScreen {
                     )
                     .child(
                         div()
+                            .id(format!("plan-alloc-{}", plan.id))
                             .px(px(10.0))
                             .py(px(4.0))
                             .rounded(px(6.0))
@@ -163,6 +192,9 @@ impl FuturePlansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.open_quick_entry(cx);
+                            }))
                             .child(if locale == Locale::Rw {
                                 "Kuzigama"
                             } else {

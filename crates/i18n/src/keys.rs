@@ -141,6 +141,32 @@ pub mod terms {
     pub const UPDATE_MANDATORY_TITLE: &str = "update-mandatory-title";
     pub const UPDATE_RESTART_NOW: &str = "update-restart-now";
 
+    // Authentication & Onboarding
+    pub const LOGIN_TITLE: &str = "login-title";
+    pub const REGISTER_TITLE: &str = "register-title";
+    pub const FULL_NAME: &str = "full-name";
+    pub const PHONE_NUMBER: &str = "phone-number";
+    pub const GENDER: &str = "gender";
+    pub const GENDER_MALE: &str = "gender-male";
+    pub const GENDER_FEMALE: &str = "gender-female";
+    pub const GENDER_OTHER: &str = "gender-other";
+    pub const PASSWORD: &str = "password";
+    pub const CONFIRM_PASSWORD: &str = "confirm-password";
+    pub const CREATE_ACCOUNT: &str = "create-account";
+    pub const ALREADY_HAVE_ACCOUNT: &str = "already-have-account";
+    pub const ONBOARDING_TITLE: &str = "onboarding-title";
+    pub const CREATE_FAMILY: &str = "create-family";
+    pub const FAMILY_NAME: &str = "family-name";
+    pub const ADD_MEMBER_PHONE: &str = "add-member-phone";
+    pub const ADD_PHONE_BTN: &str = "add-phone-btn";
+    pub const JOIN_FAMILY: &str = "join-family";
+    pub const PENDING_FAMILY_INVITES: &str = "pending-family-invites";
+    pub const ENTER_4_CHAR_CODE: &str = "enter-4-char-code";
+    pub const SKIP_FOR_NOW: &str = "skip-for-now";
+    pub const CONTINUE_TO_DASHBOARD: &str = "continue-to-dashboard";
+    pub const YOU_WERE_ADDED_TO: &str = "you-were-added-to";
+    pub const JOIN_BTN: &str = "join-btn";
+
     pub const ERR_INSUFFICIENT_CUSTODY: &str = "error-insufficient-custody";
     pub const ERR_UNAUTHORIZED_ROLE: &str = "error-unauthorized-role";
     pub const ERR_INVALID_HANDOVER: &str = "error-invalid-handover";
@@ -148,4 +174,8 @@ pub mod terms {
     pub const ERR_INVALID_AMOUNT: &str = "error-invalid-amount";
     pub const ERR_NOT_FOUND: &str = "error-not-found";
     pub const ERR_VALIDATION: &str = "error-validation";
+    pub const ERR_PASSWORD_MISMATCH: &str = "error-password-mismatch";
+    pub const ERR_PHONE_ALREADY_EXISTS: &str = "error-phone-already-exists";
+    pub const ERR_INVALID_CREDENTIALS: &str = "error-invalid-credentials";
+    pub const ERR_INVALID_INVITE_CODE: &str = "error-invalid-invite-code";
 }

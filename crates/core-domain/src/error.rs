@@ -33,6 +33,18 @@ pub enum DomainError {
 
     #[error("validation error: {0}")]
     ValidationError(String),
+
+    #[error("passwords do not match")]
+    PasswordMismatch,
+
+    #[error("phone already exists")]
+    PhoneAlreadyExists,
+
+    #[error("invalid credentials")]
+    InvalidCredentials,
+
+    #[error("invalid invite code")]
+    InvalidInviteCode,
 }
 
 impl LocalizableError for DomainError {
@@ -45,6 +57,10 @@ impl LocalizableError for DomainError {
             Self::InvalidAmount => terms::ERR_INVALID_AMOUNT,
             Self::NotFound => terms::ERR_NOT_FOUND,
             Self::ValidationError(_) => terms::ERR_VALIDATION,
+            Self::PasswordMismatch => terms::ERR_PASSWORD_MISMATCH,
+            Self::PhoneAlreadyExists => terms::ERR_PHONE_ALREADY_EXISTS,
+            Self::InvalidCredentials => terms::ERR_INVALID_CREDENTIALS,
+            Self::InvalidInviteCode => terms::ERR_INVALID_INVITE_CODE,
         }
     }
 
