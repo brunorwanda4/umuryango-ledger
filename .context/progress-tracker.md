@@ -48,7 +48,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-23** | `d9516da` | `fix(gpui): restore GPUI window event loop and implement app_config in storage-local` | `cargo check --workspace`, `cargo test -p umuryango-core-domain -p umuryango-storage-local`, `bun run dev:all --no-web` verified |
 | **2026-11-23** | `3dfb00d` | `fix(gpui): wire interactive click listeners across all views, controls, and quick entry dialog` | `cargo check --workspace`, `cargo test -p umuryango-app`, `bun run --cwd web typecheck` |
 | **2026-11-23** | `95e9bf1` | `refactor(i18n): centralize all translations into shared en.json and rw.json` | `cargo test --workspace`, `bun test`, `bun run typecheck`, `bun run build` |
-| **2026-11-24** | `pending` | `feat(onboarding): add phone auth, 4-char family codes, phone invites, and skip flow` | `cargo check --workspace`, `cargo test --workspace` (all 5 e2e sync tests passed), `bun run typecheck`, `bun test`, `bun run build` |
+| **2026-11-24** | `4240753` | `feat(onboarding): add phone auth, 4-char family codes, phone invites, and skip flow` | `cargo check --workspace`, `cargo test --workspace` (all 5 e2e sync tests passed), `bun run typecheck`, `bun test`, `bun run build` |
 
 ---
 
