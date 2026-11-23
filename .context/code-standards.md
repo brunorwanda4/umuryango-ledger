@@ -40,7 +40,7 @@ This document establishes the code quality, safety, and architectural standards 
    - Return clean, localized JSON error payloads with status codes (`400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `422 Unprocessable Entity`).
 
 2. **Error Derivation Pattern:**
-   - In library crates (`core-domain`, `storage-local`, `i18n`): Use `thiserror` to model domain failure modes.
+   - In library crates (`core-domain`, `storage-local`, `i18n`): Use `thiserror` (v2.0) to model domain failure modes.
    - Implement `LocalizableError` from `crates/i18n` on domain errors to map them to fluent translation keys.
 
 ```rust
@@ -81,13 +81,21 @@ impl LocalizableError for LedgerError {
 
 ---
 
-## 5. TypeScript & Next.js Standards
+## 5. TypeScript, Next.js & Bun Standards
 
-1. **Strict Type Safety:**
-   - `tsconfig.json` enforces `"strict": true`.
+1. **Exclusive Bun Runtime & Package Manager:**
+   - All TypeScript and JavaScript execution, script running, package installation, and testing must use **Bun** (`1.4+`).
+   - Run `bun install`, `bun add`, `bun remove`, `bun test`, `bun run dev`, `bun run build`.
+   - Strictly prohibit `npm`, `npx`, `yarn`, and `pnpm`.
+   - The only committed lockfile is `web/bun.lock`.
+2. **Strict Type Safety:**
+   - `tsconfig.json` enforces `"strict": true` and `"types": ["bun"]`.
    - Zero `any` types allowed in production code. Use strict interfaces or generics.
-2. **Client Components:**
+   - Verify code with `bun run typecheck` (`bunx tsc --noEmit`).
+3. **Client Components:**
    - Add `"use client";` only to components that manage interactive state or hooks (`useState`, `useEffect`, `useLedger`).
    - Keep page containers as Server Components where feasible.
-3. **No Unhandled Promises:**
+4. **No Unhandled Promises:**
    - Async calls in Next.js pages or components must be properly awaited or handled with try/catch blocks.
+5. **Testing under Bun:**
+   - Unit tests are authored using `bun:test` (`describe`, `it`, `expect`) and run with `bun test`.

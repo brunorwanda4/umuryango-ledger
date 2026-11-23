@@ -9,6 +9,7 @@ Before generating or modifying any code:
 1. **Read Progress State:** Open [`.context/progress-tracker.md`](file:///.context/progress-tracker.md) to understand current milestones, what was completed in preceding commits, and what is currently pending.
 2. **Consult Feature Specifications:** Open the relevant document in [`.context/feature-specs/`](file:///.context/feature-specs/) to understand the mathematical formulas, database columns, and validation invariants.
 3. **Audit Existing Components:** Scan existing components in `crates/app-gpui/src/components/` and `web/src/components/`. If a button, card, modal, or input already exists, reuse or extend it. Never build duplicate one-off primitives.
+4. **Use Bun Exclusively for JS/TS:** Always invoke `bun`, `bunx`, and `bun test` when touching `web/` or writing scripts. Never invoke `npm`, `npx`, `yarn`, or `pnpm`.
 
 ---
 
@@ -33,6 +34,11 @@ Before generating or modifying any code:
 - Every button, input, toggle, and link must be fully functional.
 - Zero emojis in UI or logs; use vector icons (`lucide-react` in web, `gpui-kit` / SVG in GPUI).
 
+### E. Bun Runtime & Lockfile Discipline
+- The web application and any Node/TypeScript tool runs exclusively on **Bun** (`1.4+`).
+- Only `web/bun.lock` is allowed. Never commit `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`.
+- All development and production commands must be run via Bun: `bun run dev`, `bun run build`, `bun test`, `bun run typecheck`.
+
 ---
 
 ## 3. Verification Protocol
@@ -46,9 +52,9 @@ Before proposing changes or creating a commit, run the required verification com
    ```bash
    cargo test --workspace
    ```
-3. **Web Application Build:**
+3. **Web Application Typecheck, Unit Tests & Production Build (Bun):**
    ```bash
-   cd web && npm run build
+   cd web && bun run typecheck && bun test && bun run build
    ```
 
 Do not proceed to commit if any test fails or any compilation error is emitted.
@@ -63,6 +69,7 @@ Do not proceed to commit if any test fails or any compilation error is emitted.
    - `refactor(<crate/area>): <description>`
    - `docs(<crate/area>): <description>`
    - `test(<crate/area>): <description>`
+   - `chore(<crate/area>): <description>`
 3. **Update Progress Tracker:** Immediately add a line to [`.context/progress-tracker.md`](file:///.context/progress-tracker.md) documenting:
    - Commit hash
    - Features or fixes included

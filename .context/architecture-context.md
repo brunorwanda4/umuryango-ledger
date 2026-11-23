@@ -4,7 +4,7 @@
 
 ```
 umuryango-ledger/
-├── AGENTS.md                   # Agent master instructions
+├── AGENTS.md                   # Agent master instructions & 8 core rules
 ├── .context/                   # System design, standards & progress tracking
 ├── Cargo.toml                  # Workspace manifest (edition = "2024", resolver = "3")
 ├── locales/                    # Fluent bilingual catalog (en.ftl, rw.ftl)
@@ -18,7 +18,7 @@ umuryango-ledger/
 │   ├── api-server/             # Actix-web backend, SQLx PostgreSQL, auth, WS hub
 │   ├── wasm-bridge/            # WebAssembly bindings for browser calculations
 │   └── app-gpui/               # Desktop & mobile GPUI native application
-└── web/                        # Next.js 16 App Router (React 19, Tailwind CSS v4)
+└── web/                        # Next.js 16 App Router (Bun 1.4+, React 19, Tailwind CSS v4)
     ├── public/                 # Static web assets, manifests, icons
     ├── src/
     │   ├── app/                # Root layout, globals.css & bilingual routes (/[locale]/...)
@@ -26,7 +26,9 @@ umuryango-ledger/
     │   └── lib/                # LedgerContext, API clients, WASM bridge loaders
     ├── postcss.config.js       # @tailwindcss/postcss pipeline
     ├── next.config.ts          # Turbopack & WebAssembly configuration
-    └── package.json            # Web dependencies (Next.js 16, React 19, Tailwind v4, Lucide)
+    ├── tsconfig.json           # TypeScript configuration with @types/bun
+    ├── bun.lock                # Bun lockfile (exclusive package manager)
+    └── package.json            # Web dependencies & bun scripts
 ```
 
 ---
@@ -37,11 +39,12 @@ umuryango-ledger/
 | :--- | :--- | :--- | :--- |
 | **Rust Toolchain** | Rust Edition | `2024` | Resolver `3` across all workspace crates |
 | **Error Handling** | `thiserror` | `2.0` | Deriving domain errors in core & local storage |
-| **Web Framework** | Next.js | `16.4.6` | App Router with Turbopack native builds |
+| **JS/TS Runtime** | **Bun** | `1.4.4` | Exclusive runtime, package manager, and test runner |
+| **Web Framework** | Next.js | `16.4.6` | App Router with Turbopack native builds (`bun --bun next`) |
 | **Frontend UI** | React / React DOM | `19.3.1` | Native Server & Client components (`use()` hook) |
 | **Styling** | Tailwind CSS | `4.3.5` | CSS-first `@theme` design tokens via `@tailwindcss/postcss` |
 | **Icons** | `lucide-react` | `1.77.0` | Professional vector icons only, zero emojis |
-| **Language** | TypeScript | `7.0.2` | Full strict mode typing |
+| **Language** | TypeScript | `7.0.2` | Full strict mode typing with `@types/bun` |
 
 ---
 
@@ -54,7 +57,7 @@ graph TD
     UI_GPUI --> Core[crates/core-domain]
     UI_GPUI --> I18N[crates/i18n]
 
-    Web[web/ Next.js 16] --> WASM[crates/wasm-bridge]
+    Web[web/ Next.js 16 on Bun] --> WASM[crates/wasm-bridge]
     WASM --> Core
     WASM --> I18N
 
@@ -92,6 +95,12 @@ graph TD
 - Stateless JWT authentication via `jsonwebtoken`.
 - Real-time `FamilyHub`: `DashMap<Uuid, broadcast::Sender<RealtimeEvent>>` keyed by `family_id`.
 - Zero-login magic link verification with cryptographic hash tokens.
+
+### `web/` (Next.js 16 Web Portal on Bun)
+- Driven exclusively by Bun (`bun run dev`, `bun run build`, `bun test`, `bunx`).
+- Native Turbopack compilation with WebAssembly support for local verification.
+- Bilingual dynamic routing (`/[locale]/dashboard`, `/[locale]/transactions`, `/[locale]/projects`, `/[locale]/report/[token]`).
+- Clean separation between Personal and Family financial scopes with live real-time sync.
 
 ---
 

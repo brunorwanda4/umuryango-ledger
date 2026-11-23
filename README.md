@@ -1,10 +1,10 @@
-# Umuryango Ledger 🇷🇼
+# Umuryango Ledger
 
 > **Multi-tenant family & personal finance accountability platform** with native English and Kinyarwanda localization, custody management, offline sync, and zero-login reporting.
 
 ---
 
-## 🌟 Highlights
+## Highlights
 
 - **Dual Financial Scopes:** Strictly isolate private `PERSONAL` accounts from collaborative multi-tenant `FAMILY` ledgers.
 - **Custody Management & Handovers:** Transparent tracking across Bank accounts, Mobile Money (`MoMo`), and Cash custodians. Supports formal Custodian-to-Custodian handovers with dual acknowledgment.
@@ -13,15 +13,16 @@
 - **Multi-Platform Architecture:**
   - **Backend:** High-performance Rust (`actix-web`, `sqlx`, PostgreSQL with RLS).
   - **Desktop / Mobile:** Rust `gpui` client with local SQLite offline cache and sync queue.
-  - **Web & Zero-Login Portal:** Next.js (App Router, TypeScript) + WebAssembly bridge (`wasm-bindgen`).
+  - **Web & Zero-Login Portal:** Next.js 16 (App Router, React 19, Tailwind CSS v4) powered exclusively by **Bun** (`bun --bun`) + WebAssembly bridge (`wasm-bindgen`).
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 umuryango-ledger/
-├── Cargo.toml                              # Workspace configuration (resolver = "2")
+├── AGENTS.md                               # Agent instructions & 8 core operating rules
+├── Cargo.toml                              # Workspace manifest (edition = "2024", resolver = "3")
 ├── .env.example                            # Sample configuration variables
 ├── docker-compose.yml                      # PostgreSQL 16 + MinIO storage setup
 ├── README.md                               # Project documentation
@@ -47,23 +48,24 @@ umuryango-ledger/
 │   ├── wasm-bridge/                       # WebAssembly interface for browser-side calculations
 │   └── app-gpui/                          # Native desktop/mobile app powered by Zed's GPUI
 │
-└── web/                                    # Next.js App Router bilingual web application
-    ├── package.json
-    ├── next.config.ts
-    ├── tsconfig.json
+└── web/                                    # Next.js 16 App Router web app on Bun runtime
+    ├── package.json                       # Scripts configured with bun --bun
+    ├── bun.lock                           # Bun lockfile
+    ├── next.config.ts                     # Turbopack & WebAssembly configuration
+    ├── tsconfig.json                      # TypeScript configuration with @types/bun
     └── src/
         ├── app/[locale]/                  # Locale-routed pages (en/rw)
-        ├── components/                    # Bilingual components (e.g. MothersReportCard, ScopeSwitcher)
-        └── lib/                           # WebAssembly bindings and API client
+        ├── components/                    # Reusable primitives (MothersReportCard, ScopeSwitcher, etc.)
+        └── lib/                           # LedgerContext, API client & WASM loader
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Prerequisites
-- **Rust Toolchain:** `rustc 1.80+` / `cargo`
-- **Node.js:** `v20+` & `npm` / `pnpm`
+- **Rust Toolchain:** `rustc 1.80+` / `cargo` (Rust Edition 2024)
+- **Bun Runtime:** `bun 1.4+` (exclusive JS/TS runtime, package manager, and test runner)
 - **Docker & Docker Compose** (for PostgreSQL & MinIO)
 
 ### 2. Environment Setup
@@ -82,20 +84,28 @@ sqlx migrate run
 ### 4. Build and Check Rust Crates
 ```bash
 cargo check --workspace
+cargo test --workspace
 ```
 
-### 5. Run the Web Application
+### 5. Run the Web Application with Bun
 ```bash
 cd web
-npm install
-npm run dev
+bun install
+bun run dev
+```
+
+Run test suite and typechecks under Bun:
+```bash
+bun test
+bun run typecheck
+bun run build
 ```
 
 Visit [http://localhost:3000/rw](http://localhost:3000/rw) for Kinyarwanda or [http://localhost:3000/en](http://localhost:3000/en) for English.
 
 ---
 
-## 📜 Localization & Domain Concepts
+## Localization & Domain Concepts
 
 | Concept | English (`en`) | Kinyarwanda (`rw`) |
 | :--- | :--- | :--- |
@@ -109,7 +119,7 @@ Visit [http://localhost:3000/rw](http://localhost:3000/rw) for Kinyarwanda or [h
 
 ---
 
-## 🔒 Security & Dual Scope Isolation
+## Security & Dual Scope Isolation
 
 - Multi-tenant tenant boundaries are reinforced through **PostgreSQL Row Level Security (RLS)**.
 - Every transaction explicitly belongs to either a `PERSONAL` user scope or a `FAMILY` shared scope.

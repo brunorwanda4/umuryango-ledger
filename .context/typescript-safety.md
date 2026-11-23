@@ -1,6 +1,6 @@
 # TypeScript & Web Standards — Umuryango Ledger
 
-This document defines TypeScript safety rules, component patterns, and WASM bridge integration standards for `web/`.
+This document defines TypeScript safety rules, component patterns, Bun runtime standards, and WASM bridge integration standards for `web/`.
 
 ---
 
@@ -46,15 +46,15 @@ export async function loadWasmBridge() {
 - **Rule:** Never use raw emojis in UI buttons, tables, badges, or headers.
 - **Icon Source:** Use `lucide-react` exclusively.
 - **Standard Mapping:**
-  - Inflow / Income: `<ArrowDownLeft className="text-emerald-600" />`
-  - Outflow / Expense: `<ArrowUpRight className="text-brand-crimson" />`
-  - Handover / Custody Transfer: `<ArrowLeftRight className="text-brand-steel-blue" />`
-  - Bank Account: `<Landmark />`
+  - Inflow / Income: `<ArrowUpRight className="text-emerald-600" />`
+  - Outflow / Expense: `<ArrowDownRight className="text-brand-crimson" />`
+  - Handover / Custody Transfer: `<Handshake className="text-brand-steel-blue" />`
+  - Bank Account: `<Building2 />`
   - Mobile Money: `<Smartphone />`
   - Cash in Hand: `<Banknote />`
-  - Family Scope: `<Users />`
+  - Family Scope: `<Landmark />`
   - Personal Scope: `<Lock />`
-  - Zero-Login Report: `<FileText />` or `<ShieldCheck />`
+  - Zero-Login Report: `<ShieldCheck />`
 
 ---
 
@@ -65,3 +65,16 @@ export async function loadWasmBridge() {
 - Optimistic updates:
   - When user records an expense or handover in `TransactionModal` or `HandoverModal`, balances update optimistically in state while mutating backend or syncing offline.
   - An automatic toast notification is emitted in the active locale (`rw` or `en`).
+
+---
+
+## 5. Bun Runtime & Tooling Mandate
+
+- **Exclusive Tooling:** Always use `bun` and `bunx`. Never invoke `npm`, `npx`, `yarn`, or `pnpm`.
+- **Lockfile Integrity:** `web/bun.lock` is the single source of truth for dependencies.
+- **Commands:**
+  - `cd web && bun install` — Install dependencies.
+  - `cd web && bun run dev` — Launch Next.js dev server (`bun --bun next dev`).
+  - `cd web && bun run build` — Compile optimized production build (`bun --bun next build`).
+  - `cd web && bun run typecheck` — Run TypeScript typecheck (`bunx tsc --noEmit`).
+  - `cd web && bun test` — Execute fast unit tests using `bun:test`.

@@ -17,7 +17,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **`crates/api-server`** | **DONE** | Actix-web 4 backend, Argon2id auth, JWT middleware, atomic SQLx handovers, zero-login magic links, `FamilyHub` WebSocket broadcasting. Rust 2024 edition. |
 | **`crates/wasm-bridge`** | **DONE** | `cdylib` WASM export with `validate_offline_tx`, `get_localized_translation`, `calculate_balance_breakdown`, `render_mothers_report_wasm`. Rust 2024 edition. |
 | **`crates/app-gpui`** | **DONE** | Native desktop & mobile app using `gpui` + `gpui-kit`, Archivo typography, light/dark modes, offline sync, Android/mobile safe area insets & edge-to-edge support. Rust 2024 edition. |
-| **`web/`** | **DONE** | Native Next.js 16 (16.4.6) with Turbopack, React 19 (19.3.1), Tailwind CSS v4 (4.3.5) with CSS-first design tokens, Lucide React (1.77.0), zero emojis, Archivo font, `LedgerContext`, live WebSocket toasts, interactive modals, Mother's Report, mobile safe-area insets. |
+| **`web/`** | **DONE** | Native Next.js 16 (16.4.6) with Turbopack, React 19 (19.3.1), Tailwind CSS v4 (4.3.5) with CSS-first design tokens, Lucide React (1.77.0), zero emojis, Archivo font, `LedgerContext`, live WebSocket toasts, interactive modals, Mother's Report, mobile safe-area insets. Powered exclusively by **Bun 1.4+** (`bun.lock`, `bun --bun`). |
 | **`migrations/`** | **DONE** | PostgreSQL migrations with schema for users, families, wallets, transactions, handovers, projects, loans, and magic tokens. |
 
 ---
@@ -36,6 +36,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-23** | `554862e` | `docs(context): add AGENTS.md and project context guidelines` | Line count and markdown checks |
 | **2026-11-23** | `1d8ec68` | `feat(mobile): add Android and mobile safe area insets support` | `cargo test --workspace` & `npm run build` |
 | **2026-11-23** | `9514825` | `chore(stack): upgrade to latest stable frameworks across Rust and Web` | `cargo test --workspace` (23 passed) & `npm run build` (Turbopack, Next 16, React 19) |
+| **2026-11-23** | *pending* | `chore(runtime): configure Bun as default JS/TS runtime and package manager` | `bun run typecheck`, `bun test`, `bun run build` |
 
 ---
 

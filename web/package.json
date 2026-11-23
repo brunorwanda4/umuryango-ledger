@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "bun --bun next dev",
+    "build": "bun --bun next build",
+    "start": "bun --bun next start",
+    "lint": "bun --bun next lint",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test",
+    "wasm:build": "wasm-pack build ../crates/wasm-bridge --target web --out-dir ../web/src/wasm"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.5",
@@ -16,6 +19,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.4",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -23,5 +27,6 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2"
-  }
+  },
+  "packageManager": "bun@1.4.4"
 }
