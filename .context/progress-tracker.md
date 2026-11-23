@@ -19,6 +19,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **`crates/app-gpui`** | **DONE** | Native desktop & mobile app using `gpui` + `gpui-kit`, Archivo typography, light/dark modes, offline sync, Android/mobile safe area insets & edge-to-edge support. Rust 2024 edition. |
 | **`web/`** | **DONE** | Native Next.js 16 (16.4.6) with Turbopack, React 19 (19.3.1), Tailwind CSS v4 (4.3.5) with CSS-first design tokens, Lucide React (1.77.0), zero emojis, Archivo font, `LedgerContext`, live WebSocket toasts, interactive modals, Mother's Report, mobile safe-area insets. Powered exclusively by **Bun 1.4+** (`bun.lock`, `bun --bun`). |
 | **`migrations/`** | **DONE** | PostgreSQL migrations with schema for users, families, wallets, transactions, handovers, projects, loans, and magic tokens. |
+| **`crates/api-server/tests`** | **DONE** | End-to-end integration tests (`e2e_offline_sync.rs`) with simulated network dropout proxy (`FaultyNetworkProxy`), verifying chronological offline sync, mid-sync dropout idempotency, custody rollback, batch recovery, and live WebSocket broadcast in `rw` and `en`. |
 
 ---
 
@@ -37,12 +38,13 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-23** | `1d8ec68` | `feat(mobile): add Android and mobile safe area insets support` | `cargo test --workspace` & `npm run build` |
 | **2026-11-23** | `39cb7f2` | `chore(stack): upgrade to latest stable frameworks across Rust and Web` | `cargo test --workspace` (23 passed) & `bun run build` (Turbopack, Next 16, React 19) |
 | **2026-11-23** | `eaa362c` | `chore(runtime): configure Bun as default JS/TS runtime and package manager` | `bun run typecheck`, `bun test`, `bun run build` |
+| **2026-11-23** | `f72fd8d` | `test(sync): add E2E offline SQLite sync and network dropout integration tests` | `cargo test --workspace` (28 passed) & `bun run typecheck`, `bun test` |
 
 ---
 
 ## 3. Upcoming Milestones & Roadmap
 
-- [ ] **E2E Automated Sync Flow:** End-to-end integration tests between offline SQLite `sync_queue` and live Actix-web server under simulated network dropouts.
+- [x] **E2E Automated Sync Flow:** End-to-end integration tests between offline SQLite `sync_queue` and live Actix-web server under simulated network dropouts.
 - [ ] **SMS / USSD Reporting Fallback:** Basic USSD / SMS report dispatch for family elders without smartphone internet.
 - [ ] **Export to Excel / CSV:** One-click CSV and Excel financial report export in Kinyarwanda and English.
 - [ ] **Multi-Currency Support:** Support for USD, EUR, and KES with daily converted totals alongside primary RWF balances for diaspora senders.

@@ -95,6 +95,56 @@ impl<'a> SyncQueueRepository<'a> {
         Ok(id)
     }
 
+    pub fn get(&self, id: Uuid) -> Result<Option<QueuedMutation>> {
+        let mut stmt = self.db.conn().prepare(
+            r#"
+            SELECT id, action, payload, status, error_message, retry_count, created_at, updated_at
+            FROM sync_queue
+            WHERE id = ?1
+            "#,
+        )?;
+
+        let mut rows = stmt.query_map([id.to_string()], |row| {
+            let id_str: String = row.get(0)?;
+            let action: String = row.get(1)?;
+            let payload: String = row.get(2)?;
+            let status: String = row.get(3)?;
+            let error_message: Option<String> = row.get(4)?;
+            let retry_count: i32 = row.get(5)?;
+            let created_str: String = row.get(6)?;
+            let updated_str: String = row.get(7)?;
+
+            let mutation: SyncMutation = serde_json::from_str(&payload).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    2,
+                    rusqlite::types::Type::Text,
+                    Box::new(e),
+                )
+            })?;
+
+            Ok(QueuedMutation {
+                id: Uuid::from_str(&id_str).unwrap_or_default(),
+                action,
+                mutation,
+                status,
+                error_message,
+                retry_count,
+                created_at: DateTime::parse_from_rfc3339(&created_str)
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .unwrap_or_else(|_| Utc::now()),
+                updated_at: DateTime::parse_from_rfc3339(&updated_str)
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .unwrap_or_else(|_| Utc::now()),
+            })
+        })?;
+
+        if let Some(first) = rows.next() {
+            Ok(Some(first?))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn list_pending(&self, limit: usize) -> Result<Vec<QueuedMutation>> {
         let mut stmt = self.db.conn().prepare(
             r#"
@@ -165,6 +215,22 @@ impl<'a> SyncQueueRepository<'a> {
         Ok(())
     }
 
+    pub fn reset_to_pending(&self, id: Uuid, error: &str) -> Result<()> {
+        let now = Utc::now().to_rfc3339();
+        self.db.conn().execute(
+            r#"
+            UPDATE sync_queue
+            SET status = 'pending',
+                error_message = ?1,
+                retry_count = retry_count + 1,
+                updated_at = ?2
+            WHERE id = ?3
+            "#,
+            params![error, now, id.to_string()],
+        )?;
+        Ok(())
+    }
+
     pub fn mark_failed(&self, id: Uuid, error: &str) -> Result<()> {
         let now = Utc::now().to_rfc3339();
         self.db.conn().execute(
@@ -183,7 +249,7 @@ impl<'a> SyncQueueRepository<'a> {
 
     pub fn pending_count(&self) -> Result<usize> {
         let count: i64 = self.db.conn().query_row(
-            "SELECT COUNT(*) FROM sync_queue WHERE status IN ('pending', 'in_flight', 'failed')",
+            "SELECT COUNT(*) FROM sync_queue WHERE status IN ('pending', 'in_flight')",
             [],
             |r| r.get(0),
         )?;

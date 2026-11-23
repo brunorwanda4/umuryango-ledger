@@ -1,24 +1,9 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tracing_actix_web::TracingLogger;
-
-mod error;
-mod handlers;
-mod middleware;
-pub mod realtime;
-mod state;
-
-use state::AppState;
-
-async fn health_check() -> impl Responder {
-    HttpResponse::Ok().json(serde_json::json!({
-        "status": "ok",
-        "service": "umuryango-api-server",
-        "version": env!("CARGO_PKG_VERSION")
-    }))
-}
+use umuryango_api_server::{configure_app, AppState};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -50,7 +35,7 @@ async fn main() -> std::io::Result<()> {
     let app_state = AppState::new(pool, jwt_secret, public_web_url);
 
     println!(
-        "🇷🇼 Umuryango Ledger API server starting on http://{}:{}",
+        "[Umuryango Ledger] API server starting on http://{}:{}",
         host, port
     );
 
@@ -61,91 +46,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(TracingLogger::default())
             .app_data(web::Data::new(app_state.clone()))
-            // Health check
-            .route("/health", web::get().to(health_check))
-            // API V1
-            .service(
-                web::scope("/api/v1")
-                    // Health check sub-route
-                    .route("/health", web::get().to(health_check))
-                    // Real-time WebSocket
-                    .route("/ws", web::get().to(realtime::ws_handler))
-                    // Auth
-                    .service(
-                        web::scope("/auth")
-                            .route("/register", web::post().to(handlers::auth::register))
-                            .route("/login", web::post().to(handlers::auth::login))
-                            .route("/locale", web::patch().to(handlers::auth::update_locale)),
-                    )
-                    // Families
-                    .service(
-                        web::scope("/families")
-                            .route("", web::get().to(handlers::families::list_families))
-                            .route("", web::post().to(handlers::families::create_family))
-                            .route("/join", web::post().to(handlers::families::join_family))
-                            .route(
-                                "/{family_id}/members/{member_id}/role",
-                                web::patch().to(handlers::families::update_member_role),
-                            ),
-                    )
-                    // Wallets
-                    .service(
-                        web::scope("/wallets")
-                            .route("", web::get().to(handlers::wallets::list_wallets))
-                            .route("", web::post().to(handlers::wallets::create_wallet)),
-                    )
-                    // Transactions
-                    .service(
-                        web::scope("/transactions")
-                            .route("", web::get().to(handlers::transactions::list_transactions))
-                            .route(
-                                "",
-                                web::post().to(handlers::transactions::create_transaction),
-                            ),
-                    )
-                    // Projects
-                    .service(
-                        web::scope("/projects")
-                            .route("", web::get().to(handlers::projects::list_projects))
-                            .route("", web::post().to(handlers::projects::create_project)),
-                    )
-                    // Loans
-                    .service(
-                        web::scope("/loans")
-                            .route("", web::get().to(handlers::projects::list_loans))
-                            .route("", web::post().to(handlers::projects::create_loan))
-                            .route(
-                                "/{id}/repay",
-                                web::post().to(handlers::projects::repay_loan),
-                            ),
-                    )
-                    // Future Plans
-                    .service(
-                        web::scope("/plans")
-                            .route("", web::get().to(handlers::projects::list_plans))
-                            .route("", web::post().to(handlers::projects::create_plan))
-                            .route(
-                                "/{id}/allocate",
-                                web::post().to(handlers::projects::allocate_plan),
-                            ),
-                    )
-                    // Reports & Magic Links
-                    .service(
-                        web::scope("/reports")
-                            .route(
-                                "/summary",
-                                web::get().to(handlers::reports::get_summary_report),
-                            )
-                            .route(
-                                "/share",
-                                web::post().to(handlers::reports::create_share_link),
-                            )
-                            .route(
-                                "/public/{token}",
-                                web::get().to(handlers::reports::get_public_report),
-                            ),
-                    ),
-            )
+            .configure(configure_app)
     })
     .bind((host.as_str(), port))?
     .run()

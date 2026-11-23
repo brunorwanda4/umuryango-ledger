@@ -20,4 +20,18 @@ impl AppState {
             family_hub: Arc::new(FamilyHub::new()),
         }
     }
+
+    pub fn with_hub(
+        db: PgPool,
+        jwt_secret: String,
+        public_web_url: String,
+        family_hub: Arc<FamilyHub>,
+    ) -> Self {
+        Self {
+            db,
+            jwt_secret,
+            public_web_url,
+            family_hub,
+        }
+    }
 }

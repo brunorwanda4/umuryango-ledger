@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{info, warn};
-use umuryango_api_client::{ApiClient, CreateTransactionRequest};
+use umuryango_api_client::{ApiClient, ApiClientError, CreateTransactionRequest};
 use umuryango_core_domain::scope::LedgerScope;
 
 use crate::cache_repo::CacheRepository;
@@ -43,18 +43,7 @@ impl SyncWorker {
 
             while running_clone.load(Ordering::SeqCst) {
                 // 1. Flush pending offline queue items
-                let pending = {
-                    let locked = db.lock().unwrap();
-                    let queue_repo = SyncQueueRepository::new(&locked);
-                    queue_repo.list_pending(20).unwrap_or_default()
-                };
-
-                for item in pending {
-                    if !running_clone.load(Ordering::SeqCst) {
-                        break;
-                    }
-                    Self::process_mutation(&db, &client, &item).await;
-                }
+                Self::flush_pending_mutations(&db, &client).await;
 
                 // 2. Pull authoritative remote state when online with authenticated token
                 if client.get_token().await.is_some() {
@@ -68,6 +57,24 @@ impl SyncWorker {
         });
 
         SyncWorkerHandle { is_running }
+    }
+
+    /// Synchronously flushes all pending and retryable mutations in the queue.
+    pub async fn flush_pending_mutations(
+        db: &Arc<std::sync::Mutex<LocalDatabase>>,
+        client: &ApiClient,
+    ) -> usize {
+        let pending = {
+            let locked = db.lock().unwrap();
+            let queue_repo = SyncQueueRepository::new(&locked);
+            queue_repo.list_pending(100).unwrap_or_default()
+        };
+
+        let count = pending.len();
+        for item in pending {
+            Self::process_mutation(db, client, &item).await;
+        }
+        count
     }
 
     pub async fn process_mutation(
@@ -133,7 +140,18 @@ impl SyncWorker {
                         warn!("Offline mutation {} failed: {:?}", item.id, e);
                         let locked = db.lock().unwrap();
                         let q_repo = SyncQueueRepository::new(&locked);
-                        let _ = q_repo.mark_failed(item.id, &e.to_string());
+                        match &e {
+                            ApiClientError::Reqwest(req_err) => {
+                                let _ = q_repo.reset_to_pending(item.id, &req_err.to_string());
+                            }
+                            ApiClientError::ServerError { code, message, .. } => {
+                                let _ =
+                                    q_repo.mark_failed(item.id, &format!("{}: {}", code, message));
+                            }
+                            _ => {
+                                let _ = q_repo.mark_failed(item.id, &e.to_string());
+                            }
+                        }
                     }
                 }
             }
@@ -180,7 +198,18 @@ impl SyncWorker {
                         warn!("Handover mutation {} failed: {:?}", item.id, e);
                         let locked = db.lock().unwrap();
                         let q_repo = SyncQueueRepository::new(&locked);
-                        let _ = q_repo.mark_failed(item.id, &e.to_string());
+                        match &e {
+                            ApiClientError::Reqwest(req_err) => {
+                                let _ = q_repo.reset_to_pending(item.id, &req_err.to_string());
+                            }
+                            ApiClientError::ServerError { code, message, .. } => {
+                                let _ =
+                                    q_repo.mark_failed(item.id, &format!("{}: {}", code, message));
+                            }
+                            _ => {
+                                let _ = q_repo.mark_failed(item.id, &e.to_string());
+                            }
+                        }
                     }
                 }
             }
@@ -195,7 +224,14 @@ impl SyncWorker {
                 Err(e) => {
                     let locked = db.lock().unwrap();
                     let q_repo = SyncQueueRepository::new(&locked);
-                    let _ = q_repo.mark_failed(item.id, &e.to_string());
+                    match &e {
+                        ApiClientError::Reqwest(req_err) => {
+                            let _ = q_repo.reset_to_pending(item.id, &req_err.to_string());
+                        }
+                        _ => {
+                            let _ = q_repo.mark_failed(item.id, &e.to_string());
+                        }
+                    }
                 }
             },
             SyncMutation::AllocatePlan {
@@ -209,7 +245,14 @@ impl SyncWorker {
                 Err(e) => {
                     let locked = db.lock().unwrap();
                     let q_repo = SyncQueueRepository::new(&locked);
-                    let _ = q_repo.mark_failed(item.id, &e.to_string());
+                    match &e {
+                        ApiClientError::Reqwest(req_err) => {
+                            let _ = q_repo.reset_to_pending(item.id, &req_err.to_string());
+                        }
+                        _ => {
+                            let _ = q_repo.mark_failed(item.id, &e.to_string());
+                        }
+                    }
                 }
             },
         }

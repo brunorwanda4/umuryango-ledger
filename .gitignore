@@ -20,7 +20,9 @@ next-env.d.ts
 *.sqlite3
 
 # Environment & Local Secrets
-.env.*.local
+.env
+.env.*
+!.env.example
 
 # IDEs & System
 .idea/
