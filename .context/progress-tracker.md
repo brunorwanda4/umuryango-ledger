@@ -9,7 +9,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 ## 1. Component Implementation Status
 
 | Component | Status | Details |
-| :--- | :---: | :--- |
+| :--- | :--- | :--- |
 | **`crates/i18n`** | **DONE** | Complete bilingual Fluent bundles (`rw.ftl`, `en.ftl`), `Translator::t()`, `Localizer`, and domain error translation catalog. Derives `utoipa::ToSchema` for `Locale` and `LocalizedError`. Rust 2024 edition. |
 | **`crates/core-domain`** | **DONE** | Pure domain models, mathematical assertions, dual scopes (`PERSONAL` / `FAMILY`), custody handovers, Mother's Report generator, `RealtimeEvent::AppUpdateAvailable`. Derives `utoipa::ToSchema` on all models and enums. Rust 2024 edition. |
 | **`crates/storage-local`** | **DONE** | Bundled SQLite database (`umuryango_offline.db`), cache repos, idempotent mutation `sync_queue`, theme persistence. Rust 2024 edition, thiserror 2.0. |
@@ -43,6 +43,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-23** | `3ce4f57` | `feat(updater): add cross-platform auto-updates and OTA system` | `cargo test --workspace` (34 passed), `bun run typecheck`, `bun test`, `bun run build` |
 | **2026-11-23** | `f40dc79` | `feat(icons): add theme-aware FontAwesome icon system across GPUI and Web` | `cargo check -p app-gpui`, `cargo test -p app-gpui` (8 passed), `bun run typecheck` |
 | **2026-11-23** | `dca1559` | `feat(api): add interactive Swagger UI and OpenAPI 3.1 documentation with utoipa 6` | `cargo check -p umuryango-api-server` |
+| **2026-11-23** | `3329ed5` | `fix(scripts): filter watchTargets with existsSync in dev-native` | `cargo test --workspace`, `bun run typecheck`, `bun test`, `bun run build` |
 
 ---
 
