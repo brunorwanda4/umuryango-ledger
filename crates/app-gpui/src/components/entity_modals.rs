@@ -70,7 +70,6 @@ impl EntityModalDialog {
             .max_h(px(620.0))
             .overflow_y_scroll()
             .p(px(24.0))
-            .rounded(px(14.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -103,7 +102,6 @@ impl EntityModalDialog {
                         div()
                             .id("entity-modal-close-btn")
                             .p(px(4.0))
-                            .rounded(px(4.0))
                             .cursor_pointer()
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.close_modal(cx);
@@ -130,7 +128,6 @@ impl EntityModalDialog {
                             .id("entity-modal-cancel-btn")
                             .flex_1()
                             .py(px(10.0))
-                            .rounded(px(8.0))
                             .bg(theme.bg_elevated)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -151,7 +148,6 @@ impl EntityModalDialog {
                             .id("entity-modal-submit-btn")
                             .flex_1()
                             .py(px(10.0))
-                            .rounded(px(8.0))
                             .bg(theme.accent_primary)
                             .flex()
                             .items_center()
@@ -279,7 +275,6 @@ impl EntityModalDialog {
                     .child(
                         div()
                             .p(px(10.0))
-                            .rounded(px(8.0))
                             .bg(theme.bg_canvas)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -404,7 +399,6 @@ impl EntityModalDialog {
                             .flex_1()
                             .py(px(7.0))
                             .px(px(8.0))
-                            .rounded(px(6.0))
                             .bg(if is_sel {
                                 theme.accent_primary
                             } else {
@@ -472,7 +466,6 @@ impl EntityModalDialog {
                             .flex_1()
                             .py(px(7.0))
                             .px(px(8.0))
-                            .rounded(px(6.0))
                             .bg(if is_sel {
                                 theme.accent_primary
                             } else {
@@ -538,7 +531,6 @@ impl EntityModalDialog {
                             .flex_1()
                             .py(px(7.0))
                             .px(px(8.0))
-                            .rounded(px(6.0))
                             .bg(if is_sel {
                                 theme.accent_primary
                             } else {

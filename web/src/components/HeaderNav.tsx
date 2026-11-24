@@ -30,7 +30,7 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
               alt="Umuryango Ledger Emblem"
               width={36}
               height={36}
-              className="rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 group-hover:scale-105 transition-transform"
+              className="shadow-sm border border-slate-200 dark:border-slate-700 group-hover:scale-105 transition-transform"
             />
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tight text-[#003049] dark:text-[#fdf0d5] leading-none">
@@ -47,7 +47,7 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
           {/* Quick Launch Button to GPUI WASM App */}
           <Link
             href="/app"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#780000] hover:bg-[#c1121f] text-white text-xs font-bold shadow-sm transition"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#780000] hover:bg-[#c1121f] text-white text-xs font-bold shadow-sm transition"
           >
             <span>{openAppLabel}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -56,7 +56,7 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
           {/* Language Switcher */}
           <Link
             href={targetPath}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/80 text-xs font-bold text-[#003049] dark:text-[#fdf0d5] transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/80 text-xs font-bold text-[#003049] dark:text-[#fdf0d5] transition"
             title={`Switch to ${otherLocaleLabel}`}
           >
             <Globe className="w-3.5 h-3.5 text-[#669bbc]" />
@@ -66,7 +66,7 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition"
+            className="p-2 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition"
             aria-label="Toggle theme"
           >
             {theme === "dark" ? (

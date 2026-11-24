@@ -29,11 +29,11 @@ export const ToastContainer: React.FC = () => {
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto p-4 rounded-xl bg-white dark:bg-brand-dark shadow-xl border-l-4 ${borderClass} border border-slate-200 dark:border-slate-800 transition-all duration-300 transform translate-y-0`}
+            className={`pointer-events-auto p-4 bg-white dark:bg-brand-dark shadow-xl border-l-4 ${borderClass} border border-slate-200 dark:border-slate-800 transition-all duration-300 transform translate-y-0`}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
-                <span className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800">{icon}</span>
+                <span className="p-1 bg-slate-100 dark:bg-slate-800">{icon}</span>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                     {toast.title}
@@ -47,7 +47,7 @@ export const ToastContainer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => dismissToast(toast.id)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg ml-2"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 ml-2"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

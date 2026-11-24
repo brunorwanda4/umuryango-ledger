@@ -8,10 +8,9 @@ This document establishes the craftsmanship standards inspired by Apple design p
 
 - **Content Precedes Decoration:** UI elements exist to showcase financial reality, not to draw attention to the frame. Avoid heavy gradients, neon accents, or unmotivated visual embellishments.
 - **Generous Margins & Optical Balance:** Elements are padded with deliberate optical balance. Text is never jammed against card edges.
-- **Consistent Corner Radii:**
-  - Micro-elements (badges, segmented tabs): `rounded-lg` (8px) or `rounded-xl` (12px).
-  - Standard cards and modals: `rounded-2xl` (16px).
-  - Master spotlight cards (e.g., Mother's Report): `rounded-3xl` (24px).
+- **Sharp, Square Geometry (Zero Border Radius):**
+  - All UI surfaces — badges, segmented tabs, inputs, buttons, cards, modals, and spotlight containers — use crisp 0px square corners with no rounded styles.
+  - Visual separation is achieved through clean 1px borders, disciplined spacing, and surface contrast rather than corner rounding.
 
 ---
 

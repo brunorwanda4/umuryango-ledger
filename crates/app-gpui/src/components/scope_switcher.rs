@@ -33,7 +33,6 @@ impl ScopeSwitcher {
             .flex_row()
             .items_center()
             .p(px(3.0))
-            .rounded(px(8.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -49,7 +48,6 @@ impl ScopeSwitcher {
                     .gap(px(6.0))
                     .py(px(6.0))
                     .px(px(12.0))
-                    .rounded(px(6.0))
                     .text_sm()
                     .font_weight(if is_family {
                         gpui_kit::FontWeight::SEMIBOLD
@@ -89,7 +87,6 @@ impl ScopeSwitcher {
                     .gap(px(6.0))
                     .py(px(6.0))
                     .px(px(12.0))
-                    .rounded(px(6.0))
                     .text_sm()
                     .font_weight(if !is_family {
                         gpui_kit::FontWeight::SEMIBOLD

@@ -39,7 +39,6 @@ impl LangToggle {
             .gap(px(6.0))
             .px(px(8.0))
             .py(px(4.0))
-            .rounded(px(6.0))
             .bg(theme.bg_elevated)
             .border_1()
             .border_color(theme.border_subtle)

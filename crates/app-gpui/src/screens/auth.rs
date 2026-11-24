@@ -63,7 +63,6 @@ impl AuthScreen {
                             .justify_center()
                             .w(px(32.0))
                             .h(px(32.0))
-                            .rounded(px(6.0))
                             .bg(theme.bg_elevated)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -84,7 +83,6 @@ impl AuthScreen {
                 div()
                     .w(px(460.0))
                     .p(px(28.0))
-                    .rounded(px(16.0))
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -96,8 +94,7 @@ impl AuthScreen {
                     .child(
                         gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
                             .w(px(56.0))
-                            .h(px(56.0))
-                            .rounded(px(12.0)),
+                            .h(px(56.0)),
                     )
                     // Card Title & Tagline
                     .child(
@@ -295,7 +292,6 @@ impl AuthScreen {
             .justify_center()
             .gap(px(8.0))
             .py(px(10.0))
-            .rounded(px(8.0))
             .bg(if is_busy {
                 theme.accent_primary.opacity(0.6)
             } else {

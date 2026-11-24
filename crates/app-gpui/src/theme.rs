@@ -1,4 +1,4 @@
-use gpui_kit::{Hsla, Rgba, hsla, rgb, rgba};
+use gpui_kit::{Hsla, Rgba, hsla, px, rgb, rgba};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use umuryango_core_domain::UserThemePrefs;
@@ -241,7 +241,8 @@ impl SemanticTheme {
     /// Mirrors the semantic tokens into the gpui-kit component theme so kit
     /// widgets follow the app palette: primary fills (radios, buttons), input
     /// caret, and focus ring use the brand red, selection a translucent red,
-    /// text and borders the app tokens. Call after every theme or palette change.
+    /// text and borders the app tokens, and all radii are zeroed for sharp corners.
+    /// Call after every theme or palette change.
     pub fn apply_to_kit(&self, cx: &mut gpui_kit::App) {
         let on_primary = if self.mode.is_dark() {
             self.text_primary
@@ -254,6 +255,9 @@ impl SemanticTheme {
             ThemeMode::Light => gpui_kit::component::ThemeMode::Light,
             ThemeMode::Dark => gpui_kit::component::ThemeMode::Dark,
         };
+        kit.radius = px(0.0);
+        kit.radius_lg = px(0.0);
+        kit.window_radius = px(0.0);
         kit.primary = self.primary;
         kit.primary_hover = self.primary_hover;
         kit.primary_active = self.primary_pressed;
@@ -275,6 +279,7 @@ impl SemanticTheme {
         kit.accent_foreground = self.text_primary;
         kit.popover = self.bg_surface;
         kit.popover_foreground = self.text_primary;
+        gpui_kit::component::Theme::sync_base(cx);
 
         gpui_kit::component::set_icon_resolver(cx, |path, _| {
             use gpui_kit::component::{IconName, IconNamed};

@@ -59,7 +59,6 @@ impl TransactionsScreen {
                                     .gap(px(6.0))
                                     .px(px(12.0))
                                     .py(px(8.0))
-                                    .rounded(px(8.0))
                                     .bg(theme.bg_surface)
                                     .border_1()
                                     .border_color(theme.border_subtle)
@@ -86,7 +85,6 @@ impl TransactionsScreen {
                                     .gap(px(6.0))
                                     .px(px(14.0))
                                     .py(px(8.0))
-                                    .rounded(px(8.0))
                                     .bg(theme.accent_primary)
                                     .text_color(theme.bg_canvas)
                                     .text_xs()
@@ -114,7 +112,6 @@ impl TransactionsScreen {
                     vec![
                         div()
                             .p(px(24.0))
-                            .rounded(px(8.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)

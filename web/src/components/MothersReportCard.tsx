@@ -57,19 +57,18 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
   };
 
   return (
-    <div className="rounded-3xl bg-white dark:bg-brand-dark shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-w-2xl mx-auto my-6 print-card transition-colors">
+    <div className="bg-white dark:bg-brand-dark shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-w-2xl mx-auto my-6 print-card transition-colors">
       {/* Elder-Friendly Brand Header */}
       <div className="bg-gradient-to-r from-brand-dark to-[#004e75] p-8 text-white text-center flex flex-col items-center relative">
-        <div className="w-16 h-16 rounded-2xl bg-white/10 p-2 shadow-inner border border-white/20 mb-3 flex items-center justify-center">
+        <div className="w-16 h-16 bg-white/10 p-2 shadow-inner border border-white/20 mb-3 flex items-center justify-center">
           <img
             src="/icon-192.png"
             alt="Umuryango Emblem"
             width={48}
             height={48}
-            className="rounded-xl"
           />
         </div>
-        <div className="inline-block bg-brand-cream/20 border border-brand-cream/30 text-brand-cream px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase mb-2">
+        <div className="inline-block bg-brand-cream/20 border border-brand-cream/30 text-brand-cream px-3 py-1 text-xs font-black tracking-widest uppercase mb-2">
           {data.family_name || t(locale, "scopes.family_ledger")}
         </div>
         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-brand-cream">
@@ -79,7 +78,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           {data.mothers_description}
         </p>
 
-        <div className="mt-4 flex items-center space-x-2 text-xs text-brand-cream/80 bg-white/10 px-3 py-1 rounded-full">
+        <div className="mt-4 flex items-center space-x-2 text-xs text-brand-cream/80 bg-white/10 px-3 py-1">
           <Calendar className="w-3.5 h-3.5" />
           <span>{data.generated_date}</span>
         </div>
@@ -87,7 +86,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
 
       <div className="p-6 sm:p-8 space-y-6">
         {/* Total Assets Spotlight */}
-        <div className="p-6 bg-gradient-to-b from-[#fdf0d5]/40 to-[#fdf0d5]/10 dark:from-slate-800 dark:to-slate-900 rounded-2xl border-2 border-brand-cream/70 dark:border-slate-700 text-center">
+        <div className="p-6 bg-gradient-to-b from-[#fdf0d5]/40 to-[#fdf0d5]/10 dark:from-slate-800 dark:to-slate-900 border-2 border-brand-cream/70 dark:border-slate-700 text-center">
           <span className="text-xs font-extrabold uppercase tracking-widest text-brand-dark dark:text-brand-cream">
             {data.total_assets_label}
           </span>
@@ -118,7 +117,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-center">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center">
               <Building2 className="w-6 h-6 mx-auto mb-1 text-slate-600 dark:text-slate-300" />
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">
                 {data.bank_label}
@@ -131,7 +130,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
               </span>
             </div>
 
-            <div className="p-4 bg-amber-50/70 dark:bg-slate-800 rounded-2xl border border-amber-200 dark:border-slate-700 text-center">
+            <div className="p-4 bg-amber-50/70 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-center">
               <Smartphone className="w-6 h-6 mx-auto mb-1 text-amber-700 dark:text-amber-400" />
               <span className="text-xs text-amber-900 dark:text-amber-300 font-medium block">
                 {data.momo_label}
@@ -144,7 +143,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
               </span>
             </div>
 
-            <div className="p-4 bg-rose-50/70 dark:bg-slate-800 rounded-2xl border border-rose-200 dark:border-slate-700 text-center">
+            <div className="p-4 bg-rose-50/70 dark:bg-slate-800 border border-rose-200 dark:border-slate-700 text-center">
               <Banknote className="w-6 h-6 mx-auto mb-1 text-brand-crimson dark:text-rose-400" />
               <span className="text-xs text-rose-900 dark:text-rose-300 font-medium block">
                 {data.cash_label}
@@ -160,7 +159,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         </div>
 
         {/* Active Projects Checklist */}
-        <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+        <div className="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
             <Hammer className="w-3.5 h-3.5 text-brand-steel-blue" />
             <span>{t(locale, "report.active_projects_section")}</span>
@@ -171,15 +170,15 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
                 <span>{t(locale, "report.house_renovation")}</span>
                 <span>1,200,000 / 5,000,000 RWF (24%)</span>
               </div>
-              <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full mt-1.5 overflow-hidden">
-                <div className="h-full bg-brand-steel-blue rounded-full w-[24%]" />
+              <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 mt-1.5 overflow-hidden">
+                <div className="h-full bg-brand-steel-blue w-[24%]" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Liabilities / Outstanding Loans */}
-        <div className="p-4 bg-rose-50/80 dark:bg-rose-950/20 rounded-2xl border border-rose-200 dark:border-rose-900 flex items-center justify-between">
+        <div className="p-4 bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <AlertTriangle className="w-5 h-5 text-rose-600" />
             <div>
@@ -201,7 +200,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           <button
             type="button"
             onClick={handleWhatsAppShare}
-            className="w-full py-3 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
+            className="w-full py-3 bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
           >
             <Share2 className="w-4 h-4" />
             <span>{t(locale, "report.share_whatsapp")}</span>
@@ -210,7 +209,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
           <button
             type="button"
             onClick={handlePrint}
-            className="w-full py-3 rounded-2xl bg-brand-dark dark:bg-slate-700 hover:bg-brand-dark/90 text-brand-cream dark:text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
+            className="w-full py-3 bg-brand-dark dark:bg-slate-700 hover:bg-brand-dark/90 text-brand-cream dark:text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2"
           >
             <Printer className="w-4 h-4" />
             <span>{t(locale, "report.download_pdf")}</span>

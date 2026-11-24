@@ -16,11 +16,11 @@ export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({ locale = "rw" }) =
   const familyLabel = t(locale, "scopes.family_ledger");
 
   return (
-    <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+    <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner">
       <button
         type="button"
         onClick={() => setScope("family")}
-        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 ${
+        className={`px-3.5 py-1.5 text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 ${
           scope === "family"
             ? "bg-brand-dark text-brand-cream shadow-md"
             : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
@@ -33,7 +33,7 @@ export const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({ locale = "rw" }) =
       <button
         type="button"
         onClick={() => setScope("personal")}
-        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 ${
+        className={`px-3.5 py-1.5 text-xs font-bold transition-all duration-200 flex items-center space-x-1.5 ${
           scope === "personal"
             ? "bg-brand-crimson text-white shadow-md"
             : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"

@@ -75,7 +75,6 @@ impl QuickEntryDialog {
             .max_h(px(680.0))
             .overflow_y_scroll()
             .p(px(24.0))
-            .rounded(px(14.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -114,7 +113,6 @@ impl QuickEntryDialog {
                         div()
                             .id("quick-entry-header-close")
                             .p(px(4.0))
-                            .rounded(px(4.0))
                             .cursor_pointer()
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.close_quick_entry(cx);
@@ -228,7 +226,6 @@ impl QuickEntryDialog {
                                             .id(format!("amt-preset-{}", amt))
                                             .px(px(8.0))
                                             .py(px(4.0))
-                                            .rounded(px(4.0))
                                             .bg(if is_sel {
                                                 theme.accent_primary
                                             } else {
@@ -288,7 +285,6 @@ impl QuickEntryDialog {
                                             .id(format!("cat-preset-{}", cat))
                                             .px(px(8.0))
                                             .py(px(4.0))
-                                            .rounded(px(4.0))
                                             .bg(if is_sel {
                                                 theme.accent_primary
                                             } else {
@@ -351,7 +347,6 @@ impl QuickEntryDialog {
                             .id("quick-entry-cancel-btn")
                             .flex_1()
                             .py(px(10.0))
-                            .rounded(px(8.0))
                             .bg(theme.bg_elevated)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -372,7 +367,6 @@ impl QuickEntryDialog {
                             .id("quick-entry-confirm-btn")
                             .flex_1()
                             .py(px(10.0))
-                            .rounded(px(8.0))
                             .bg(if is_busy {
                                 theme.accent_primary.opacity(0.6)
                             } else {
@@ -424,7 +418,6 @@ impl QuickEntryDialog {
             .justify_center()
             .gap(px(6.0))
             .py(px(6.0))
-            .rounded(px(6.0))
             .text_xs()
             .font_weight(gpui_kit::FontWeight::SEMIBOLD)
             .bg(if is_active {
@@ -479,7 +472,6 @@ impl QuickEntryDialog {
             .child(if wallets.is_empty() {
                 div()
                     .p(px(10.0))
-                    .rounded(px(8.0))
                     .bg(theme.bg_canvas)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -498,7 +490,6 @@ impl QuickEntryDialog {
                         div()
                             .id(format!("wallet-pick-{}-{}", prefix, w.id))
                             .p(px(7.0))
-                            .rounded(px(6.0))
                             .bg(if is_sel {
                                 theme.accent_primary.opacity(0.12)
                             } else {

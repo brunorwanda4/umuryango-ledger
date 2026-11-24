@@ -136,7 +136,7 @@ export function AutoUpdateListener({ locale }: AutoUpdateListenerProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={applyUpdate}
-          className="px-3 py-1 text-xs font-semibold rounded bg-[#fdf0d5] text-[#003049] hover:bg-white transition-colors cursor-pointer"
+          className="px-3 py-1 text-xs font-semibold bg-[#fdf0d5] text-[#003049] hover:bg-white transition-colors cursor-pointer"
         >
           {buttonText}
         </button>
@@ -145,7 +145,7 @@ export function AutoUpdateListener({ locale }: AutoUpdateListenerProps) {
           <button
             onClick={() => setDismissed(true)}
             aria-label="Dismiss banner"
-            className="p-1 rounded text-[#fdf0d5]/80 hover:text-[#fdf0d5] transition-colors cursor-pointer"
+            className="p-1 text-[#fdf0d5]/80 hover:text-[#fdf0d5] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

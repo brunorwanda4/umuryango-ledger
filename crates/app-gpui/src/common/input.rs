@@ -46,7 +46,6 @@ fn base_input(id: &'static str, state: &Entity<InputState>, theme: &SemanticThem
         .id(id)
         .focus_bordered(true)
         .w_full()
-        .rounded(px(8.0))
         .bg(theme.bg_canvas)
         .border_color(theme.border_subtle)
         .text_color(theme.text_primary)
@@ -71,7 +70,6 @@ fn mask_toggle(
         .items_center()
         .justify_center()
         .size(px(26.0))
-        .rounded(px(6.0))
         .cursor_pointer()
         .hover(move |s| s.bg(hover_bg))
         .on_click(move |_, window, cx| {

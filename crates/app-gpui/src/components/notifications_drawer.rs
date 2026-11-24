@@ -65,7 +65,6 @@ impl NotificationsDrawer {
                                     div()
                                         .px(px(6.0))
                                         .py(px(2.0))
-                                        .rounded_full()
                                         .bg(theme.accent_primary)
                                         .text_xs()
                                         .font_weight(gpui_kit::FontWeight::BOLD)
@@ -98,7 +97,6 @@ impl NotificationsDrawer {
                                 div()
                                     .id("drawer-close-btn")
                                     .p(px(4.0))
-                                    .rounded(px(4.0))
                                     .cursor_pointer()
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.close_notifications(cx);
@@ -205,7 +203,6 @@ impl NotificationsDrawer {
             .items_start()
             .gap(px(12.0))
             .p(px(10.0))
-            .rounded(px(8.0))
             .bg(card_bg)
             .border_1()
             .border_color(if !item.is_read {
@@ -221,7 +218,6 @@ impl NotificationsDrawer {
                     .justify_center()
                     .w(px(32.0))
                     .h(px(32.0))
-                    .rounded(px(6.0))
                     .bg(theme.bg_surface)
                     .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
             )

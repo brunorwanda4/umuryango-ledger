@@ -104,20 +104,20 @@ export default function GpuiAppPage() {
       {/* Error fallback state if WebGL/WASM encounters an unrecoverable failure */}
       {status === "error" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#003049] text-[#fdf0d5] z-20 p-6">
-          <div className="max-w-md w-full bg-[#780000] p-6 rounded-2xl shadow-2xl border border-[#c1121f]/50 text-center space-y-4">
+          <div className="max-w-md w-full bg-[#780000] p-6 shadow-2xl border border-[#c1121f]/50 text-center space-y-4">
             <h2 className="text-xl font-bold font-archivo text-white">Application Loading Error</h2>
             <p className="text-sm text-[#fdf0d5]/90 font-mono break-all">{errorMessage}</p>
             <div className="pt-2 flex justify-center gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#003049] hover:bg-[#003049]/80 text-[#fdf0d5] font-semibold text-sm transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003049] hover:bg-[#003049]/80 text-[#fdf0d5] font-semibold text-sm transition"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Retry</span>
               </button>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Home</span>
@@ -131,7 +131,7 @@ export default function GpuiAppPage() {
       <div className="absolute top-4 left-4 z-30">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#003049]/80 hover:bg-[#003049] text-[#fdf0d5] hover:text-white border border-[#669bbc]/30 text-xs font-medium backdrop-blur-md transition shadow-sm"
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#003049]/80 hover:bg-[#003049] text-[#fdf0d5] hover:text-white border border-[#669bbc]/30 text-xs font-medium backdrop-blur-md transition shadow-sm"
           title="Return to Public Visitor Page"
         >
           <ArrowLeft className="w-3.5 h-3.5" />

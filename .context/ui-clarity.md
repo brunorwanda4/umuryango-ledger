@@ -31,7 +31,7 @@ When a user opens any screen in `umuryango-ledger`, they must instantly discern 
 ## 3. High Information Density with Clean Whitespace
 
 - **Data Density:** Use compact tabular rows (`py-3 px-4`) and legible monospace or tabular numbers (`tabular-nums`) for currency amounts.
-- **Visual Breathing Room:** Group related fields in rounded cards (`rounded-2xl` or `rounded-3xl`) with 16px to 24px internal padding (`p-4` to `p-6`).
+- **Visual Breathing Room:** Group related fields in crisp, sharp-cornered cards (0px border radius) with 16px to 24px internal padding (`p-4` to `p-6`).
 - **Immediate Action Placement:** Primary actions (`+ Log Transaction`, `Handover`) must always sit at the top-right of the screen header or as a persistent floating button on mobile.
 
 ---

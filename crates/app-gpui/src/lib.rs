@@ -206,7 +206,6 @@ impl RootView {
                 .items_center()
                 .gap(px(8.0))
                 .p(px(12.0))
-                .rounded(px(8.0))
                 .bg(bg)
                 .border_1()
                 .border_color(border)

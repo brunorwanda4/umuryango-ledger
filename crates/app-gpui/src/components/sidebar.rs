@@ -87,8 +87,7 @@ impl Sidebar {
                                     .child(
                                         gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
                                             .w(px(30.0))
-                                            .h(px(30.0))
-                                            .rounded(px(7.0)),
+                                            .h(px(30.0)),
                                     )
                                     .child(
                                         div()
@@ -118,7 +117,6 @@ impl Sidebar {
                                     .items_center()
                                     .gap(px(4.0))
                                     .p(px(6.0))
-                                    .rounded(px(8.0))
                                     .bg(if state.unread_notifications_count > 0 {
                                         theme.bg_surface
                                     } else {
@@ -149,7 +147,6 @@ impl Sidebar {
                                             div()
                                                 .px(px(6.0))
                                                 .py(px(2.0))
-                                                .rounded(px(10.0))
                                                 .bg(theme.accent_primary)
                                                 .text_xs()
                                                 .font_weight(gpui_kit::FontWeight::BOLD)
@@ -180,7 +177,6 @@ impl Sidebar {
                             .gap(px(6.0))
                             .px(px(8.0))
                             .py(px(4.0))
-                            .rounded(px(6.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -224,7 +220,6 @@ impl Sidebar {
                         .gap(px(10.0))
                         .py(px(8.0))
                         .px(px(12.0))
-                        .rounded(px(8.0))
                         .bg(bg)
                         .cursor_pointer()
                         .on_click(cx.listener(move |this, _, _, cx| {
@@ -273,7 +268,6 @@ impl Sidebar {
                                     .gap(px(6.0))
                                     .px(px(10.0))
                                     .py(px(4.0))
-                                    .rounded(px(6.0))
                                     .bg(theme.bg_elevated)
                                     .border_1()
                                     .border_color(theme.border_subtle)
@@ -310,7 +304,6 @@ impl Sidebar {
                             .justify_center()
                             .gap(px(6.0))
                             .py(px(6.0))
-                            .rounded(px(6.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)

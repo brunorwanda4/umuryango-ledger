@@ -247,7 +247,6 @@ pub fn icon_button(
         .items_center()
         .justify_center()
         .p(padding)
-        .rounded(px(6.0))
         .cursor_pointer()
         .hover(|s| s.bg(theme.bg_elevated))
         .child(

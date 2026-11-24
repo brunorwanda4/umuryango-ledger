@@ -69,7 +69,6 @@ impl SettingsScreen {
             .child(
                 div()
                     .p(px(20.0))
-                    .rounded(px(12.0))
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -120,7 +119,6 @@ impl SettingsScreen {
                             .gap(px(6.0))
                             .px(px(14.0))
                             .py(px(8.0))
-                            .rounded(px(8.0))
                             .bg(theme.expense_color)
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::BOLD)
@@ -142,7 +140,6 @@ impl SettingsScreen {
             .child(
                 div()
                     .p(px(20.0))
-                    .rounded(px(12.0))
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -164,7 +161,6 @@ impl SettingsScreen {
                                     .id("settings-light-mode-card")
                                     .flex_1()
                                     .p(px(14.0))
-                                    .rounded(px(8.0))
                                     .bg(if !state.theme_mode.is_dark() {
                                         theme.accent_primary
                                     } else {
@@ -216,7 +212,6 @@ impl SettingsScreen {
                                     .id("settings-dark-mode-card")
                                     .flex_1()
                                     .p(px(14.0))
-                                    .rounded(px(8.0))
                                     .bg(if state.theme_mode.is_dark() {
                                         theme.accent_primary
                                     } else {
@@ -269,7 +264,6 @@ impl SettingsScreen {
             .child(
                 div()
                     .p(px(20.0))
-                    .rounded(px(12.0))
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -299,7 +293,6 @@ impl SettingsScreen {
                                         div()
                                             .px(px(10.0))
                                             .py(px(4.0))
-                                            .rounded(px(6.0))
                                             .bg(theme.bg_elevated)
                                             .border_1()
                                             .border_color(theme.border_subtle)
@@ -317,7 +310,6 @@ impl SettingsScreen {
                                     .cursor_pointer()
                                     .px(px(12.0))
                                     .py(px(6.0))
-                                    .rounded(px(6.0))
                                     .bg(theme.accent_primary)
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
@@ -399,7 +391,6 @@ impl SettingsScreen {
             .child(
                 div()
                     .p(px(20.0))
-                    .rounded(px(12.0))
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -411,7 +402,6 @@ impl SettingsScreen {
                         gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
                             .w(px(54.0))
                             .h(px(54.0))
-                            .rounded(px(12.0))
                             .border_1()
                             .border_color(theme.border_subtle),
                     )
@@ -448,11 +438,10 @@ impl SettingsScreen {
             .flex_col()
             .gap(px(6.0))
             .p(px(10.0))
-            .rounded(px(8.0))
             .bg(theme.bg_canvas)
             .border_1()
             .border_color(theme.border_subtle)
-            .child(div().w_full().h(px(40.0)).rounded(px(6.0)).bg(color))
+            .child(div().w_full().h(px(40.0)).bg(color))
             .child(
                 div()
                     .text_xs()

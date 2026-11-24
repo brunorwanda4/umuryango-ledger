@@ -57,7 +57,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-brand-dark rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white dark:bg-brand-dark shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Handshake className="w-5 h-5 text-brand-dark dark:text-brand-cream" />
@@ -68,7 +68,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold p-1 rounded-lg"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-bold p-1"
           >
             <X className="w-4 h-4" />
           </button>
@@ -76,7 +76,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-brand-crimson/10 border border-brand-crimson/30 text-brand-active-crimson text-xs font-semibold flex items-center">
+            <div className="p-3 bg-brand-crimson/10 border border-brand-crimson/30 text-brand-active-crimson text-xs font-semibold flex items-center">
               <AlertTriangle className="w-4 h-4 mr-2 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -92,7 +92,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
                 setFromWallet(e.target.value);
                 setErrorMsg(null);
               }}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
             >
               {wallets.map((w) => (
                 <option key={w.id} value={w.name}>
@@ -112,7 +112,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
                 setToWallet(e.target.value);
                 setErrorMsg(null);
               }}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
             >
               {wallets.map((w) => (
                 <option key={w.id} value={w.name}>
@@ -135,7 +135,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
                 setErrorMsg(null);
               }}
               required
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
             />
           </div>
 
@@ -148,7 +148,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
               placeholder={isRw ? "Amazina y'uwohereje..." : "Name of initiator..."}
               value={actorName}
               onChange={(e) => setActorName(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-dark"
             />
           </div>
 
@@ -162,7 +162,7 @@ export const HandoverModal: React.FC<HandoverModalProps> = ({ isOpen, onClose, l
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-brand-dark text-brand-cream hover:bg-brand-dark/90 dark:bg-brand-steel-blue dark:text-white font-bold text-xs shadow-md transition"
+              className="px-5 py-2 bg-brand-dark text-brand-cream hover:bg-brand-dark/90 dark:bg-brand-steel-blue dark:text-white font-bold text-xs shadow-md transition"
             >
               {t(locale, "common.confirm")}
             </button>

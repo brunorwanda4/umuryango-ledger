@@ -93,7 +93,6 @@ impl DashboardScreen {
                                     .gap(px(6.0))
                                     .px(px(12.0))
                                     .py(px(8.0))
-                                    .rounded(px(8.0))
                                     .bg(theme.bg_surface)
                                     .border_1()
                                     .border_color(theme.border_subtle)
@@ -120,7 +119,6 @@ impl DashboardScreen {
                                     .gap(px(6.0))
                                     .px(px(14.0))
                                     .py(px(8.0))
-                                    .rounded(px(8.0))
                                     .bg(theme.accent_primary)
                                     .text_color(theme.bg_canvas)
                                     .text_sm()
@@ -216,7 +214,6 @@ impl DashboardScreen {
                                     .gap(px(6.0))
                                     .px(px(10.0))
                                     .py(px(5.0))
-                                    .rounded(px(6.0))
                                     .bg(theme.bg_surface)
                                     .border_1()
                                     .border_color(theme.border_subtle)
@@ -239,7 +236,6 @@ impl DashboardScreen {
                     .child(if state.wallets.is_empty() {
                         div()
                             .p(px(20.0))
-                            .rounded(px(10.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -276,7 +272,6 @@ impl DashboardScreen {
                         div()
                             .flex_1()
                             .p(px(18.0))
-                            .rounded(px(12.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -316,7 +311,6 @@ impl DashboardScreen {
                         div()
                             .flex_1()
                             .p(px(18.0))
-                            .rounded(px(12.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -379,7 +373,6 @@ impl DashboardScreen {
                             vec![
                                 div()
                                     .p(px(16.0))
-                                    .rounded(px(8.0))
                                     .bg(theme.bg_surface)
                                     .border_1()
                                     .border_color(theme.border_subtle)
@@ -426,7 +419,6 @@ impl DashboardScreen {
         div()
             .id(id)
             .p(px(16.0))
-            .rounded(px(12.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -485,15 +477,8 @@ impl DashboardScreen {
                 div()
                     .w_full()
                     .h(px(12.0))
-                    .rounded(px(6.0))
                     .bg(theme.bg_elevated)
-                    .child(
-                        div()
-                            .h_full()
-                            .rounded(px(6.0))
-                            .bg(bar_color)
-                            .w(relative(ratio)),
-                    ),
+                    .child(div().h_full().bg(bar_color).w(relative(ratio))),
             )
     }
 
@@ -513,7 +498,7 @@ impl DashboardScreen {
                     .flex()
                     .items_center()
                     .gap(px(8.0))
-                    .child(div().w(px(10.0)).h(px(10.0)).rounded(px(3.0)).bg(color))
+                    .child(div().w(px(10.0)).h(px(10.0)).bg(color))
                     .child(
                         div()
                             .text_xs()

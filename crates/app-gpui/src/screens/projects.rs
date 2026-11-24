@@ -55,7 +55,6 @@ impl ProjectsScreen {
                             .gap(px(6.0))
                             .px(px(12.0))
                             .py(px(6.0))
-                            .rounded(px(6.0))
                             .bg(theme.accent_primary)
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::BOLD)
@@ -77,7 +76,6 @@ impl ProjectsScreen {
             .child(if state.projects.is_empty() {
                 div()
                     .p(px(24.0))
-                    .rounded(px(8.0))
                     .bg(theme.bg_surface)
                     .border_1()
                     .border_color(theme.border_subtle)
@@ -118,7 +116,6 @@ impl ProjectsScreen {
 
         div()
             .p(px(16.0))
-            .rounded(px(12.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -151,7 +148,6 @@ impl ProjectsScreen {
                         div()
                             .px(px(8.0))
                             .py(px(2.0))
-                            .rounded(px(4.0))
                             .bg(theme.bg_elevated)
                             .text_xs()
                             .text_color(theme.text_muted)
@@ -183,15 +179,8 @@ impl ProjectsScreen {
                 div()
                     .w_full()
                     .h(px(8.0))
-                    .rounded(px(4.0))
                     .bg(theme.bg_elevated)
-                    .child(
-                        div()
-                            .h_full()
-                            .rounded(px(4.0))
-                            .bg(theme.income_color)
-                            .w(relative(ratio)),
-                    ),
+                    .child(div().h_full().bg(theme.income_color).w(relative(ratio))),
             )
     }
 }

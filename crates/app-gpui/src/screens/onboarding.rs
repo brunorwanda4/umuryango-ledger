@@ -62,7 +62,6 @@ impl OnboardingScreen {
                             .justify_center()
                             .w(px(32.0))
                             .h(px(32.0))
-                            .rounded(px(6.0))
                             .bg(theme.bg_elevated)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -90,7 +89,6 @@ impl OnboardingScreen {
                     .child(
                         div()
                             .p(px(20.0))
-                            .rounded(px(14.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -101,8 +99,7 @@ impl OnboardingScreen {
                             .child(
                                 gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
                                     .w(px(52.0))
-                                    .h(px(52.0))
-                                    .rounded(px(12.0)),
+                                    .h(px(52.0)),
                             )
                             .child(
                                 div()
@@ -165,7 +162,6 @@ impl OnboardingScreen {
         div()
             .w_full()
             .p(px(16.0))
-            .rounded(px(12.0))
             .bg(theme.accent_primary.opacity(0.12))
             .border_1()
             .border_color(theme.accent_primary.opacity(0.4))
@@ -213,7 +209,6 @@ impl OnboardingScreen {
                         div()
                             .id(format!("invite-{}", idx))
                             .p(px(12.0))
-                            .rounded(px(8.0))
                             .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
@@ -252,7 +247,6 @@ impl OnboardingScreen {
                                     .id(format!("accept-invite-btn-{}", idx))
                                     .px(px(12.0))
                                     .py(px(6.0))
-                                    .rounded(px(6.0))
                                     .bg(theme.income_color)
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
@@ -282,7 +276,6 @@ impl OnboardingScreen {
         div()
             .w_full()
             .p(px(18.0))
-            .rounded(px(14.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -339,7 +332,6 @@ impl OnboardingScreen {
                                     .id("add-member-phone-btn")
                                     .px(px(12.0))
                                     .py(px(8.0))
-                                    .rounded(px(8.0))
                                     .bg(theme.bg_elevated)
                                     .border_1()
                                     .border_color(theme.border_subtle)
@@ -364,7 +356,6 @@ impl OnboardingScreen {
                                         .gap(px(6.0))
                                         .px(px(10.0))
                                         .py(px(4.0))
-                                        .rounded(px(6.0))
                                         .bg(theme.bg_canvas)
                                         .border_1()
                                         .border_color(theme.border_subtle)
@@ -402,7 +393,6 @@ impl OnboardingScreen {
                     .justify_center()
                     .gap(px(8.0))
                     .py(px(10.0))
-                    .rounded(px(8.0))
                     .bg(if state.is_busy {
                         theme.accent_primary.opacity(0.6)
                     } else {
@@ -440,7 +430,6 @@ impl OnboardingScreen {
         div()
             .w_full()
             .p(px(18.0))
-            .rounded(px(14.0))
             .bg(theme.bg_surface)
             .border_1()
             .border_color(theme.border_subtle)
@@ -484,7 +473,6 @@ impl OnboardingScreen {
                     .justify_center()
                     .gap(px(8.0))
                     .py(px(10.0))
-                    .rounded(px(8.0))
                     .bg(if state.is_busy {
                         theme.accent_primary.opacity(0.6)
                     } else {
