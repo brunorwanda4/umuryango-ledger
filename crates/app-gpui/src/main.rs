@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use gpui_kit::AppContext;
 use umuryango_app::RootView;
+use umuryango_app::assets::AppAssets;
 use umuryango_app::db_facade::LocalDatabase;
 use umuryango_app::state::AppState;
 use umuryango_app::theme::archivo_font_bytes;
@@ -20,7 +21,7 @@ fn main() {
         state.active_scope, state.locale
     );
 
-    let app = gpui_kit::application();
+    let app = gpui_kit::application().with_assets(AppAssets);
     app.run(move |cx| {
         gpui_kit::init(cx);
 

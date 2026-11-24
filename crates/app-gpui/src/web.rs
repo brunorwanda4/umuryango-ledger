@@ -10,6 +10,7 @@ pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
     #[cfg(target_arch = "wasm32")]
     {
         use crate::RootView;
+        use crate::assets::AppAssets;
         use crate::state::AppState;
         use crate::theme::archivo_font_bytes;
         use gpui_kit::AppContext;
@@ -31,7 +32,7 @@ pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
         // Initialize clean app state starting at Auth / Dashboard
         let state = AppState::default();
 
-        let app = gpui_kit::application();
+        let app = gpui_kit::application().with_assets(AppAssets);
         app.run(move |cx| {
             gpui_kit::init(cx);
 

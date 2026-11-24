@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod common;
 pub mod components;
 pub mod db_facade;

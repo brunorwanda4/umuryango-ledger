@@ -12,6 +12,7 @@ use crate::state::AppState;
 
 const PHONE_PLACEHOLDER: &str = "+250 788 000 000";
 const NAME_PLACEHOLDER: &str = "Kwizera Aimable";
+const PASSWORD_PLACEHOLDER: &str = "••••••••";
 
 pub struct AuthInputs {
     pub full_name: Entity<InputState>,
@@ -25,8 +26,16 @@ impl AuthInputs {
     pub fn new(window: &mut Window, cx: &mut Context<RootView>) -> Self {
         let full_name = cx.new(|cx| InputState::new(window, cx).placeholder(NAME_PLACEHOLDER));
         let phone = cx.new(|cx| InputState::new(window, cx).placeholder(PHONE_PLACEHOLDER));
-        let password = cx.new(|cx| InputState::new(window, cx).masked(true));
-        let confirm_password = cx.new(|cx| InputState::new(window, cx).masked(true));
+        let password = cx.new(|cx| {
+            InputState::new(window, cx)
+                .masked(true)
+                .placeholder(PASSWORD_PLACEHOLDER)
+        });
+        let confirm_password = cx.new(|cx| {
+            InputState::new(window, cx)
+                .masked(true)
+                .placeholder(PASSWORD_PLACEHOLDER)
+        });
 
         let subscriptions = vec![
             bind(&full_name, |s, v| s.auth_full_name = v, cx),

@@ -67,9 +67,10 @@ fn mask_toggle(
     div()
         .id(ElementId::Name(format!("{id}-mask-toggle").into()))
         .flex()
+        .flex_none()
         .items_center()
         .justify_center()
-        .size(px(24.0))
+        .size(px(26.0))
         .rounded(px(6.0))
         .cursor_pointer()
         .hover(move |s| s.bg(hover_bg))
@@ -84,7 +85,11 @@ fn mask_toggle(
                 AppIcon::EyeSlash
             },
             IconSize::Sm,
-            IconTone::Muted,
+            if masked {
+                IconTone::Muted
+            } else {
+                IconTone::Default
+            },
             theme,
         ))
 }
