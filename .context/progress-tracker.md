@@ -52,3 +52,4 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `c737311` | `fix(app): eliminate compiler warnings across workspace and deduplicate app-gpui binary` | `cargo check --tests --all-targets` (0 warnings), `cargo test --workspace` (34 passed), `bun run typecheck`, `bun test`, `bun run build` |
 | **2026-11-24** | `0fc8522` | `style(theme): update default Light/Dark palette to 10-color red primary theme` | `cargo check -p app-gpui`, `cargo test -p umuryango-storage-local -p umuryango-core-domain -p umuryango-i18n -p umuryango-app`, `bun run build` |
 | **2026-11-24** | `66bd970` | `feat(gpui): add reusable input and radio components and wire interactive auth form` | Tests skipped per user request |
+| **2026-11-24** | `c6aa642` | `feat(gpui): embed AppAssets icon source and refine auth password inputs and rw label` | Tests skipped per user request |
