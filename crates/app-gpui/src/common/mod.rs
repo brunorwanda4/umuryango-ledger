@@ -6,6 +6,7 @@ pub mod badge;
 pub mod button;
 pub mod button_group;
 pub mod card;
+pub mod checkbox;
 pub mod direction;
 pub mod input;
 pub mod input_group;
@@ -28,6 +29,7 @@ pub use button_group::{
 pub use card::{
     Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardSize, CardTitle,
 };
+pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use input::{
     Input, InputContentType, InputState, KitInput, input_primitive, password_field, text_field,
