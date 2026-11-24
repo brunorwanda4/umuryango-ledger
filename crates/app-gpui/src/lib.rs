@@ -5,6 +5,7 @@ pub mod assets;
 pub mod common;
 pub mod components;
 pub mod db_facade;
+pub mod hooks;
 pub mod mobile;
 pub mod safe_area;
 pub mod screens;

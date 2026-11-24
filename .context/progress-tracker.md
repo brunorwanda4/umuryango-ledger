@@ -56,3 +56,78 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `eb71ca3` | `feat(gpui, api): wire live API bridge, interactive entity modals, and family member endpoints` | Tests skipped per user request |
 | **2026-11-25** | `59db18c` | `feat(web): initialize shadcn UI setup and add button primitive` | Tests skipped per user request |
 | **2026-11-25** | `13d9781` | `feat(web): add all shadcn UI components` | `bun run typecheck`, `bun test` (4 passed), `bun run build` |
+
+---
+
+## 3. shadcn/ui (`--preset b1oaDsAa` / `base-sera`) → GPUI `common/` Porting Checklist
+
+### A. Hooks & Style Utilities
+- [x] `web/src/hooks/use-mobile.ts` → `crates/app-gpui/src/hooks/use_mobile.rs` (`Breakpoint::Mobile | Tablet | Desktop`, `is_mobile(window)`, `observe_viewport`)
+- [x] `web/src/lib/utils.ts` → `crates/app-gpui/src/common/utils.rs` (`PresetRadius`, `PresetSpacing`, `PresetTokens`, `StyleComposeExt`, focus/invalid/surface shadow builders)
+- [x] `web/src/hooks/use-highlighted-code.ts` & `web/src/lib/highlighter.tsx` → **Skipped (Documented):** Zero installed components in `web/src/components/ui/` (including `code-block.tsx`) and zero Umuryango Ledger views import or depend on Shiki syntax highlighting; omitted per Rule 1 (Zero Dead Code).
+
+### B. All 63 Components (`web/src/components/ui/*.tsx` → `crates/app-gpui/src/common/*.rs`)
+- [ ] 01. `direction.tsx` → `direction.rs`
+- [ ] 02. `separator.tsx` → `separator.rs`
+- [ ] 03. `skeleton.tsx` → `skeleton.rs`
+- [ ] 04. `spinner.tsx` → `spinner.rs`
+- [ ] 05. `aspect-ratio.tsx` → `aspect_ratio.rs`
+- [ ] 06. `kbd.tsx` → `kbd.rs`
+- [ ] 07. `label.tsx` → `label.rs`
+- [ ] 08. `badge.tsx` → `badge.rs`
+- [ ] 09. `button.tsx` → `button.rs`
+- [ ] 10. `button-group.tsx` → `button_group.rs`
+- [ ] 11. `card.tsx` → `card.rs`
+- [ ] 12. `input.tsx` → `input.rs`
+- [ ] 13. `textarea.tsx` → `textarea.rs`
+- [ ] 14. `input-group.tsx` → `input_group.rs`
+- [ ] 15. `input-otp.tsx` → `input_otp.rs`
+- [ ] 16. `checkbox.tsx` → `checkbox.rs`
+- [ ] 17. `switch.tsx` → `switch.rs`
+- [ ] 18. `radio-group.tsx` → `radio_group.rs`
+- [ ] 19. `slider.tsx` → `slider.rs`
+- [ ] 20. `progress.tsx` → `progress.rs`
+- [ ] 21. `native-select.tsx` → `native_select.rs`
+- [ ] 22. `field.tsx` → `field.rs`
+- [ ] 23. `avatar.tsx` → `avatar.rs`
+- [ ] 24. `alert.tsx` → `alert.rs`
+- [ ] 25. `empty.tsx` → `empty.rs`
+- [ ] 26. `item.tsx` → `item.rs`
+- [ ] 27. `marker.tsx` → `marker.rs`
+- [ ] 28. `toggle.tsx` → `toggle.rs`
+- [ ] 29. `toggle-group.tsx` → `toggle_group.rs`
+- [ ] 30. `collapsible.tsx` → `collapsible.rs`
+- [ ] 31. `accordion.tsx` → `accordion.rs`
+- [ ] 32. `tabs.tsx` → `tabs.rs`
+- [ ] 33. `breadcrumb.tsx` → `breadcrumb.rs`
+- [ ] 34. `pagination.tsx` → `pagination.rs`
+- [ ] 35. `scroll-area.tsx` → `scroll_area.rs`
+- [ ] 36. `resizable.tsx` → `resizable.rs`
+- [ ] 37. `table.tsx` → `table.rs`
+- [ ] 38. `tooltip.tsx` → `tooltip.rs`
+- [ ] 39. `popover.tsx` → `popover.rs`
+- [ ] 40. `hover-card.tsx` → `hover_card.rs`
+- [ ] 41. `dialog.tsx` → `dialog.rs`
+- [ ] 42. `alert-dialog.tsx` → `alert_dialog.rs`
+- [ ] 43. `sheet.tsx` → `sheet.rs`
+- [ ] 44. `drawer.tsx` → `drawer.rs`
+- [ ] 45. `select.tsx` → `select.rs`
+- [ ] 46. `dropdown-menu.tsx` → `dropdown_menu.rs`
+- [ ] 47. `context-menu.tsx` → `context_menu.rs`
+- [ ] 48. `menubar.tsx` → `menubar.rs`
+- [ ] 49. `navigation-menu.tsx` → `navigation_menu.rs`
+- [ ] 50. `command.tsx` → `command.rs`
+- [ ] 51. `combobox.tsx` → `combobox.rs`
+- [ ] 52. `toast.tsx` → `toast.rs`
+- [ ] 53. `carousel.tsx` → `carousel.rs`
+- [ ] 54. `calendar.tsx` → `calendar.rs`
+- [ ] 55. `chart.tsx` → `chart.rs`
+- [ ] 56. `code-block.tsx` → `code_block.rs`
+- [ ] 57. `attachment.tsx` → `attachment.rs`
+- [ ] 58. `bubble.tsx` → `bubble.rs`
+- [ ] 59. `message.tsx` → `message.rs`
+- [ ] 60. `message-scroller.tsx` → `message_scroller.rs`
+- [ ] 61. `trace.tsx` → `trace.rs`
+- [ ] 62. `questionnaire.tsx` → `questionnaire.rs`
+- [ ] 63. `sidebar.tsx` → `sidebar.rs`
+
