@@ -7,16 +7,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const locale = resolvedParams.locale === "en" ? "en" : "rw";
   const title = t(locale, "landing.title");
   const subtitle = t(locale, "landing.subtitle");
-  const openDashboard = t(locale, "landing.open_dashboard");
+  const openApp = locale === "rw" ? "Fungura Porogaramu (Open App)" : "Open App";
   const viewReportDemo = t(locale, "landing.view_report_demo");
 
   return (
     <div className="py-12 space-y-12">
       <div className="text-center max-w-3xl mx-auto space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-brand-cream/80 dark:bg-slate-800 text-brand-dark dark:text-brand-cream border border-brand-cream dark:border-slate-700 rounded-full text-xs font-bold shadow-sm">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#fdf0d5] text-[#003049] border border-[#fdf0d5] rounded-full text-xs font-bold shadow-sm">
           <span>{t(locale, "landing.tagline")}</span>
         </div>
-        <h1 className="text-4xl sm:text-6xl font-black text-brand-dark dark:text-white tracking-tight leading-tight">
+        <h1 className="text-4xl sm:text-6xl font-black text-[#003049] dark:text-white tracking-tight leading-tight">
           {title}
         </h1>
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
@@ -25,15 +25,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
         <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href={`/${locale}/dashboard`}
-            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-brand-dark dark:bg-brand-active-crimson text-white font-extrabold shadow-lg hover:opacity-95 transition transform hover:-translate-y-0.5"
+            href="/app"
+            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-[#780000] hover:bg-[#c1121f] text-white font-extrabold shadow-lg transition transform hover:-translate-y-0.5"
           >
-            <span>{openDashboard}</span>
+            <span>{openApp}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href={`/${locale}/report/family-november-2026`}
-            className="px-7 py-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-brand-dark dark:text-brand-cream font-extrabold shadow-sm transition"
+            className="px-7 py-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-[#fdf0d5]/40 border border-[#669bbc]/40 text-[#003049] dark:text-[#fdf0d5] font-extrabold shadow-sm transition"
           >
             {viewReportDemo}
           </Link>
@@ -41,8 +41,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-brand-dark p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-brand-steel-blue">
+        <div className="bg-white dark:bg-[#003049] p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
+          <div className="w-12 h-12 rounded-2xl bg-[#fdf0d5]/60 dark:bg-slate-800 flex items-center justify-center mb-4 text-[#669bbc]">
             <Smartphone className="w-6 h-6" />
           </div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white">
@@ -53,8 +53,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </p>
         </div>
 
-        <div className="bg-white dark:bg-brand-dark p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-brand-active-crimson">
+        <div className="bg-white dark:bg-[#003049] p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
+          <div className="w-12 h-12 rounded-2xl bg-[#fdf0d5]/60 dark:bg-slate-800 flex items-center justify-center mb-4 text-[#c1121f]">
             <Shield className="w-6 h-6" />
           </div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white">
@@ -65,8 +65,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </p>
         </div>
 
-        <div className="bg-white dark:bg-brand-dark p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-brand-steel-blue">
+        <div className="bg-white dark:bg-[#003049] p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
+          <div className="w-12 h-12 rounded-2xl bg-[#fdf0d5]/60 dark:bg-slate-800 flex items-center justify-center mb-4 text-[#669bbc]">
             <HeartHandshake className="w-6 h-6" />
           </div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white">

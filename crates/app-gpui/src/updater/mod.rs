@@ -1,10 +1,13 @@
+#[cfg(not(target_arch = "wasm32"))]
 pub mod android_updater;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod desktop_updater;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod ota_sync;
 pub mod update_banner;
 
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::info;
 use umuryango_core_domain::realtime::RealtimeEvent;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -50,7 +53,9 @@ pub struct AppUpdater {
 
 impl AppUpdater {
     pub fn new(current_version: impl Into<String>) -> Self {
-        let platform = if cfg!(target_os = "android") {
+        let platform = if cfg!(target_arch = "wasm32") {
+            "WEB"
+        } else if cfg!(target_os = "android") {
             "ANDROID"
         } else if cfg!(target_os = "windows") {
             "WINDOWS"
@@ -91,122 +96,141 @@ impl AppUpdater {
 
     /// Queries the backend /api/v1/releases/check endpoint to verify if an update is available
     pub async fn check_for_updates(&mut self, api_base_url: &str) -> Result<bool, String> {
-        self.status = UpdateStatus::Checking;
-        let url = format!(
-            "{}/api/v1/releases/check?platform={}&current_version={}",
-            api_base_url.trim_end_matches('/'),
-            self.platform,
-            self.current_version
-        );
-
-        info!(url = %url, "Checking for application updates");
-
-        let client = match reqwest::Client::builder()
-            .user_agent("Umuryango-Updater/1.0")
-            .build()
+        #[cfg(target_arch = "wasm32")]
         {
-            Ok(c) => c,
-            Err(e) => {
-                let err = format!("Failed to create HTTP client: {}", e);
-                self.status = UpdateStatus::Failed { error: err.clone() };
-                return Err(err);
-            }
-        };
-
-        let response = match client.get(&url).send().await {
-            Ok(r) => r,
-            Err(e) => {
-                let err = format!("Update check failed: {}", e);
-                self.status = UpdateStatus::Failed { error: err.clone() };
-                return Err(err);
-            }
-        };
-
-        if !response.status().is_success() {
-            let err = format!("Server returned error: {}", response.status());
-            self.status = UpdateStatus::Failed { error: err.clone() };
-            return Err(err);
-        }
-
-        let release: ReleaseCheckResponse = match response.json().await {
-            Ok(res) => res,
-            Err(e) => {
-                let err = format!("Failed to decode release JSON: {}", e);
-                self.status = UpdateStatus::Failed { error: err.clone() };
-                return Err(err);
-            }
-        };
-
-        if release.update_available {
-            info!(
-                version = %release.latest_version,
-                mandatory = release.is_mandatory,
-                "New application release detected"
-            );
-            self.status = UpdateStatus::Available {
-                version: release.latest_version,
-                download_url: release.download_url,
-                sha256_checksum: release.sha256_checksum,
-                is_mandatory: release.is_mandatory,
-                release_notes: release.release_notes_en,
-            };
-            Ok(true)
-        } else {
+            let _ = api_base_url;
             self.status = UpdateStatus::Idle;
             Ok(false)
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.status = UpdateStatus::Checking;
+            let url = format!(
+                "{}/api/v1/releases/check?platform={}&current_version={}",
+                api_base_url.trim_end_matches('/'),
+                self.platform,
+                self.current_version
+            );
+
+            info!(url = %url, "Checking for application updates");
+
+            let client = match reqwest::Client::builder()
+                .user_agent("Umuryango-Updater/1.0")
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => {
+                    let err = format!("Failed to create HTTP client: {}", e);
+                    self.status = UpdateStatus::Failed { error: err.clone() };
+                    return Err(err);
+                }
+            };
+
+            let response = match client.get(&url).send().await {
+                Ok(r) => r,
+                Err(e) => {
+                    let err = format!("Update check failed: {}", e);
+                    self.status = UpdateStatus::Failed { error: err.clone() };
+                    return Err(err);
+                }
+            };
+
+            if !response.status().is_success() {
+                let err = format!("Server returned error: {}", response.status());
+                self.status = UpdateStatus::Failed { error: err.clone() };
+                return Err(err);
+            }
+
+            let release: ReleaseCheckResponse = match response.json().await {
+                Ok(res) => res,
+                Err(e) => {
+                    let err = format!("Failed to decode release JSON: {}", e);
+                    self.status = UpdateStatus::Failed { error: err.clone() };
+                    return Err(err);
+                }
+            };
+
+            if release.update_available {
+                info!(
+                    version = %release.latest_version,
+                    mandatory = release.is_mandatory,
+                    "New application release detected"
+                );
+                self.status = UpdateStatus::Available {
+                    version: release.latest_version,
+                    download_url: release.download_url,
+                    sha256_checksum: release.sha256_checksum,
+                    is_mandatory: release.is_mandatory,
+                    release_notes: release.release_notes_en,
+                };
+                Ok(true)
+            } else {
+                self.status = UpdateStatus::Idle;
+                Ok(false)
+            }
         }
     }
 
     /// Downloads and applies the pending update based on active platform
     pub async fn perform_update(&mut self) -> Result<(), String> {
-        let (version, url, sha256, is_mandatory) = match &self.status {
-            UpdateStatus::Available {
-                version,
-                download_url,
-                sha256_checksum,
-                is_mandatory,
-                ..
-            } => (
-                version.clone(),
-                download_url.clone(),
-                sha256_checksum.clone(),
-                *is_mandatory,
-            ),
-            _ => return Err("No update currently available to download".to_string()),
-        };
+        #[cfg(target_arch = "wasm32")]
+        {
+            Err("Browser web application updates automatically upon page reload".to_string())
+        }
 
-        self.status = UpdateStatus::Downloading { progress: 0.1 };
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use tracing::error;
+            let (version, url, sha256, is_mandatory) = match &self.status {
+                UpdateStatus::Available {
+                    version,
+                    download_url,
+                    sha256_checksum,
+                    is_mandatory,
+                    ..
+                } => (
+                    version.clone(),
+                    download_url.clone(),
+                    sha256_checksum.clone(),
+                    *is_mandatory,
+                ),
+                _ => return Err("No update currently available to download".to_string()),
+            };
 
-        if self.platform == "ANDROID" {
-            match android_updater::download_and_install_apk(&url, &sha256).await {
-                Ok(_) => {
-                    self.status = UpdateStatus::ReadyToRestart {
-                        version,
-                        is_mandatory,
-                    };
-                    Ok(())
+            self.status = UpdateStatus::Downloading { progress: 0.1 };
+
+            if self.platform == "ANDROID" {
+                match android_updater::download_and_install_apk(&url, &sha256).await {
+                    Ok(_) => {
+                        self.status = UpdateStatus::ReadyToRestart {
+                            version,
+                            is_mandatory,
+                        };
+                        Ok(())
+                    }
+                    Err(e) => {
+                        let err = format!("Android APK installation failed: {}", e);
+                        error!("{}", err);
+                        self.status = UpdateStatus::Failed { error: err.clone() };
+                        Err(err)
+                    }
                 }
-                Err(e) => {
-                    let err = format!("Android APK installation failed: {}", e);
-                    error!("{}", err);
-                    self.status = UpdateStatus::Failed { error: err.clone() };
-                    Err(err)
-                }
-            }
-        } else {
-            match desktop_updater::download_and_apply_desktop_update(&url, &sha256).await {
-                Ok(_) => {
-                    self.status = UpdateStatus::ReadyToRestart {
-                        version,
-                        is_mandatory,
-                    };
-                    Ok(())
-                }
-                Err(e) => {
-                    let err = format!("Desktop self-update failed: {}", e);
-                    error!("{}", err);
-                    self.status = UpdateStatus::Failed { error: err.clone() };
-                    Err(err)
+            } else {
+                match desktop_updater::download_and_apply_desktop_update(&url, &sha256).await {
+                    Ok(_) => {
+                        self.status = UpdateStatus::ReadyToRestart {
+                            version,
+                            is_mandatory,
+                        };
+                        Ok(())
+                    }
+                    Err(e) => {
+                        let err = format!("Desktop self-update failed: {}", e);
+                        error!("{}", err);
+                        self.status = UpdateStatus::Failed { error: err.clone() };
+                        Err(err)
+                    }
                 }
             }
         }

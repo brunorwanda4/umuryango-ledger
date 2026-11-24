@@ -10,9 +10,10 @@ use umuryango_core_domain::models::{
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
-use umuryango_storage_local::{
-    CacheRepository, LocalDatabase, SyncMutation, SyncQueueRepository, SyncStatus,
-};
+use umuryango_core_domain::SyncStatus;
+use crate::db_facade::LocalDatabase;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::db_facade::{CacheRepository, SyncMutation, SyncQueueRepository};
 use uuid::Uuid;
 
 use crate::safe_area::SafeAreaInsets;
@@ -179,6 +180,10 @@ impl AppState {
     }
 
     /// Reloads cached entities matching active scope from the local database
+    #[cfg(target_arch = "wasm32")]
+    pub fn load_from_db(&mut self, _db: &LocalDatabase) {}
+
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn load_from_db(&mut self, db: &LocalDatabase) {
         let repo = CacheRepository::new(db);
         let queue = SyncQueueRepository::new(db);
@@ -326,9 +331,15 @@ impl AppState {
         self.active_family_name = family_name;
         self.active_role = role;
 
+        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(database) = db {
             self.load_from_db(database);
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = db;
+        #[cfg(target_arch = "wasm32")]
+        let _ = db;
     }
 
     pub fn select_screen(&mut self, screen: Screen) {
@@ -344,15 +355,23 @@ impl AppState {
     }
 
     pub fn toggle_theme(&mut self, db: Option<&LocalDatabase>) {
-        self.theme_mode = self.theme_mode.toggle();
+        let new_mode = self.theme_mode.toggle();
+        self.set_theme_mode(new_mode, db);
+    }
+
+    pub fn set_theme_mode(&mut self, mode: ThemeMode, db: Option<&LocalDatabase>) {
+        self.theme_mode = mode;
         self.theme = SemanticTheme::from_config(&self.theme_config, self.theme_mode);
         crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(database) = db {
             let repo = CacheRepository::new(database);
             let prefs = self.theme_config.to_prefs(self.theme_mode);
             let _ = repo.save_theme_prefs(self.user_id, &prefs);
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = db;
     }
 
     pub fn set_theme_config(&mut self, config: ThemeConfig, db: Option<&LocalDatabase>) {
@@ -360,11 +379,14 @@ impl AppState {
         self.theme = SemanticTheme::from_config(&self.theme_config, self.theme_mode);
         crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(database) = db {
             let repo = CacheRepository::new(database);
             let prefs = self.theme_config.to_prefs(self.theme_mode);
             let _ = repo.save_theme_prefs(self.user_id, &prefs);
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = db;
     }
 
     pub fn set_toast(&mut self, message: String, is_error: bool) {
@@ -439,6 +461,7 @@ impl AppState {
         // 1. Validate and apply financial invariants
         LedgerValidator::validate_and_apply_transaction(&tx, actor_role, &mut self.wallets)?;
         // 2. Persist locally if DB provided
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(database) = db {
             let repo = CacheRepository::new(database);
             let queue = SyncQueueRepository::new(database);
@@ -479,6 +502,8 @@ impl AppState {
                 self.sync_status = st;
             }
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = db;
 
         self.transactions.insert(0, tx);
         Ok(())

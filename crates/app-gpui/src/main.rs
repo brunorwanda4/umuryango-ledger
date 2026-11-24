@@ -5,6 +5,8 @@ mod screens;
 mod state;
 mod theme;
 pub mod updater;
+pub mod db_facade;
+pub mod web;
 
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;

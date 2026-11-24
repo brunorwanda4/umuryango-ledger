@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tracing::info;
+#[cfg(not(target_arch = "wasm32"))]
 use umuryango_storage_local::LocalDatabase;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

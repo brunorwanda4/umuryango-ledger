@@ -14,7 +14,7 @@ Before performing any task, examine:
 
 ---
 
-## 2. Eight Non-Negotiable Core Rules
+## 2. Nine Non-Negotiable Core Rules
 
 ### Rule 1: Less Is More (Zero Bloat & Zero Dead UI)
 - Never create placeholder buttons, disabled links that do nothing, or filler text.
@@ -64,6 +64,13 @@ Plus semantic status tokens: `error`, `success`, `warning`, `info`.
   - Type-checking & Testing: `bun run typecheck` (`bunx tsc --noEmit`), `bun test`.
   - Utility & Scripts: Use native `Bun` APIs and runtime execution for automation scripts.
 
+### Rule 9: 100% App UI Built Only in GPUI (Rust) & Served via WASM at `/app`
+- **Zero App UI in React/Next.js:** Never build Login, Register, Onboarding, Dashboard, Transactions, Projects, Loans, or Settings pages in React/Next.js. Every app screen lives strictly in `crates/app-gpui` and compiles to WebAssembly (`wasm32-unknown-unknown`) for the browser.
+- **Next.js (`web/`) is strictly for public visitors and reports:**
+  - `/` (or `/[locale]`): public visitor landing page with an "Open App" button linking directly to `/app`.
+  - `/report/[token]` (or `/[locale]/report/[token]`): Mom's zero-login web report link.
+  - `/app`: full-screen (`100vw x 100vh`) GPUI WebAssembly host page hosting `<canvas id="gpui-canvas">`.
+
 ---
 
 ## 3. Technology Stack Reference
@@ -71,9 +78,9 @@ Plus semantic status tokens: `error`, `success`, `warning`, `info`.
 | Layer | Technologies |
 | :--- | :--- |
 | **Backend API** | Rust 2024 (edition 2024, resolver 3), Actix-web 4, SQLx 0.8 (PostgreSQL 16), Argon2id, JWT, `actix-ws` |
-| **Desktop / Mobile UI** | Rust, `gpui`, `gpui-kit` components and charts, Android safe area insets |
-| **Offline Storage** | SQLite (`rusqlite` bundled), optimistic sync queue |
-| **Web & Report Portal**| Next.js 16 (App Router), Bun 1.4+, React 19, Tailwind CSS v4, WebAssembly (`wasm-bindgen`) |
+| **Desktop / Mobile UI & Web App** | Rust, `gpui`, `gpui-kit` components and charts, Android safe area insets, WebAssembly (`wasm32-unknown-unknown`) |
+| **Offline Storage** | SQLite (`rusqlite` bundled on native, in-memory facade on web), optimistic sync queue |
+| **Public Web & Report Portal**| Next.js 16 (App Router), Bun 1.4+, React 19, Tailwind CSS v4, WebAssembly bridge |
 | **Localization** | Centralized JSON translation bundles (`locales/en.json`, `locales/rw.json`), `crates/i18n` with OnceLock fast dot-path lookup & fallback, `@/lib/i18n` in Next.js |
 | **Typography** | `Archivo` Google Font family |
 
@@ -81,7 +88,7 @@ Plus semantic status tokens: `error`, `success`, `warning`, `info`.
 
 ## 4. Context Directory Index
 - [`.context/project-overview.md`](file:///.context/project-overview.md) — Core problem, user personas, custody model.
-- [`.context/architecture-context.md`](file:///.context/architecture-context.md) — Monorepo layout, database RLS, offline sync.
+- [`.context/architecture-context.md`](file:///.context/architecture-context.md) — Monorepo layout, database RLS, offline sync, GPUI WASM web architecture.
 - [`.context/ai-workflow-rules.md`](file:///.context/ai-workflow-rules.md) — Agent operating steps and verification standards.
 - [`.context/code-standards.md`](file:///.context/code-standards.md) — Coding conventions, integer money math, safety.
 - [`.context/rust-actix-rebuild.md`](file:///.context/rust-actix-rebuild.md) — Actix-web handler patterns, middleware, WS hub.

@@ -12,28 +12,7 @@ use uuid::Uuid;
 
 use crate::db::LocalDatabase;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct UserThemePrefs {
-    pub theme_mode: String, // "light" | "dark"
-    pub crimson_deep: String,
-    pub crimson_bright: String,
-    pub cream_warm: String,
-    pub prussian_navy: String,
-    pub steel_blue: String,
-}
-
-impl Default for UserThemePrefs {
-    fn default() -> Self {
-        Self {
-            theme_mode: "light".to_string(),
-            crimson_deep: "#780000".to_string(),
-            crimson_bright: "#c1121f".to_string(),
-            cream_warm: "#fdf0d5".to_string(),
-            prussian_navy: "#003049".to_string(),
-            steel_blue: "#669bbc".to_string(),
-        }
-    }
-}
+pub use umuryango_core_domain::UserThemePrefs;
 
 pub struct CacheRepository<'a> {
     db: &'a LocalDatabase,

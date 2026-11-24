@@ -8,12 +8,7 @@ use uuid::Uuid;
 
 use crate::db::LocalDatabase;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum SyncStatus {
-    Synced,
-    PendingSync(usize),
-    Offline,
-}
+pub use umuryango_core_domain::SyncStatus;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "action", content = "data")]

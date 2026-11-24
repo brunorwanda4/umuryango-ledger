@@ -1,12 +1,10 @@
-//! WebAssembly entry point for mounting the full GPUI app in the browser.
-
-use std::sync::{Arc, Mutex};
-use gpui_kit::{AppContext, InteractiveElement, IntoElement, ParentElement, Render, Styled, div, px};
+/// WebAssembly entry point for mounting the full GPUI app in the browser.
+use gpui_kit::AppContext;
 use wasm_bindgen::prelude::*;
 
+use crate::RootView;
 use crate::state::AppState;
 use crate::theme::archivo_font_bytes;
-use crate::RootView;
 
 /// Mounts the full GPUI application onto the DOM `<canvas>` specified by `canvas_id`.
 ///
@@ -18,13 +16,14 @@ pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
     {
         use wasm_bindgen::JsCast;
 
-        let window = web_sys::window().ok_or_else(|| JsValue::from_str("No global window found in browser environment"))?;
+        let window = web_sys::window()
+            .ok_or_else(|| JsValue::from_str("No global window found in browser environment"))?;
         let document = window
             .document()
             .ok_or_else(|| JsValue::from_str("No DOM document found"))?;
-        let canvas = document
-            .get_element_by_id(canvas_id)
-            .ok_or_else(|| JsValue::from_str(&format!("Canvas with id '{}' not found in DOM", canvas_id)))?;
+        let canvas = document.get_element_by_id(canvas_id).ok_or_else(|| {
+            JsValue::from_str(&format!("Canvas with id '{}' not found in DOM", canvas_id))
+        })?;
 
         let _canvas_elem = canvas
             .dyn_into::<web_sys::HtmlCanvasElement>()
@@ -47,9 +46,7 @@ pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
             let mut options = gpui_kit::WindowOptions::default();
             options.titlebar = None;
 
-            let _ = cx.open_window(options, |_window, cx| {
-                cx.new(|_| RootView::new(state, None))
-            });
+            let _ = cx.open_window(options, |_window, cx| cx.new(|_| RootView::new_wasm(state)));
         });
     }
 

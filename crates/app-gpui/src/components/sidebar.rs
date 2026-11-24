@@ -1,6 +1,6 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
-use umuryango_storage_local::SyncStatus;
+use umuryango_core_domain::SyncStatus;
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};

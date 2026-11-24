@@ -5,28 +5,49 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
 [[bin]]
 name = "umuryango-app"
 path = "src/main.rs"
+required-features = ["native"]
+
+[features]
+default = ["native"]
+native = [
+    "dep:tokio",
+    "dep:umuryango-storage-local",
+    "dep:umuryango-api-client",
+    "dep:reqwest",
+    "dep:self-replace",
+]
 
 [dependencies]
 umuryango-core-domain = { workspace = true }
 umuryango-i18n = { workspace = true }
-umuryango-storage-local = { workspace = true }
-umuryango-api-client = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 rust_decimal = { workspace = true }
-tokio = { workspace = true }
 tracing = { workspace = true }
 gpui-kit = { version = "0.10.0", features = ["component"] }
 semver = { workspace = true }
 sha2 = { workspace = true }
-reqwest = { workspace = true }
-self-replace = { workspace = true }
 thiserror = { workspace = true }
+wasm-bindgen = { workspace = true }
+
+# Native only dependencies (optional, enabled by "native" feature)
+tokio = { workspace = true, optional = true }
+umuryango-storage-local = { workspace = true, optional = true }
+umuryango-api-client = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
+self-replace = { workspace = true, optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlCanvasElement", "console"] }
 
 [build-dependencies]
 image = { version = "0.25", default-features = false, features = ["png"] }

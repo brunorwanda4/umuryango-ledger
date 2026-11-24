@@ -1,7 +1,7 @@
 use gpui_kit::{Hsla, Rgba, hsla, rgb, rgba};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use umuryango_storage_local::UserThemePrefs;
+use umuryango_core_domain::UserThemePrefs;
 
 pub const FONT_FAMILY: &str = "Archivo";
 

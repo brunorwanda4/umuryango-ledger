@@ -3,14 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sun, Moon, Globe, UserCheck } from "lucide-react";
-import { ScopeSwitcher } from "@/components/ScopeSwitcher";
+import { Sun, Moon, Globe, ArrowRight } from "lucide-react";
 import { useLedger } from "@/lib/LedgerContext";
-import { t } from "@/lib/i18n";
 
 export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
   const pathname = usePathname();
-  const { theme, toggleTheme, currentUser } = useLedger();
+  const { theme, toggleTheme } = useLedger();
 
   const otherLocale = locale === "rw" ? "en" : "rw";
   const otherLocaleLabel = locale === "rw" ? "EN" : "RW";
@@ -20,12 +18,10 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
     ? pathname.replace(new RegExp(`^/${locale}`), `/${otherLocale}`)
     : `/${otherLocale}`;
 
-  const navDashboard = t(locale, "dashboard.title");
-  const navTransactions = t(locale, "transactions.title");
-  const navProjects = t(locale, "projects.title");
+  const openAppLabel = locale === "rw" ? "Injira muri App" : "Launch App";
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-brand-dark/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 transition-colors pt-safe pl-safe pr-safe no-print">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#003049]/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 transition-colors pt-safe pl-safe pr-safe no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link href={`/${locale}`} className="flex items-center space-x-3 group">
@@ -37,92 +33,48 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
               className="rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 group-hover:scale-105 transition-transform"
             />
             <div className="flex flex-col">
-              <span className="text-lg font-black tracking-tight text-brand-dark dark:text-brand-cream leading-none">
-                Umuryango <span className="text-brand-active-crimson">Ledger</span>
+              <span className="text-lg font-black tracking-tight text-[#003049] dark:text-[#fdf0d5] leading-none">
+                Umuryango <span className="text-[#c1121f]">Ledger</span>
               </span>
               <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">
                 Bilingual Accountability
               </span>
             </div>
           </Link>
-
-          <nav className="hidden md:flex space-x-1 text-sm font-semibold">
-            <Link
-              href={`/${locale}/dashboard`}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                pathname.includes("/dashboard")
-                  ? "bg-slate-100 dark:bg-slate-800 text-brand-active-crimson font-bold"
-                  : "text-slate-600 dark:text-slate-300 hover:text-brand-active-crimson"
-              }`}
-            >
-              {navDashboard}
-            </Link>
-            <Link
-              href={`/${locale}/transactions`}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                pathname.includes("/transactions")
-                  ? "bg-slate-100 dark:bg-slate-800 text-brand-active-crimson font-bold"
-                  : "text-slate-600 dark:text-slate-300 hover:text-brand-active-crimson"
-              }`}
-            >
-              {navTransactions}
-            </Link>
-            <Link
-              href={`/${locale}/projects`}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                pathname.includes("/projects")
-                  ? "bg-slate-100 dark:bg-slate-800 text-brand-active-crimson font-bold"
-                  : "text-slate-600 dark:text-slate-300 hover:text-brand-active-crimson"
-              }`}
-            >
-              {navProjects}
-            </Link>
-          </nav>
         </div>
 
         <div className="flex items-center space-x-3">
-          <ScopeSwitcher locale={locale} />
-
-          {currentUser ? (
-            <Link
-              href={`/${locale}/onboarding`}
-              title="Family Onboarding"
-              className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-brand-active-crimson transition shadow-sm"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-brand-active-crimson" />
-              <span className="hidden sm:inline-block max-w-[100px] truncate">
-                {currentUser.full_name}
-              </span>
-            </Link>
-          ) : (
-            <Link
-              href={`/${locale}/login`}
-              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-brand-active-crimson transition shadow-sm"
-            >
-              {locale === "rw" ? "Injira" : "Login"}
-            </Link>
-          )}
-
-          <button
-            type="button"
-            onClick={toggleTheme}
-            title={theme === "dark" ? t(locale, "common.light_mode") : t(locale, "common.dark_mode")}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-brand-cream hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+          {/* Quick Launch Button to GPUI WASM App */}
+          <Link
+            href="/app"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#780000] hover:bg-[#c1121f] text-white text-xs font-bold shadow-sm transition"
           >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 text-brand-accent-cream" />
-            ) : (
-              <Moon className="w-4 h-4 text-brand-dark" />
-            )}
-          </button>
+            <span>{openAppLabel}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
 
+          {/* Language Switcher */}
           <Link
             href={targetPath}
-            className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-brand-active-crimson transition shadow-sm cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/80 text-xs font-bold text-[#003049] dark:text-[#fdf0d5] transition"
+            title={`Switch to ${otherLocaleLabel}`}
           >
-            <Globe className="w-3.5 h-3.5" />
+            <Globe className="w-3.5 h-3.5 text-[#669bbc]" />
             <span>{otherLocaleLabel}</span>
           </Link>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4 text-[#fdf0d5]" />
+            ) : (
+              <Moon className="w-4 h-4 text-[#003049]" />
+            )}
+          </button>
         </div>
       </div>
     </header>
