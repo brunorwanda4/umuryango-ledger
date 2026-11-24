@@ -70,6 +70,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `8b4896d` | `feat(ui): port shadcn card to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `b036043` | `feat(ui): port shadcn input to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `f970174` | `feat(ui): port shadcn textarea to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `6f4e58a` | `feat(ui): port shadcn input-group to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -95,7 +96,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 12. `input.tsx` → `input.rs`
 - [x] 13. `textarea.tsx` → `textarea.rs`
 - [x] 14. `input-group.tsx` → `input_group.rs`
-- [ ] 15. `input-otp.tsx` → `input_otp.rs`
+- [x] 15. `input-otp.tsx` → `input_otp.rs`
 - [ ] 16. `checkbox.tsx` → `checkbox.rs`
 - [ ] 17. `switch.tsx` → `switch.rs`
 - [ ] 18. `radio-group.tsx` → `radio_group.rs`

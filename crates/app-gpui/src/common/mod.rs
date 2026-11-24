@@ -9,6 +9,7 @@ pub mod card;
 pub mod direction;
 pub mod input;
 pub mod input_group;
+pub mod input_otp;
 pub mod kbd;
 pub mod label;
 pub mod radio;
@@ -34,6 +35,9 @@ pub use input::{
 pub use input_group::{
     InputGroup, InputGroupAddon, InputGroupAddonAlign, InputGroupButtonSize, InputGroupText,
     input_group_button, input_group_input, input_group_textarea,
+};
+pub use input_otp::{
+    InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot, KitOtpInput, OtpEvent, OtpState,
 };
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
