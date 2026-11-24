@@ -1,7 +1,10 @@
 import React from "react";
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Archivo, Nunito_Sans } from "next/font/google";
 import "@/app/globals.css";
+import { cn } from "@/lib/utils";
+
+const nunitoSans = Nunito_Sans({subsets:['latin'],variable:'--font-sans'});
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -29,7 +32,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html className={archivo.variable}>
+    <html className={cn("font-sans", nunitoSans.variable)}>
       <body className="min-h-screen bg-slate-50 dark:bg-[#001e2e] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-brand-active-crimson selection:text-white transition-colors duration-200">
         {children}
       </body>
