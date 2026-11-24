@@ -2,6 +2,7 @@
 //! (inputs, radios, text areas, cards, etc.).
 
 pub mod aspect_ratio;
+pub mod badge;
 pub mod direction;
 pub mod input;
 pub mod kbd;
@@ -13,6 +14,7 @@ pub mod spinner;
 pub mod utils;
 
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
+pub use badge::{Badge, BadgeVariant, OverlayCountBadge, badge};
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use input::{password_field, text_field};
 pub use kbd::{Kbd, KbdGroup};
