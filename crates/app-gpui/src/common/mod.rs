@@ -4,6 +4,7 @@
 pub mod aspect_ratio;
 pub mod direction;
 pub mod input;
+pub mod kbd;
 pub mod radio;
 pub mod separator;
 pub mod skeleton;
@@ -13,6 +14,7 @@ pub mod utils;
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use input::{password_field, text_field};
+pub use kbd::{Kbd, KbdGroup};
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
 pub use separator::{
     Separator, SeparatorOrientation, SeparatorStyle, horizontal_separator, vertical_separator,
