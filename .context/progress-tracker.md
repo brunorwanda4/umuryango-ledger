@@ -62,6 +62,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `37e1622` | `feat(ui): port shadcn skeleton to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `4b11501` | `feat(ui): port shadcn spinner to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `c529373` | `feat(ui): port shadcn aspect-ratio to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `a0893c8` | `feat(ui): port shadcn kbd to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -79,7 +80,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 04. `spinner.tsx` → `spinner.rs`
 - [x] 05. `aspect-ratio.tsx` → `aspect_ratio.rs`
 - [x] 06. `kbd.tsx` → `kbd.rs`
-- [ ] 07. `label.tsx` → `label.rs`
+- [x] 07. `label.tsx` → `label.rs`
 - [ ] 08. `badge.tsx` → `badge.rs`
 - [ ] 09. `button.tsx` → `button.rs`
 - [ ] 10. `button-group.tsx` → `button_group.rs`
