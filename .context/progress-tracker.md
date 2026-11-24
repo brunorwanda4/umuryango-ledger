@@ -55,3 +55,4 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `c6aa642` | `feat(gpui): embed AppAssets icon source and refine auth password inputs and rw label` | Tests skipped per user request |
 | **2026-11-25** | `eb71ca3` | `feat(gpui, api): wire live API bridge, interactive entity modals, and family member endpoints` | Tests skipped per user request |
 | **2026-11-25** | `59db18c` | `feat(web): initialize shadcn UI setup and add button primitive` | Tests skipped per user request |
+| **2026-11-25** | `13d9781` | `feat(web): add all shadcn UI components` | `bun run typecheck`, `bun test` (4 passed), `bun run build` |
