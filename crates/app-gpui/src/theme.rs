@@ -24,30 +24,36 @@ impl ThemeMode {
     }
 }
 
-/// Customizable palette configuration stored in state and persisted in SQLite.
-/// Seeded with 5 core brand color tokens:
-/// - crimson_deep: #780000
-/// - crimson_bright: #c1121f
-/// - cream_warm: #fdf0d5
-/// - prussian_navy: #003049
-/// - steel_blue: #669bbc
+/// Customizable 10-color palette configuration stored in state and persisted in SQLite.
+/// Seeded with the 10-color red primary palette:
+/// ["#0b090a", "#161a1d", "#660708", "#a4161a", "#ba181b", "#e5383b", "#b1a7a6", "#d3d3d3", "#f5f3f4", "#ffffff"]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ThemeConfig {
-    pub crimson_deep: String,
-    pub crimson_bright: String,
-    pub cream_warm: String,
-    pub prussian_navy: String,
-    pub steel_blue: String,
+    pub primary: String, // #ba181b (Main primary buttons, active navigation, primary brand accents)
+    pub primary_hover: String, // #e5383b (Hover states, active highlights, bright red emphasis)
+    pub primary_pressed: String, // #a4161a (Pressed button states, strong red badges)
+    pub primary_deep: String, // #660708 (Deep crimson containers, dark-tinted active pills, high-contrast red accents)
+    pub dark_canvas: String,  // #0b090a (Dark Mode main app background)
+    pub dark_surface: String, // #161a1d (Dark Mode cards, sidebar, modals, inputs)
+    pub text_muted: String,   // #b1a7a6 (Muted text / subtle dividers)
+    pub light_border: String, // #d3d3d3 (Light Mode input/card borders, subtle elevated headers)
+    pub light_canvas: String, // #f5f3f4 (Light Mode main app background)
+    pub light_surface: String, // #ffffff (Light Mode cards, sidebar, modals, inputs)
 }
 
 impl Default for ThemeConfig {
     fn default() -> Self {
         Self {
-            crimson_deep: "#780000".to_string(),
-            crimson_bright: "#c1121f".to_string(),
-            cream_warm: "#fdf0d5".to_string(),
-            prussian_navy: "#003049".to_string(),
-            steel_blue: "#669bbc".to_string(),
+            primary: "#ba181b".to_string(),
+            primary_hover: "#e5383b".to_string(),
+            primary_pressed: "#a4161a".to_string(),
+            primary_deep: "#660708".to_string(),
+            dark_canvas: "#0b090a".to_string(),
+            dark_surface: "#161a1d".to_string(),
+            text_muted: "#b1a7a6".to_string(),
+            light_border: "#d3d3d3".to_string(),
+            light_canvas: "#f5f3f4".to_string(),
+            light_surface: "#ffffff".to_string(),
         }
     }
 }
@@ -55,11 +61,16 @@ impl Default for ThemeConfig {
 impl From<&UserThemePrefs> for ThemeConfig {
     fn from(p: &UserThemePrefs) -> Self {
         Self {
-            crimson_deep: p.crimson_deep.clone(),
-            crimson_bright: p.crimson_bright.clone(),
-            cream_warm: p.cream_warm.clone(),
-            prussian_navy: p.prussian_navy.clone(),
-            steel_blue: p.steel_blue.clone(),
+            primary: p.primary.clone(),
+            primary_hover: p.primary_hover.clone(),
+            primary_pressed: p.primary_pressed.clone(),
+            primary_deep: p.primary_deep.clone(),
+            dark_canvas: p.dark_canvas.clone(),
+            dark_surface: p.dark_surface.clone(),
+            text_muted: p.text_muted.clone(),
+            light_border: p.light_border.clone(),
+            light_canvas: p.light_canvas.clone(),
+            light_surface: p.light_surface.clone(),
         }
     }
 }
@@ -75,11 +86,16 @@ impl ThemeConfig {
                 ThemeMode::Light => "light".to_string(),
                 ThemeMode::Dark => "dark".to_string(),
             },
-            crimson_deep: self.crimson_deep.clone(),
-            crimson_bright: self.crimson_bright.clone(),
-            cream_warm: self.cream_warm.clone(),
-            prussian_navy: self.prussian_navy.clone(),
-            steel_blue: self.steel_blue.clone(),
+            primary: self.primary.clone(),
+            primary_hover: self.primary_hover.clone(),
+            primary_pressed: self.primary_pressed.clone(),
+            primary_deep: self.primary_deep.clone(),
+            dark_canvas: self.dark_canvas.clone(),
+            dark_surface: self.dark_surface.clone(),
+            text_muted: self.text_muted.clone(),
+            light_border: self.light_border.clone(),
+            light_canvas: self.light_canvas.clone(),
+            light_surface: self.light_surface.clone(),
         }
     }
 }
@@ -97,10 +113,15 @@ pub struct SemanticTheme {
 
     // Typography & Borders
     pub text_primary: Hsla,
+    pub text_secondary: Hsla,
     pub text_muted: Hsla,
     pub border_subtle: Hsla,
 
-    // Accents & Actions
+    // Primary Red Spectrum (Main Brand Primary)
+    pub primary: Hsla,
+    pub primary_hover: Hsla,
+    pub primary_pressed: Hsla,
+    pub primary_deep: Hsla,
     pub accent_primary: Hsla,
     pub accent_secondary: Hsla,
 
@@ -112,8 +133,11 @@ pub struct SemanticTheme {
     // Hex strings for chart components and tooltips
     pub bg_canvas_hex: String,
     pub bg_surface_hex: String,
+    pub bg_elevated_hex: String,
     pub text_primary_hex: String,
+    pub text_secondary_hex: String,
     pub text_muted_hex: String,
+    pub primary_hex: String,
     pub income_hex: String,
     pub expense_hex: String,
     pub handover_hex: String,
@@ -123,59 +147,100 @@ impl SemanticTheme {
     pub fn from_config(config: &ThemeConfig, mode: ThemeMode) -> Self {
         match mode {
             ThemeMode::Light => {
-                // Light mode: cream_warm canvas, prussian_navy text, steel_blue income, crimson expenses
+                // Light mode:
+                // bg_canvas: #f5f3f4
+                // bg_surface: #ffffff
+                // bg_elevated: #d3d3d3 / #ffffff
+                // border_subtle: #d3d3d3
+                // text_primary: #0b090a
+                // text_secondary: #161a1d
+                // text_muted: #b1a7a6
+                // accent_primary: #ba181b (with #a4161a / #660708 for deep red text/badges)
+                // accent_secondary: #a4161a
                 Self {
                     mode,
                     font_family: FONT_FAMILY,
-                    bg_canvas: hex_to_hsla(&config.cream_warm),
-                    bg_surface: hex_to_hsla("#ffffff"),
-                    bg_elevated: hex_to_hsla("#f5e6c8"),
-                    text_primary: hex_to_hsla(&config.prussian_navy),
-                    text_muted: hex_to_hsla("#4a6070"),
-                    border_subtle: hex_to_hsla("#e5d4b8"),
-                    accent_primary: hex_to_hsla(&config.crimson_deep),
-                    accent_secondary: hex_to_hsla(&config.crimson_bright),
-                    income_color: hex_to_hsla(&config.steel_blue),
-                    expense_color: hex_to_hsla(&config.crimson_bright),
-                    handover_color: hex_to_hsla(&config.crimson_deep),
+                    bg_canvas: hex_to_hsla(&config.light_canvas),
+                    bg_surface: hex_to_hsla(&config.light_surface),
+                    bg_elevated: hex_to_hsla(&config.light_border),
+                    text_primary: hex_to_hsla(&config.dark_canvas),
+                    text_secondary: hex_to_hsla(&config.dark_surface),
+                    text_muted: hex_to_hsla(&config.text_muted),
+                    border_subtle: hex_to_hsla(&config.light_border),
+                    primary: hex_to_hsla(&config.primary),
+                    primary_hover: hex_to_hsla(&config.primary_hover),
+                    primary_pressed: hex_to_hsla(&config.primary_pressed),
+                    primary_deep: hex_to_hsla(&config.primary_deep),
+                    accent_primary: hex_to_hsla(&config.primary),
+                    accent_secondary: hex_to_hsla(&config.primary_pressed),
+                    income_color: hex_to_hsla("#2a9d8f"),
+                    expense_color: hex_to_hsla(&config.primary),
+                    handover_color: hex_to_hsla(&config.primary_deep),
 
-                    bg_canvas_hex: config.cream_warm.clone(),
-                    bg_surface_hex: "#ffffff".to_string(),
-                    text_primary_hex: config.prussian_navy.clone(),
-                    text_muted_hex: "#4a6070".to_string(),
-                    income_hex: config.steel_blue.clone(),
-                    expense_hex: config.crimson_bright.clone(),
-                    handover_hex: config.crimson_deep.clone(),
+                    bg_canvas_hex: config.light_canvas.clone(),
+                    bg_surface_hex: config.light_surface.clone(),
+                    bg_elevated_hex: config.light_border.clone(),
+                    text_primary_hex: config.dark_canvas.clone(),
+                    text_secondary_hex: config.dark_surface.clone(),
+                    text_muted_hex: config.text_muted.clone(),
+                    primary_hex: config.primary.clone(),
+                    income_hex: "#2a9d8f".to_string(),
+                    expense_hex: config.primary.clone(),
+                    handover_hex: config.primary_deep.clone(),
                 }
             }
             ThemeMode::Dark => {
-                // Dark mode: prussian_navy canvas, cream_warm text, steel_blue income, crimson highlights
+                // Dark mode:
+                // bg_canvas: #0b090a
+                // bg_surface: #161a1d
+                // bg_elevated: #660708 / #161a1d
+                // border_subtle: #b1a7a6 (at low opacity) / #d3d3d3
+                // text_primary: #ffffff
+                // text_secondary: #f5f3f4
+                // text_muted: #b1a7a6
+                // accent_primary: #ba181b (with #e5383b for bright contrast)
+                // accent_secondary: #e5383b
                 Self {
                     mode,
                     font_family: FONT_FAMILY,
-                    bg_canvas: hex_to_hsla("#001b2a"),
-                    bg_surface: hex_to_hsla(&config.prussian_navy),
-                    bg_elevated: hex_to_hsla("#0b3d5b"),
-                    text_primary: hex_to_hsla(&config.cream_warm),
-                    text_muted: hex_to_hsla("#a8c5d6"),
-                    border_subtle: hex_to_hsla("#0e4b6e"),
-                    accent_primary: hex_to_hsla(&config.crimson_bright),
-                    accent_secondary: hex_to_hsla(&config.crimson_deep),
-                    income_color: hex_to_hsla(&config.steel_blue),
-                    expense_color: hex_to_hsla(&config.crimson_bright),
-                    handover_color: hex_to_hsla(&config.cream_warm),
+                    bg_canvas: hex_to_hsla(&config.dark_canvas),
+                    bg_surface: hex_to_hsla(&config.dark_surface),
+                    bg_elevated: hex_to_hsla(&config.primary_deep),
+                    text_primary: hex_to_hsla(&config.light_surface),
+                    text_secondary: hex_to_hsla(&config.light_canvas),
+                    text_muted: hex_to_hsla(&config.text_muted),
+                    border_subtle: hex_to_hsla_alpha(&config.text_muted, 0.25),
+                    primary: hex_to_hsla(&config.primary),
+                    primary_hover: hex_to_hsla(&config.primary_hover),
+                    primary_pressed: hex_to_hsla(&config.primary_pressed),
+                    primary_deep: hex_to_hsla(&config.primary_deep),
+                    accent_primary: hex_to_hsla(&config.primary),
+                    accent_secondary: hex_to_hsla(&config.primary_hover),
+                    income_color: hex_to_hsla("#2a9d8f"),
+                    expense_color: hex_to_hsla(&config.primary),
+                    handover_color: hex_to_hsla(&config.primary_hover),
 
-                    bg_canvas_hex: "#001b2a".to_string(),
-                    bg_surface_hex: config.prussian_navy.clone(),
-                    text_primary_hex: config.cream_warm.clone(),
-                    text_muted_hex: "#a8c5d6".to_string(),
-                    income_hex: config.steel_blue.clone(),
-                    expense_hex: config.crimson_bright.clone(),
-                    handover_hex: config.cream_warm.clone(),
+                    bg_canvas_hex: config.dark_canvas.clone(),
+                    bg_surface_hex: config.dark_surface.clone(),
+                    bg_elevated_hex: config.primary_deep.clone(),
+                    text_primary_hex: config.light_surface.clone(),
+                    text_secondary_hex: config.light_canvas.clone(),
+                    text_muted_hex: config.text_muted.clone(),
+                    primary_hex: config.primary.clone(),
+                    income_hex: "#2a9d8f".to_string(),
+                    expense_hex: config.primary.clone(),
+                    handover_hex: config.primary_hover.clone(),
                 }
             }
         }
     }
+}
+
+/// Helper converting a hex string into `gpui::Hsla` with explicit alpha.
+pub fn hex_to_hsla_alpha(hex: &str, alpha: f32) -> Hsla {
+    let mut h = hex_to_hsla(hex);
+    h.a = alpha;
+    h
 }
 
 /// Helper converting `#RRGGBB` or `#RRGGBBAA` strings into `gpui::Rgba`.

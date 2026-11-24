@@ -127,6 +127,13 @@ impl RootView {
         }
     }
 
+    pub fn reset_theme_palette(&mut self, cx: &mut Context<Self>) {
+        let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
+        self.state
+            .set_theme_config(crate::theme::ThemeConfig::default(), db_lock.as_deref());
+        cx.notify();
+    }
+
     pub fn toggle_notifications(&mut self, cx: &mut Context<Self>) {
         self.state.toggle_notifications_drawer();
         cx.notify();

@@ -4,8 +4,8 @@
   "description": "Multi-tenant bilingual family and personal finance accountability platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#003049",
-  "theme_color": "#003049",
+  "background_color": "#0b090a",
+  "theme_color": "#0b090a",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -128,7 +128,7 @@ impl SettingsScreen {
                                         div()
                                             .text_xs()
                                             .mt(px(4.0))
-                                            .child("#fdf0d5 warm cream canvas with crisp contrast"),
+                                            .child(umuryango_i18n::t(locale, "settings.light_theme_desc")),
                                     ),
                             )
                             // Dark mode card
@@ -180,7 +180,7 @@ impl SettingsScreen {
                                         div()
                                             .text_xs()
                                             .mt(px(4.0))
-                                            .child("#003049 prussian navy surface with warm accents"),
+                                            .child(umuryango_i18n::t(locale, "settings.dark_theme_desc")),
                                     ),
                             ),
                     ),
@@ -202,22 +202,44 @@ impl SettingsScreen {
                             .mb(px(12.0))
                             .child(
                                 div()
-                                    .text_base()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(umuryango_i18n::t(locale, "settings.brand_palette")),
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(12.0))
+                                    .child(
+                                        div()
+                                            .text_base()
+                                            .font_weight(gpui_kit::FontWeight::BOLD)
+                                            .text_color(theme.text_primary)
+                                            .child(umuryango_i18n::t(locale, "settings.brand_palette")),
+                                    )
+                                    .child(
+                                        div()
+                                            .px(px(10.0))
+                                            .py(px(4.0))
+                                            .rounded(px(6.0))
+                                            .bg(theme.bg_elevated)
+                                            .border_1()
+                                            .border_color(theme.border_subtle)
+                                            .text_xs()
+                                            .text_color(theme.accent_secondary)
+                                            .child(umuryango_i18n::t(locale, "settings.persisted_sqlite")),
+                                    ),
                             )
                             .child(
                                 div()
-                                    .px(px(10.0))
-                                    .py(px(4.0))
+                                    .id("settings-reset-palette-btn")
+                                    .cursor_pointer()
+                                    .px(px(12.0))
+                                    .py(px(6.0))
                                     .rounded(px(6.0))
-                                    .bg(theme.bg_elevated)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
+                                    .bg(theme.accent_primary)
                                     .text_xs()
-                                    .text_color(theme.accent_secondary)
-                                    .child(umuryango_i18n::t(locale, "settings.persisted_sqlite")),
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(crate::theme::hex_to_hsla("#ffffff"))
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.reset_theme_palette(cx);
+                                    }))
+                                    .child(umuryango_i18n::t(locale, "settings.reset_palette")),
                             ),
                     )
                     .child(
@@ -226,33 +248,63 @@ impl SettingsScreen {
                             .grid_cols(5)
                             .gap(px(12.0))
                             .child(Self::render_color_token_card(
-                                "crimson_deep",
-                                &state.theme_config.crimson_deep,
-                                "Primary Brand / Expense",
+                                "primary",
+                                &state.theme_config.primary,
+                                "Main Brand Primary (#ba181b)",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
-                                "crimson_bright",
-                                &state.theme_config.crimson_bright,
-                                "Badges / Alert Accent",
+                                "primary_hover",
+                                &state.theme_config.primary_hover,
+                                "Hover / Active (#e5383b)",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
-                                "cream_warm",
-                                &state.theme_config.cream_warm,
-                                "Light Canvas / Dark Text",
+                                "primary_pressed",
+                                &state.theme_config.primary_pressed,
+                                "Pressed / Badges (#a4161a)",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
-                                "prussian_navy",
-                                &state.theme_config.prussian_navy,
-                                "Dark Canvas / Light Text",
+                                "primary_deep",
+                                &state.theme_config.primary_deep,
+                                "Deep Crimson / Elevated (#660708)",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
-                                "steel_blue",
-                                &state.theme_config.steel_blue,
-                                "Income / Custody Balance",
+                                "dark_canvas",
+                                &state.theme_config.dark_canvas,
+                                "Dark Canvas BG (#0b090a)",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "dark_surface",
+                                &state.theme_config.dark_surface,
+                                "Dark Surface / Cards (#161a1d)",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "text_muted",
+                                &state.theme_config.text_muted,
+                                "Text Muted / Subtle (#b1a7a6)",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "light_border",
+                                &state.theme_config.light_border,
+                                "Light Border / Headers (#d3d3d3)",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "light_canvas",
+                                &state.theme_config.light_canvas,
+                                "Light Canvas BG (#f5f3f4)",
+                                theme,
+                            ))
+                            .child(Self::render_color_token_card(
+                                "light_surface",
+                                &state.theme_config.light_surface,
+                                "Light Surface / Cards (#ffffff)",
                                 theme,
                             )),
                     ),

@@ -756,27 +756,38 @@ impl<'a> CacheRepository<'a> {
         self.db.conn().execute(
             r#"
             INSERT INTO user_theme_prefs (
-                user_id, theme_mode, crimson_deep, crimson_bright, cream_warm,
-                prussian_navy, steel_blue, updated_at
+                user_id, theme_mode, primary_color, primary_hover, primary_pressed,
+                primary_deep, dark_canvas, dark_surface, text_muted, light_border,
+                light_canvas, light_surface, updated_at
             )
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
             ON CONFLICT(user_id) DO UPDATE SET
                 theme_mode = excluded.theme_mode,
-                crimson_deep = excluded.crimson_deep,
-                crimson_bright = excluded.crimson_bright,
-                cream_warm = excluded.cream_warm,
-                prussian_navy = excluded.prussian_navy,
-                steel_blue = excluded.steel_blue,
+                primary_color = excluded.primary_color,
+                primary_hover = excluded.primary_hover,
+                primary_pressed = excluded.primary_pressed,
+                primary_deep = excluded.primary_deep,
+                dark_canvas = excluded.dark_canvas,
+                dark_surface = excluded.dark_surface,
+                text_muted = excluded.text_muted,
+                light_border = excluded.light_border,
+                light_canvas = excluded.light_canvas,
+                light_surface = excluded.light_surface,
                 updated_at = excluded.updated_at
             "#,
             params![
                 user_id.to_string(),
                 prefs.theme_mode,
-                prefs.crimson_deep,
-                prefs.crimson_bright,
-                prefs.cream_warm,
-                prefs.prussian_navy,
-                prefs.steel_blue,
+                prefs.primary,
+                prefs.primary_hover,
+                prefs.primary_pressed,
+                prefs.primary_deep,
+                prefs.dark_canvas,
+                prefs.dark_surface,
+                prefs.text_muted,
+                prefs.light_border,
+                prefs.light_canvas,
+                prefs.light_surface,
                 now,
             ],
         )?;
@@ -787,7 +798,9 @@ impl<'a> CacheRepository<'a> {
     pub fn get_theme_prefs(&self, user_id: Uuid) -> Result<Option<UserThemePrefs>> {
         let mut stmt = self.db.conn().prepare(
             r#"
-            SELECT theme_mode, crimson_deep, crimson_bright, cream_warm, prussian_navy, steel_blue
+            SELECT theme_mode, primary_color, primary_hover, primary_pressed,
+                   primary_deep, dark_canvas, dark_surface, text_muted,
+                   light_border, light_canvas, light_surface
             FROM user_theme_prefs
             WHERE user_id = ?1
             "#,
@@ -797,11 +810,16 @@ impl<'a> CacheRepository<'a> {
         if let Some(row) = rows.next()? {
             Ok(Some(UserThemePrefs {
                 theme_mode: row.get(0)?,
-                crimson_deep: row.get(1)?,
-                crimson_bright: row.get(2)?,
-                cream_warm: row.get(3)?,
-                prussian_navy: row.get(4)?,
-                steel_blue: row.get(5)?,
+                primary: row.get(1)?,
+                primary_hover: row.get(2)?,
+                primary_pressed: row.get(3)?,
+                primary_deep: row.get(4)?,
+                dark_canvas: row.get(5)?,
+                dark_surface: row.get(6)?,
+                text_muted: row.get(7)?,
+                light_border: row.get(8)?,
+                light_canvas: row.get(9)?,
+                light_surface: row.get(10)?,
             }))
         } else {
             Ok(None)

@@ -25,14 +25,13 @@ Before performing any task, examine:
 - **Rust GPUI (`crates/app-gpui`):** Use shared components and charts from `gpui-kit`. Never duplicate one-off cards, inputs, or button primitives.
 - **Next.js Web (`web/src/components/`):** Reuse shared UI primitives and existing layouts. Never duplicate one-off modals, cards, or form inputs.
 
-### Rule 3: Strict Color Discipline (Customizable 5-Color System)
-Never hardcode arbitrary hex colors in stylesheets or component code. Use only semantic tokens initialized from the 5-color brand palette:
-- Primary Dark: `#003049`
-- Accent Cream: `#fdf0d5`
-- Primary Crimson: `#780000`
-- Active Crimson: `#c1121f`
-- Steel Blue: `#669bbc`
-Plus semantic status tokens: `error`, `success`, `warning`, `info`.
+### Rule 3: Strict Color Discipline (Customizable 10-Color System with Red Primary)
+Never hardcode arbitrary hex colors in stylesheets or component code. Use only semantic tokens initialized from the 10-color red primary palette:
+`["#0b090a", "#161a1d", "#660708", "#a4161a", "#ba181b", "#e5383b", "#b1a7a6", "#d3d3d3", "#f5f3f4", "#ffffff"]`
+- **Primary Red Spectrum:** `primary`: `#ba181b` (Main Brand Primary), `primary_hover`: `#e5383b` (Active accent), `primary_pressed`: `#a4161a` (Badges/pressed), `primary_deep`: `#660708` (Dark-tinted containers/elevated).
+- **Dark Mode:** `bg_canvas`: `#0b090a`, `bg_surface`: `#161a1d`, `bg_elevated`: `#660708`, `border_subtle`: `#b1a7a6` (low opacity), `text_primary`: `#ffffff`, `text_secondary`: `#f5f3f4`, `text_muted`: `#b1a7a6`, `accent_primary`: `#ba181b`.
+- **Light Mode:** `bg_canvas`: `#f5f3f4`, `bg_surface`: `#ffffff`, `bg_elevated`: `#d3d3d3`, `border_subtle`: `#d3d3d3`, `text_primary`: `#0b090a`, `text_secondary`: `#161a1d`, `text_muted`: `#b1a7a6`, `accent_primary`: `#ba181b`.
+Plus semantic status tokens: `error` (`#e5383b`), `success` (`#2a9d8f`), `warning` (`#e76f51`), `info` (`#b1a7a6`).
 
 ### Rule 4: Professional Icons Only (Zero Emojis)
 - **Zero Emojis:** Never use emojis in production UI headers, buttons, cards, forms, or system log messages.

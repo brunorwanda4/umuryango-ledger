@@ -192,11 +192,16 @@ mod tests {
 
         let prefs = UserThemePrefs {
             theme_mode: "dark".to_string(),
-            crimson_deep: "#550000".to_string(),
-            crimson_bright: "#e01020".to_string(),
-            cream_warm: "#f5e6c8".to_string(),
-            prussian_navy: "#001f33".to_string(),
-            steel_blue: "#4682b4".to_string(),
+            primary: "#ba181b".to_string(),
+            primary_hover: "#e5383b".to_string(),
+            primary_pressed: "#a4161a".to_string(),
+            primary_deep: "#660708".to_string(),
+            dark_canvas: "#0b090a".to_string(),
+            dark_surface: "#161a1d".to_string(),
+            text_muted: "#b1a7a6".to_string(),
+            light_border: "#d3d3d3".to_string(),
+            light_canvas: "#f5f3f4".to_string(),
+            light_surface: "#ffffff".to_string(),
         };
 
         repo.save_theme_prefs(user_id, &prefs)
@@ -207,6 +212,7 @@ mod tests {
             .expect("prefs should exist");
 
         assert_eq!(loaded.theme_mode, "dark");
-        assert_eq!(loaded.crimson_deep, "#550000");
+        assert_eq!(loaded.primary, "#ba181b");
+        assert_eq!(loaded.dark_canvas, "#0b090a");
     }
 }

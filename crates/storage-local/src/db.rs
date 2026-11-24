@@ -63,6 +63,15 @@ impl LocalDatabase {
     }
 
     fn init_schema(&self) -> Result<()> {
+        // Automatic migration if old user_theme_prefs schema is present
+        let has_old_theme = self
+            .conn
+            .prepare("SELECT crimson_deep FROM user_theme_prefs LIMIT 1")
+            .is_ok();
+        if has_old_theme {
+            let _ = self.conn.execute("DROP TABLE user_theme_prefs", []);
+        }
+
         self.conn.execute_batch(
             r#"
             PRAGMA journal_mode = WAL;
@@ -160,15 +169,20 @@ impl LocalDatabase {
             );
             CREATE INDEX IF NOT EXISTS idx_plans_scope ON future_plans(scope_type, family_id, user_id);
 
-            -- User Theme Preferences
+            -- User Theme Preferences (10-Color Red Primary Palette)
             CREATE TABLE IF NOT EXISTS user_theme_prefs (
                 user_id TEXT PRIMARY KEY,
                 theme_mode TEXT NOT NULL DEFAULT 'light',
-                crimson_deep TEXT NOT NULL DEFAULT '#780000',
-                crimson_bright TEXT NOT NULL DEFAULT '#c1121f',
-                cream_warm TEXT NOT NULL DEFAULT '#fdf0d5',
-                prussian_navy TEXT NOT NULL DEFAULT '#003049',
-                steel_blue TEXT NOT NULL DEFAULT '#669bbc',
+                primary_color TEXT NOT NULL DEFAULT '#ba181b',
+                primary_hover TEXT NOT NULL DEFAULT '#e5383b',
+                primary_pressed TEXT NOT NULL DEFAULT '#a4161a',
+                primary_deep TEXT NOT NULL DEFAULT '#660708',
+                dark_canvas TEXT NOT NULL DEFAULT '#0b090a',
+                dark_surface TEXT NOT NULL DEFAULT '#161a1d',
+                text_muted TEXT NOT NULL DEFAULT '#b1a7a6',
+                light_border TEXT NOT NULL DEFAULT '#d3d3d3',
+                light_canvas TEXT NOT NULL DEFAULT '#f5f3f4',
+                light_surface TEXT NOT NULL DEFAULT '#ffffff',
                 updated_at TEXT NOT NULL
             );
 

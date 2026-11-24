@@ -3,6 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-primary-deep: var(--primary-deep);
+
   --color-brand-dark: var(--primary-dark);
   --color-brand-cream: var(--accent-cream);
   --color-brand-crimson: var(--primary-crimson);
@@ -18,41 +23,57 @@
 }
 
 :root {
-  --primary-dark: #003049;
-  --accent-cream: #fdf0d5;
-  --primary-crimson: #780000;
-  --active-crimson: #c1121f;
-  --steel-blue: #669bbc;
+  /* 10-Color Palette - Red as Main Primary */
+  --primary: #ba181b;
+  --primary-hover: #e5383b;
+  --primary-pressed: #a4161a;
+  --primary-deep: #660708;
 
-  --color-error: #c1121f;
+  --primary-dark: #0b090a;
+  --accent-cream: #f5f3f4;
+  --primary-crimson: #ba181b;
+  --active-crimson: #e5383b;
+  --steel-blue: #a4161a;
+
+  --color-error: #ba181b;
   --color-success: #2a9d8f;
   --color-warning: #e76f51;
-  --color-info: #669bbc;
+  --color-info: #b1a7a6;
 
-  --bg-main: #f8fafc;
+  --bg-main: #f5f3f4;
   --bg-card: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
+  --bg-elevated: #d3d3d3;
+  --text-main: #0b090a;
+  --text-secondary: #161a1d;
+  --text-muted: #b1a7a6;
+  --border-color: #d3d3d3;
 }
 
 .dark {
-  --primary-dark: #003049;
-  --accent-cream: #fdf0d5;
-  --primary-crimson: #780000;
-  --active-crimson: #c1121f;
-  --steel-blue: #669bbc;
+  /* 10-Color Palette - Red as Main Primary */
+  --primary: #ba181b;
+  --primary-hover: #e5383b;
+  --primary-pressed: #a4161a;
+  --primary-deep: #660708;
 
-  --color-error: #e63946;
+  --primary-dark: #161a1d;
+  --accent-cream: #f5f3f4;
+  --primary-crimson: #ba181b;
+  --active-crimson: #e5383b;
+  --steel-blue: #660708;
+
+  --color-error: #e5383b;
   --color-success: #2a9d8f;
-  --color-warning: #f4a261;
-  --color-info: #669bbc;
+  --color-warning: #e76f51;
+  --color-info: #b1a7a6;
 
-  --bg-main: #001e2e;
-  --bg-card: #003049;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: #0b4566;
+  --bg-main: #0b090a;
+  --bg-card: #161a1d;
+  --bg-elevated: #660708;
+  --text-main: #ffffff;
+  --text-secondary: #f5f3f4;
+  --text-muted: #b1a7a6;
+  --border-color: #161a1d;
 }
 
 body {
