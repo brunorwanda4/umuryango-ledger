@@ -1,21 +1,157 @@
-//! Common text and password inputs built on the gpui-kit `Input` component.
+//! Text and password input primitives ported from `web/src/components/ui/input.tsx`.
 //!
-//! The `InputState` entity owns focus, the blinking cursor (caret), selection,
-//! clipboard, and IME composition. This module layers the app's visual style on
-//! top: a label, semantic theme tokens, a brand-colored focus ring, and (for
-//! passwords) a show / hide toggle using the app's FontAwesome icons.
-//!
-//! Caret, focus-ring, and selection colors come from the kit theme, which
-//! `SemanticTheme::apply_to_kit` keeps in sync with the app palette.
+//! Matches `--preset b1oaDsAa` (`base-sera`):
+//! - `Input`: `h-10 w-full min-w-0 border-b border-b-input bg-transparent px-0 py-1 text-sm focus-visible:border-b-ring aria-invalid:border-b-destructive disabled:opacity-50`
+//! - Preserves `text_field` and `password_field` labeled compound helpers used across
+//!   auth, onboarding, quick-entry, and entity modal screens.
 
-use gpui_kit::component::input::{Input, InputState};
+pub use gpui_kit::component::input::{Input as KitInput, InputContentType, InputState};
+use gpui_kit::component::StyledExt as _;
 use gpui_kit::prelude::*;
 use gpui_kit::{
-    App, ElementId, Entity, FontWeight, IntoElement, ParentElement, SharedString, Styled, div, px,
+    AnyElement, App, ElementId, Entity, Focusable as _, FontWeight, IntoElement, ParentElement,
+    RenderOnce, SharedString, StyleRefinement, Styled, Window, div, px,
 };
 
+use crate::common::utils::{PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use crate::theme::SemanticTheme;
+use crate::theme::{FONT_FAMILY, SemanticTheme, ThemeConfig, ThemeMode};
+
+/// Underline text input matching `Input` in `web/src/components/ui/input.tsx`.
+#[derive(IntoElement)]
+pub struct Input {
+    id: Option<ElementId>,
+    state: Entity<InputState>,
+    disabled: bool,
+    invalid: bool,
+    borderless: bool,
+    prefix: Option<AnyElement>,
+    suffix: Option<AnyElement>,
+    theme: Option<SemanticTheme>,
+    style: StyleRefinement,
+}
+
+impl Input {
+    pub fn new(state: &Entity<InputState>) -> Self {
+        Self {
+            id: None,
+            state: state.clone(),
+            disabled: false,
+            invalid: false,
+            borderless: false,
+            prefix: None,
+            suffix: None,
+            theme: None,
+            style: StyleRefinement::default(),
+        }
+    }
+
+    pub fn id(mut self, id: impl Into<ElementId>) -> Self {
+        self.id = Some(id.into());
+        self
+    }
+
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
+    pub fn invalid(mut self, invalid: bool) -> Self {
+        self.invalid = invalid;
+        self
+    }
+
+    /// Removes the bottom underline when nested inside `InputGroup`.
+    pub fn borderless(mut self, borderless: bool) -> Self {
+        self.borderless = borderless;
+        self
+    }
+
+    pub fn prefix(mut self, prefix: impl IntoElement) -> Self {
+        self.prefix = Some(prefix.into_any_element());
+        self
+    }
+
+    pub fn suffix(mut self, suffix: impl IntoElement) -> Self {
+        self.suffix = Some(suffix.into_any_element());
+        self
+    }
+
+    pub fn theme(mut self, theme: &SemanticTheme) -> Self {
+        self.theme = Some(theme.clone());
+        self
+    }
+}
+
+impl Styled for Input {
+    fn style(&mut self) -> &mut StyleRefinement {
+        &mut self.style
+    }
+}
+
+impl RenderOnce for Input {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        let fallback_theme = SemanticTheme::from_config(
+            &ThemeConfig::default(),
+            if gpui_kit::component::Theme::global(cx).mode.is_dark() {
+                ThemeMode::Dark
+            } else {
+                ThemeMode::Light
+            },
+        );
+        let theme = self.theme.as_ref().unwrap_or(&fallback_theme);
+        let tokens = PresetTokens::from_theme(theme);
+
+        let is_focused = self.state.read(cx).focus_handle(cx).is_focused(window);
+        let border_bottom = if self.invalid {
+            tokens.destructive
+        } else if is_focused {
+            tokens.ring
+        } else {
+            tokens.input
+        };
+
+        let mut inner = KitInput::new(&self.state)
+            .appearance(false)
+            .bordered(false)
+            .focus_bordered(false)
+            .disabled(self.disabled)
+            .w_full()
+            .px(px(0.0))
+            .py(px(4.0))
+            .font_family(FONT_FAMILY)
+            .text_sm()
+            .text_color(tokens.foreground);
+
+        if let Some(id) = self.id {
+            inner = inner.id(id);
+        }
+        if let Some(prefix) = self.prefix {
+            inner = inner.prefix(prefix);
+        }
+        if let Some(suffix) = self.suffix {
+            inner = inner.suffix(suffix);
+        }
+
+        div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .h(PresetSpacing::CONTROL_DEFAULT) // h-10 (40px)
+            .w_full()
+            .min_w_0()
+            .rounded(PresetRadius::NONE)
+            .cx_when(!self.borderless, |d| d.border_b_1().border_color(border_bottom))
+            .preset_disabled(self.disabled)
+            .refine_style(&self.style)
+            .child(inner)
+    }
+}
+
+/// Convenience constructor for a themed `--preset b1oaDsAa` [`Input`].
+pub fn input_primitive(id: impl Into<ElementId>, state: &Entity<InputState>, theme: &SemanticTheme) -> Input {
+    Input::new(state).id(id).theme(theme)
+}
 
 /// Single-line text input with a label above it and a blinking cursor when focused.
 pub fn text_field(
@@ -41,8 +177,8 @@ pub fn password_field(
     labeled(label, input, theme)
 }
 
-fn base_input(id: &'static str, state: &Entity<InputState>, theme: &SemanticTheme) -> Input {
-    Input::new(state)
+fn base_input(id: &'static str, state: &Entity<InputState>, theme: &SemanticTheme) -> KitInput {
+    KitInput::new(state)
         .id(id)
         .focus_bordered(true)
         .w_full()
@@ -94,7 +230,7 @@ fn mask_toggle(
 
 fn labeled(
     label: impl Into<SharedString>,
-    input: Input,
+    input: KitInput,
     theme: &SemanticTheme,
 ) -> impl IntoElement {
     div()

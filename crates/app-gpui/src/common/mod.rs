@@ -26,7 +26,9 @@ pub use card::{
     Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardSize, CardTitle,
 };
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
-pub use input::{password_field, text_field};
+pub use input::{
+    Input, InputContentType, InputState, KitInput, input_primitive, password_field, text_field,
+};
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
