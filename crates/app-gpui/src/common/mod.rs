@@ -17,6 +17,7 @@ pub mod radio;
 pub mod separator;
 pub mod skeleton;
 pub mod spinner;
+pub mod switch;
 pub mod textarea;
 pub mod utils;
 
@@ -49,6 +50,7 @@ pub use separator::{
 };
 pub use skeleton::{Skeleton, skeleton};
 pub use spinner::{Spinner, spinner, spinner_static};
+pub use switch::{KitSwitch, Switch, SwitchSize, switch_field};
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use utils::{
     PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, card_surface_shadow,
