@@ -14,6 +14,7 @@ pub mod input_otp;
 pub mod kbd;
 pub mod label;
 pub mod radio;
+pub mod radio_group;
 pub mod separator;
 pub mod skeleton;
 pub mod spinner;
@@ -45,6 +46,9 @@ pub use input_otp::{
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
+pub use radio_group::{
+    RadioGroup as RadioGroupContainer, RadioGroupItem, RadioGroupOrientation,
+};
 pub use separator::{
     Separator, SeparatorOrientation, SeparatorStyle, horizontal_separator, vertical_separator,
 };
