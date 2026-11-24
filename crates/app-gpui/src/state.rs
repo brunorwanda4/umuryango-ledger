@@ -1,24 +1,35 @@
-use crate::db_facade::LocalDatabase;
-#[cfg(not(target_arch = "wasm32"))]
-use crate::db_facade::{CacheRepository, SyncMutation, SyncQueueRepository};
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
+use rust_decimal::prelude::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use umuryango_core_domain::DomainError;
 use umuryango_core_domain::SyncStatus;
 use umuryango_core_domain::ledger::LedgerValidator;
 use umuryango_core_domain::models::{
-    FamilyMember, FamilyRole, FuturePlan, Loan, PendingFamilyInvite, Project, Transaction,
-    TransactionType, Wallet, WalletChannel,
+    FamilyMemberView, FamilyRole, FamilyWithRole, FuturePlan, Loan, LoanDirection,
+    PendingFamilyInvite, Project, Transaction, TransactionType, Wallet, WalletChannel,
 };
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
+use crate::api_bridge::{ScopeSnapshot, resolve_api_urls};
+use crate::db_facade::LocalDatabase;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::db_facade::{CacheRepository, SyncMutation, SyncQueueRepository};
 use crate::safe_area::SafeAreaInsets;
 use crate::theme::{SemanticTheme, ThemeConfig, ThemeMode};
 use crate::updater::AppUpdater;
+
+const SESSION_KEY_TOKEN: &str = "session.token";
+const SESSION_KEY_USER_ID: &str = "session.user_id";
+const SESSION_KEY_USER_NAME: &str = "session.user_name";
+const SESSION_KEY_USER_PHONE: &str = "session.user_phone";
+const SESSION_KEY_LOCALE: &str = "session.locale";
+const SESSION_KEY_FAMILY_ID: &str = "session.active_family_id";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Screen {
@@ -51,6 +62,47 @@ impl Screen {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ActiveModal {
+    AddWallet,
+    AddProject,
+    AddLoan,
+    RepayLoan {
+        loan_id: Uuid,
+        counterparty: String,
+        remaining: Decimal,
+    },
+    AddPlan,
+    AllocatePlan {
+        plan_id: Uuid,
+        title: String,
+    },
+    InviteMember,
+}
+
+#[derive(Debug, Clone)]
+pub struct EntityFormState {
+    pub primary_text: String,
+    pub secondary_text: String,
+    pub amount_text: String,
+    pub wallet_channel: WalletChannel,
+    pub loan_direction: LoanDirection,
+    pub invite_role: FamilyRole,
+}
+
+impl Default for EntityFormState {
+    fn default() -> Self {
+        Self {
+            primary_text: String::new(),
+            secondary_text: String::new(),
+            amount_text: String::new(),
+            wallet_channel: WalletChannel::MobileMoney,
+            loan_direction: LoanDirection::Lent,
+            invite_role: FamilyRole::Member,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationItem {
     pub id: Uuid,
@@ -63,25 +115,37 @@ pub struct NotificationItem {
 pub struct AppState {
     pub user_id: Uuid,
     pub user_name: String,
+    pub user_phone: String,
+    pub auth_token: Option<String>,
+    pub api_base_url: String,
+
     pub active_scope: LedgerScope,
+    pub active_family_id: Option<Uuid>,
     pub active_family_name: Option<String>,
+    pub active_family_invite_code: Option<String>,
     pub active_role: FamilyRole,
+    pub families: Vec<FamilyWithRole>,
+
     pub locale: Locale,
     pub theme_mode: ThemeMode,
     pub theme_config: ThemeConfig,
     pub theme: SemanticTheme,
 
     pub wallets: Vec<Wallet>,
+    pub wallet_custodian_names: HashMap<Uuid, String>,
     pub transactions: Vec<Transaction>,
     pub projects: Vec<Project>,
     pub loans: Vec<Loan>,
     pub future_plans: Vec<FuturePlan>,
-    pub members: Vec<FamilyMember>,
+    pub family_members: Vec<FamilyMemberView>,
 
     pub sync_status: SyncStatus,
+    pub is_busy: bool,
     pub current_screen: Screen,
-    pub toast_message: Option<(String, bool)>, // (message, is_error)
+    pub toast_message: Option<(String, bool)>,
     pub show_quick_entry: bool,
+    pub active_modal: Option<ActiveModal>,
+    pub entity_form: EntityFormState,
 
     // Realtime Notifications Drawer
     pub show_notifications_drawer: bool,
@@ -98,6 +162,7 @@ pub struct AppState {
     pub auth_full_name: String,
     pub auth_gender: String,
     pub onboarding_family_name: String,
+    pub onboarding_phone_draft: String,
     pub onboarding_member_phones: Vec<String>,
     pub onboarding_join_code: String,
 
@@ -110,35 +175,47 @@ pub struct AppState {
 
 impl Default for AppState {
     fn default() -> Self {
-        let user_id = Uuid::new_v4();
-        let family_id = Uuid::new_v4();
+        let user_id = Uuid::nil();
         let theme_config = ThemeConfig::default();
         let theme_mode = ThemeMode::Light;
         let theme = SemanticTheme::from_config(&theme_config, theme_mode);
         let safe_area = crate::safe_area::platform::query_system_window_insets();
+        let (api_base_url, _) = resolve_api_urls();
 
         Self {
             user_id,
-            user_name: "Bruno Hapiman".to_string(),
-            active_scope: LedgerScope::Family { family_id },
-            active_family_name: Some("Umuryango w'Abahire".to_string()),
-            active_role: FamilyRole::Head,
+            user_name: String::new(),
+            user_phone: String::new(),
+            auth_token: None,
+            api_base_url,
+
+            active_scope: LedgerScope::Personal { user_id },
+            active_family_id: None,
+            active_family_name: None,
+            active_family_invite_code: None,
+            active_role: FamilyRole::Member,
+            families: Vec::new(),
+
             locale: Locale::Rw,
             theme_mode,
             theme_config,
             theme,
 
             wallets: Vec::new(),
+            wallet_custodian_names: HashMap::new(),
             transactions: Vec::new(),
             projects: Vec::new(),
             loans: Vec::new(),
             future_plans: Vec::new(),
-            members: Vec::new(),
+            family_members: Vec::new(),
 
             sync_status: SyncStatus::Synced,
+            is_busy: false,
             current_screen: Screen::Auth,
             toast_message: None,
             show_quick_entry: false,
+            active_modal: None,
+            entity_form: EntityFormState::default(),
 
             show_notifications_drawer: false,
             notifications: Vec::new(),
@@ -153,7 +230,8 @@ impl Default for AppState {
             auth_full_name: String::new(),
             auth_gender: "MALE".to_string(),
             onboarding_family_name: String::new(),
-            onboarding_member_phones: vec![String::new()],
+            onboarding_phone_draft: String::new(),
+            onboarding_member_phones: Vec::new(),
             onboarding_join_code: String::new(),
 
             safe_area,
@@ -167,6 +245,7 @@ impl AppState {
         Self {
             user_id,
             user_name,
+            active_scope: LedgerScope::Personal { user_id },
             ..Default::default()
         }
     }
@@ -179,7 +258,7 @@ impl AppState {
         self.safe_area.ime_height = height;
     }
 
-    /// Reloads cached entities matching active scope from the local database
+    /// Reloads cached entities matching active scope from SQLite (never seeds fake records).
     #[cfg(target_arch = "wasm32")]
     pub fn load_from_db(&mut self, _db: &LocalDatabase) {}
 
@@ -188,8 +267,9 @@ impl AppState {
         let repo = CacheRepository::new(db);
         let queue = SyncQueueRepository::new(db);
 
-        // Load theme preferences
-        if let Ok(Some(prefs)) = repo.get_theme_prefs(self.user_id) {
+        if !self.user_id.is_nil()
+            && let Ok(Some(prefs)) = repo.get_theme_prefs(self.user_id)
+        {
             self.theme_config = ThemeConfig::from_prefs(&prefs);
             self.theme_mode = if prefs.theme_mode == "dark" {
                 ThemeMode::Dark
@@ -202,142 +282,211 @@ impl AppState {
             );
         }
 
-        // Load sync status
         if let Ok(st) = queue.sync_status(true) {
             self.sync_status = st;
         }
 
-        // Load cached wallets & transactions matching active scope
-        match self.active_scope {
-            LedgerScope::Personal { user_id } => {
-                if let Ok(w) = repo.list_wallets(&self.active_scope) {
-                    if w.is_empty() {
-                        let seed_wallets = vec![
-                            Wallet {
-                                id: Uuid::new_v4(),
-                                scope: self.active_scope,
-                                channel: WalletChannel::MobileMoney,
-                                name: "Personal MTN MoMo".to_string(),
-                                account_number: Some("+250788112233".to_string()),
-                                currency: "RWF".to_string(),
-                                balance: Decimal::from(65_000),
-                                custodian_id: Some(user_id),
-                                is_active: true,
-                                created_at: Utc::now(),
-                                updated_at: Utc::now(),
-                            },
-                            Wallet {
-                                id: Uuid::new_v4(),
-                                scope: self.active_scope,
-                                channel: WalletChannel::CashInHand,
-                                name: "Personal Cash".to_string(),
-                                account_number: None,
-                                currency: "RWF".to_string(),
-                                balance: Decimal::from(20_000),
-                                custodian_id: Some(user_id),
-                                is_active: true,
-                                created_at: Utc::now(),
-                                updated_at: Utc::now(),
-                            },
-                        ];
-                        for sw in &seed_wallets {
-                            let _ = repo.upsert_wallet(sw);
-                        }
-                        self.wallets = seed_wallets;
-                    } else {
-                        self.wallets = w;
-                    }
-                }
-                if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
-                    self.transactions = txs;
-                }
-            }
-            LedgerScope::Family { family_id } => {
-                if let Ok(w) = repo.list_wallets(&self.active_scope) {
-                    if w.is_empty() {
-                        let seed_wallets = vec![
-                            Wallet {
-                                id: Uuid::new_v4(),
-                                scope: self.active_scope,
-                                channel: WalletChannel::MobileMoney,
-                                name: "MTN MoMo Family Custody".to_string(),
-                                account_number: Some("+250788123456".to_string()),
-                                currency: "RWF".to_string(),
-                                balance: Decimal::from(350_000),
-                                custodian_id: Some(self.user_id),
-                                is_active: true,
-                                created_at: Utc::now(),
-                                updated_at: Utc::now(),
-                            },
-                            Wallet {
-                                id: Uuid::new_v4(),
-                                scope: self.active_scope,
-                                channel: WalletChannel::Bank,
-                                name: "BK Family Operating Account".to_string(),
-                                account_number: Some("00045-0123456-78".to_string()),
-                                currency: "RWF".to_string(),
-                                balance: Decimal::from(1_200_000),
-                                custodian_id: Some(self.user_id),
-                                is_active: true,
-                                created_at: Utc::now(),
-                                updated_at: Utc::now(),
-                            },
-                            Wallet {
-                                id: Uuid::new_v4(),
-                                scope: self.active_scope,
-                                channel: WalletChannel::CashInHand,
-                                name: "Cash in Hand / Ntoki".to_string(),
-                                account_number: None,
-                                currency: "RWF".to_string(),
-                                balance: Decimal::from(80_000),
-                                custodian_id: Some(self.user_id),
-                                is_active: true,
-                                created_at: Utc::now(),
-                                updated_at: Utc::now(),
-                            },
-                        ];
-                        for sw in &seed_wallets {
-                            let _ = repo.upsert_wallet(sw);
-                        }
-                        self.wallets = seed_wallets;
-                    } else {
-                        self.wallets = w;
-                    }
-                }
-                if let Ok(txs) = repo.list_transactions(&self.active_scope, 100) {
-                    self.transactions = txs;
-                }
-                if let Ok(projects) = repo.list_projects(family_id) {
-                    self.projects = projects;
-                }
-                if let Ok(loans) = repo.list_loans(&self.active_scope) {
-                    self.loans = loans;
-                }
-                if let Ok(plans) = repo.list_future_plans(&self.active_scope) {
-                    self.future_plans = plans;
-                }
-            }
+        if !self.is_authenticated {
+            return;
         }
+
+        self.wallets = repo.list_wallets(&self.active_scope).unwrap_or_default();
+        self.transactions = repo
+            .list_transactions(&self.active_scope, 100)
+            .unwrap_or_default();
+        self.loans = repo.list_loans(&self.active_scope).unwrap_or_default();
+        self.future_plans = repo
+            .list_future_plans(&self.active_scope)
+            .unwrap_or_default();
+        self.projects = match self.active_scope {
+            LedgerScope::Family { family_id } => repo.list_projects(family_id).unwrap_or_default(),
+            LedgerScope::Personal { .. } => Vec::new(),
+        };
+    }
+
+    /// Persists active authenticated session metadata into local SQLite `app_config`.
+    #[cfg(target_arch = "wasm32")]
+    pub fn save_session_to_db(&self, _db: &LocalDatabase) {}
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn save_session_to_db(&self, db: &LocalDatabase) {
+        if let Some(ref token) = self.auth_token {
+            let _ = db.set_config(SESSION_KEY_TOKEN, token);
+            let _ = db.set_config(SESSION_KEY_USER_ID, &self.user_id.to_string());
+            let _ = db.set_config(SESSION_KEY_USER_NAME, &self.user_name);
+            let _ = db.set_config(SESSION_KEY_USER_PHONE, &self.user_phone);
+            let _ = db.set_config(SESSION_KEY_LOCALE, self.locale.as_str());
+            let fam_val = self
+                .active_family_id
+                .map(|id| id.to_string())
+                .unwrap_or_default();
+            let _ = db.set_config(SESSION_KEY_FAMILY_ID, &fam_val);
+        }
+    }
+
+    /// Restores a previously saved session token & user profile from SQLite `app_config`.
+    #[cfg(target_arch = "wasm32")]
+    pub fn restore_session_from_db(&mut self, _db: &LocalDatabase) -> Option<String> {
+        None
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn restore_session_from_db(&mut self, db: &LocalDatabase) -> Option<String> {
+        let token = db.get_config(SESSION_KEY_TOKEN).ok()??;
+        if token.trim().is_empty() {
+            return None;
+        }
+        let user_id_str = db.get_config(SESSION_KEY_USER_ID).ok()??;
+        let user_id = Uuid::parse_str(&user_id_str).ok()?;
+        let user_name = db
+            .get_config(SESSION_KEY_USER_NAME)
+            .ok()
+            .flatten()
+            .unwrap_or_default();
+        let user_phone = db
+            .get_config(SESSION_KEY_USER_PHONE)
+            .ok()
+            .flatten()
+            .unwrap_or_default();
+        if let Ok(Some(loc)) = db.get_config(SESSION_KEY_LOCALE) {
+            self.locale = match loc.as_str() {
+                "en" => Locale::En,
+                _ => Locale::Rw,
+            };
+        }
+        let saved_family_id = db
+            .get_config(SESSION_KEY_FAMILY_ID)
+            .ok()
+            .flatten()
+            .and_then(|s| Uuid::parse_str(&s).ok());
+
+        self.user_id = user_id;
+        self.user_name = user_name;
+        self.user_phone = user_phone;
+        self.auth_token = Some(token.clone());
+        self.is_authenticated = true;
+        self.active_family_id = saved_family_id;
+        self.active_scope = match saved_family_id {
+            Some(family_id) => LedgerScope::Family { family_id },
+            None => LedgerScope::Personal { user_id },
+        };
+        self.current_screen = Screen::Dashboard;
+        self.load_from_db(db);
+        Some(token)
+    }
+
+    /// Clears persisted session keys from SQLite `app_config`.
+    #[cfg(target_arch = "wasm32")]
+    pub fn clear_session_in_db(_db: &LocalDatabase) {}
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn clear_session_in_db(db: &LocalDatabase) {
+        for key in [
+            SESSION_KEY_TOKEN,
+            SESSION_KEY_USER_ID,
+            SESSION_KEY_USER_NAME,
+            SESSION_KEY_USER_PHONE,
+            SESSION_KEY_FAMILY_ID,
+        ] {
+            let _ = db.set_config(key, "");
+        }
+    }
+
+    /// Resets all user-scoped state upon logout or expired session.
+    pub fn reset_session(&mut self) {
+        self.user_id = Uuid::nil();
+        self.user_name.clear();
+        self.user_phone.clear();
+        self.auth_token = None;
+        self.is_authenticated = false;
+        self.active_scope = LedgerScope::Personal {
+            user_id: Uuid::nil(),
+        };
+        self.active_family_id = None;
+        self.active_family_name = None;
+        self.active_family_invite_code = None;
+        self.active_role = FamilyRole::Member;
+        self.families.clear();
+        self.wallets.clear();
+        self.wallet_custodian_names.clear();
+        self.transactions.clear();
+        self.projects.clear();
+        self.loans.clear();
+        self.future_plans.clear();
+        self.family_members.clear();
+        self.pending_invites.clear();
+        self.notifications.clear();
+        self.unread_notifications_count = 0;
+        self.show_notifications_drawer = false;
+        self.show_quick_entry = false;
+        self.active_modal = None;
+        self.is_busy = false;
+        self.auth_password.clear();
+        self.auth_confirm_password.clear();
+        self.onboarding_family_name.clear();
+        self.onboarding_phone_draft.clear();
+        self.onboarding_member_phones.clear();
+        self.onboarding_join_code.clear();
+        self.current_screen = Screen::Auth;
+    }
+
+    /// Applies an authoritative snapshot fetched from the backend PostgreSQL database.
+    pub fn apply_scope_snapshot(&mut self, snap: ScopeSnapshot) {
+        self.families = snap.families;
+        self.pending_invites = snap.pending_invites;
+
+        if snap.scope == self.active_scope {
+            self.wallets = snap.wallets;
+            self.wallet_custodian_names = snap.custodian_names;
+            self.transactions = snap.transactions;
+            self.projects = snap.projects;
+            self.loans = snap.loans;
+            self.future_plans = snap.future_plans;
+            self.family_members = snap.members;
+        }
+
+        if let LedgerScope::Family { family_id } = self.active_scope
+            && let Some(fam) = self.families.iter().find(|f| f.id == family_id)
+        {
+            self.active_family_id = Some(fam.id);
+            self.active_family_name = Some(fam.name.clone());
+            self.active_family_invite_code = fam.invite_code.clone();
+            self.active_role = fam.role;
+        }
+
+        self.sync_status = if snap.pending_sync_count > 0 {
+            SyncStatus::PendingSync(snap.pending_sync_count)
+        } else {
+            SyncStatus::Synced
+        };
     }
 
     pub fn switch_scope(
         &mut self,
         new_scope: LedgerScope,
         family_name: Option<String>,
+        invite_code: Option<String>,
         role: FamilyRole,
         db: Option<&LocalDatabase>,
     ) {
         self.active_scope = new_scope;
+        self.active_family_id = new_scope.family_id();
         self.active_family_name = family_name;
+        self.active_family_invite_code = invite_code;
         self.active_role = role;
+        self.wallets.clear();
+        self.wallet_custodian_names.clear();
+        self.transactions.clear();
+        self.projects.clear();
+        self.loans.clear();
+        self.future_plans.clear();
+        self.family_members.clear();
 
-        #[cfg(not(target_arch = "wasm32"))]
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(database) = db {
             self.load_from_db(database);
+            self.save_session_to_db(database);
         }
-        #[cfg(target_arch = "wasm32")]
-        let _ = db;
         #[cfg(target_arch = "wasm32")]
         let _ = db;
     }
@@ -365,7 +514,9 @@ impl AppState {
         crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(database) = db {
+        if let Some(database) = db
+            && !self.user_id.is_nil()
+        {
             let repo = CacheRepository::new(database);
             let prefs = self.theme_config.to_prefs(self.theme_mode);
             let _ = repo.save_theme_prefs(self.user_id, &prefs);
@@ -380,7 +531,9 @@ impl AppState {
         crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(database) = db {
+        if let Some(database) = db
+            && !self.user_id.is_nil()
+        {
             let repo = CacheRepository::new(database);
             let prefs = self.theme_config.to_prefs(self.theme_mode);
             let _ = repo.save_theme_prefs(self.user_id, &prefs);
@@ -408,7 +561,33 @@ impl AppState {
         self.unread_notifications_count = 0;
     }
 
-    /// Process an incoming real-time event received from the WebSocket broadcast hub
+    /// Resolves the custodian display name for a wallet from real PostgreSQL metadata.
+    pub fn custodian_name_for_wallet(&self, wallet: &Wallet) -> Option<String> {
+        if let Some(name) = self.wallet_custodian_names.get(&wallet.id) {
+            return Some(name.clone());
+        }
+        if let Some(cid) = wallet.custodian_id {
+            return self.actor_name(cid);
+        }
+        None
+    }
+
+    /// Resolves a user ID to a real member name (or current user's name).
+    pub fn actor_name(&self, user_id: Uuid) -> Option<String> {
+        if user_id == self.user_id && !self.user_name.is_empty() {
+            return Some(self.user_name.clone());
+        }
+        self.family_members
+            .iter()
+            .find(|m| m.user_id == user_id)
+            .map(|m| {
+                m.display_name
+                    .clone()
+                    .unwrap_or_else(|| m.full_name.clone())
+            })
+    }
+
+    /// Process an incoming real-time event received from the WebSocket broadcast hub.
     pub fn apply_realtime_event(&mut self, event: RealtimeEvent, db: Option<&LocalDatabase>) {
         let formatted = event.format_notification(self.locale);
         let item = NotificationItem {
@@ -419,10 +598,8 @@ impl AppState {
             is_read: false,
         };
 
-        // Notify updater if this is an app update announcement
         self.updater.handle_realtime_event(&event);
 
-        // Update in-memory wallet balances directly
         match &event {
             RealtimeEvent::IncomeAdded {
                 wallet_id,
@@ -451,16 +628,15 @@ impl AppState {
     }
 
     /// Logs a transaction offline: validates invariants via core-domain, applies balance updates,
-    /// and persists to SQLite cache and sync queue.
-    pub fn log_transaction(
+    /// and persists to SQLite cache and sync queue for later cloud replay.
+    pub fn log_transaction_offline(
         &mut self,
         tx: Transaction,
         actor_role: FamilyRole,
         db: Option<&LocalDatabase>,
     ) -> Result<(), DomainError> {
-        // 1. Validate and apply financial invariants
         LedgerValidator::validate_and_apply_transaction(&tx, actor_role, &mut self.wallets)?;
-        // 2. Persist locally if DB provided
+
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(database) = db {
             let repo = CacheRepository::new(database);
@@ -471,7 +647,6 @@ impl AppState {
                 let _ = repo.upsert_wallet(w);
             }
 
-            // Queue for cloud sync
             let mutation = match tx.tx_type {
                 TransactionType::Handover => SyncMutation::CreateHandover {
                     idempotency_key: tx.id,
@@ -498,7 +673,7 @@ impl AppState {
             };
 
             let _ = queue.enqueue(&mutation);
-            if let Ok(st) = queue.sync_status(true) {
+            if let Ok(st) = queue.sync_status(false) {
                 self.sync_status = st;
             }
         }
@@ -534,21 +709,68 @@ impl AppState {
     pub fn active_projects_budget(&self) -> Decimal {
         self.projects.iter().map(|p| p.target_amount).sum()
     }
+
+    /// Computes dynamic expense breakdown by category from real transactions.
+    /// Returns `(category, amount, percentage)` sorted descending by amount.
+    pub fn expense_category_breakdown(&self) -> Vec<(String, Decimal, i32)> {
+        let mut totals: HashMap<String, Decimal> = HashMap::new();
+        let mut grand_total = Decimal::ZERO;
+
+        for tx in &self.transactions {
+            if tx.tx_type == TransactionType::Expense && tx.amount > Decimal::ZERO {
+                *totals.entry(tx.category.clone()).or_insert(Decimal::ZERO) += tx.amount;
+                grand_total += tx.amount;
+            }
+        }
+
+        if grand_total <= Decimal::ZERO {
+            return Vec::new();
+        }
+
+        let mut rows: Vec<(String, Decimal, i32)> = totals
+            .into_iter()
+            .map(|(cat, amt)| {
+                let pct = ((amt / grand_total) * Decimal::from(100))
+                    .round()
+                    .to_i32()
+                    .unwrap_or(0);
+                (cat, amt, pct)
+            })
+            .collect();
+
+        rows.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        rows.truncate(6);
+        rows
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use umuryango_core_domain::models::WalletChannel;
+
+    #[test]
+    fn test_default_state_has_no_fake_seed_data() {
+        let state = AppState::default();
+        assert!(!state.is_authenticated);
+        assert!(state.user_name.is_empty());
+        assert!(state.active_family_name.is_none());
+        assert!(state.wallets.is_empty());
+        assert!(state.transactions.is_empty());
+        assert!(state.family_members.is_empty());
+        assert_eq!(state.current_screen, Screen::Auth);
+    }
 
     #[test]
     fn test_apply_realtime_income_event() {
-        let mut state = AppState::default();
-        state.locale = Locale::Rw;
+        let family_id = Uuid::new_v4();
+        let mut state = AppState {
+            locale: Locale::Rw,
+            user_id: Uuid::new_v4(),
+            active_scope: LedgerScope::Family { family_id },
+            ..Default::default()
+        };
 
         let wallet_id = Uuid::new_v4();
-        let family_id = state.active_scope.family_id().unwrap();
-
         state.wallets.push(Wallet {
             id: wallet_id,
             scope: LedgerScope::Family { family_id },
@@ -579,7 +801,6 @@ mod tests {
 
         state.apply_realtime_event(event, None);
 
-        // Check wallet balance updated
         assert_eq!(state.wallets[0].balance, Decimal::new(70000, 0));
         assert_eq!(state.unread_notifications_count, 1);
         assert_eq!(state.notifications.len(), 1);
@@ -593,10 +814,54 @@ mod tests {
             Some((state.notifications[0].message.clone(), false))
         );
 
-        // Mark as read
         state.mark_all_notifications_as_read();
         assert_eq!(state.unread_notifications_count, 0);
         assert!(state.notifications[0].is_read);
+    }
+
+    #[test]
+    fn test_expense_category_breakdown_from_real_transactions() {
+        let mut state = AppState::default();
+        let uid = Uuid::new_v4();
+        let wid = Uuid::new_v4();
+        let scope = LedgerScope::Personal { user_id: uid };
+        let now = Utc::now();
+
+        state.transactions.push(Transaction {
+            id: Uuid::new_v4(),
+            scope,
+            source_wallet_id: wid,
+            destination_wallet_id: None,
+            tx_type: TransactionType::Expense,
+            amount: Decimal::from(7500),
+            currency: "RWF".to_string(),
+            category: "Food".to_string(),
+            description: None,
+            authorized_by: uid,
+            paid_to: None,
+            tx_date: now,
+            created_at: now,
+        });
+        state.transactions.push(Transaction {
+            id: Uuid::new_v4(),
+            scope,
+            source_wallet_id: wid,
+            destination_wallet_id: None,
+            tx_type: TransactionType::Expense,
+            amount: Decimal::from(2500),
+            currency: "RWF".to_string(),
+            category: "Transport".to_string(),
+            description: None,
+            authorized_by: uid,
+            paid_to: None,
+            tx_date: now,
+            created_at: now,
+        });
+
+        let rows = state.expense_category_breakdown();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0], ("Food".to_string(), Decimal::from(7500), 75));
+        assert_eq!(rows[1], ("Transport".to_string(), Decimal::from(2500), 25));
     }
 
     #[test]

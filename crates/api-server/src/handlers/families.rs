@@ -3,7 +3,8 @@ use chrono::{DateTime, Utc};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use umuryango_core_domain::models::{Family, FamilyRole, PendingFamilyInvite};
-use umuryango_i18n::{Translator, terms};
+pub use umuryango_core_domain::models::{FamilyMemberView, FamilyWithRole};
+use umuryango_i18n::{Locale, Translator, terms};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -52,20 +53,11 @@ pub struct UpdateMemberRoleRequest {
     pub role: FamilyRole,
 }
 
-#[derive(Debug, Serialize, ToSchema)]
-pub struct FamilyWithRole {
-    #[schema(example = "9a756613-263a-4467-9d7a-11239c04901f")]
-    pub id: Uuid,
-    #[schema(example = "Umuryango w'Abahire")]
-    pub name: String,
-    #[schema(example = "Rwanda & Diaspora joint custody ledger")]
-    pub description: Option<String>,
-    #[schema(example = "RWF")]
-    pub currency: String,
-    pub role: FamilyRole,
-    #[schema(example = "HK0N")]
-    pub invite_code: Option<String>,
-    pub joined_at: DateTime<Utc>,
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct InviteMemberRequest {
+    #[schema(example = "+250788111222")]
+    pub phone: String,
+    pub role: Option<FamilyRole>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -161,6 +153,162 @@ pub async fn list_families(
         .collect::<Vec<_>>();
 
     Ok(HttpResponse::Ok().json(families))
+}
+
+/// List all active members of a family group
+#[utoipa::path(
+    get,
+    path = "/api/v1/families/{family_id}/members",
+    tag = "Families",
+    security(("bearer_auth" = [])),
+    params(
+        ("family_id" = Uuid, Path, description = "Family UUID"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    responses(
+        (status = 200, description = "List of active family members", body = Vec<FamilyMemberView>),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (not a family member)", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
+pub async fn list_family_members(
+    data: web::Data<AppState>,
+    user: AuthenticatedUser,
+    path: web::Path<Uuid>,
+) -> Result<HttpResponse, ApiError> {
+    let family_id = path.into_inner();
+    require_family_membership(&data.db, user.user_id, family_id, user.locale).await?;
+
+    #[derive(sqlx::FromRow)]
+    struct MemberRow {
+        id: Uuid,
+        family_id: Uuid,
+        user_id: Uuid,
+        full_name: String,
+        phone: String,
+        display_name: Option<String>,
+        role: String,
+        is_active: bool,
+        joined_at: DateTime<Utc>,
+    }
+
+    let rows = sqlx::query_as::<_, MemberRow>(
+        r#"
+        SELECT
+            fm.id,
+            fm.family_id,
+            fm.user_id,
+            u.full_name,
+            u.phone,
+            fm.display_name,
+            fm.role::TEXT as role,
+            fm.is_active,
+            fm.joined_at
+        FROM family_members fm
+        JOIN users u ON fm.user_id = u.id
+        WHERE fm.family_id = $1 AND fm.is_active = TRUE
+        ORDER BY fm.joined_at ASC
+        "#,
+    )
+    .bind(family_id)
+    .fetch_all(&data.db)
+    .await
+    .map_err(|e| ApiError::database(e, user.locale))?;
+
+    let members = rows
+        .into_iter()
+        .map(|r| {
+            let role = match r.role.to_lowercase().as_str() {
+                "head" => FamilyRole::Head,
+                "custodian" | "treasurer" => FamilyRole::Custodian,
+                _ => FamilyRole::Member,
+            };
+            FamilyMemberView {
+                id: r.id,
+                family_id: r.family_id,
+                user_id: r.user_id,
+                full_name: r.full_name,
+                phone: r.phone,
+                display_name: r.display_name,
+                role,
+                is_active: r.is_active,
+                joined_at: r.joined_at,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    Ok(HttpResponse::Ok().json(members))
+}
+
+/// Invite a family member by phone number (Head only)
+#[utoipa::path(
+    post,
+    path = "/api/v1/families/{family_id}/invites",
+    tag = "Families",
+    security(("bearer_auth" = [])),
+    params(
+        ("family_id" = Uuid, Path, description = "Family UUID"),
+        ("Accept-Language" = Option<String>, Header, description = "Language preference (rw or en)")
+    ),
+    request_body = InviteMemberRequest,
+    responses(
+        (status = 201, description = "Invitation recorded successfully"),
+        (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 403, description = "Forbidden (requires Head role)", body = LocalizedErrorResponse),
+        (status = 409, description = "Invalid phone number", body = LocalizedErrorResponse),
+        (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
+    )
+)]
+pub async fn invite_member_by_phone(
+    data: web::Data<AppState>,
+    user: AuthenticatedUser,
+    path: web::Path<Uuid>,
+    payload: web::Json<InviteMemberRequest>,
+) -> Result<HttpResponse, ApiError> {
+    let family_id = path.into_inner();
+    let caller = require_family_membership(&data.db, user.user_id, family_id, user.locale).await?;
+    require_role(&caller, &[FamilyRole::Head], user.locale)?;
+
+    let clean_phone = normalize_phone(&payload.phone);
+    if clean_phone.is_empty() {
+        let msg = if user.locale == Locale::Rw {
+            "Ugomba gutanga nimero ya telefoni yemewe."
+        } else {
+            "A valid phone number is required."
+        };
+        return Err(ApiError::conflict(msg, user.locale));
+    }
+
+    let role_str = match payload.role.unwrap_or(FamilyRole::Custodian) {
+        FamilyRole::Head => "HEAD",
+        FamilyRole::Custodian => "CUSTODIAN",
+        FamilyRole::Member => "MEMBER",
+    };
+
+    sqlx::query(
+        r#"
+        INSERT INTO family_phone_invites (id, family_id, invited_phone, invited_by_user_id, role, status, created_at)
+        VALUES ($1, $2, $3, $4, $5, 'PENDING', $6)
+        ON CONFLICT (family_id, invited_phone) DO UPDATE SET
+            role = excluded.role,
+            status = 'PENDING'
+        "#,
+    )
+    .bind(Uuid::new_v4())
+    .bind(family_id)
+    .bind(&clean_phone)
+    .bind(user.user_id)
+    .bind(role_str)
+    .bind(Utc::now())
+    .execute(&data.db)
+    .await
+    .map_err(|e| ApiError::database(e, user.locale))?;
+
+    Ok(HttpResponse::Created().json(serde_json::json!({
+        "status": "invited",
+        "invited_phone": clean_phone
+    })))
 }
 
 /// List all pending family phone invites for the authenticated user
@@ -261,6 +409,7 @@ pub async fn list_pending_invites(
     responses(
         (status = 201, description = "Family created successfully", body = CreateFamilyResponse),
         (status = 401, description = "Unauthorized", body = LocalizedErrorResponse),
+        (status = 409, description = "Validation error", body = LocalizedErrorResponse),
         (status = 500, description = "Internal server error", body = LocalizedErrorResponse)
     )
 )]
@@ -269,6 +418,16 @@ pub async fn create_family(
     user: AuthenticatedUser,
     payload: web::Json<CreateFamilyRequest>,
 ) -> Result<HttpResponse, ApiError> {
+    let family_name = payload.name.trim();
+    if family_name.is_empty() {
+        let msg = if user.locale == Locale::Rw {
+            "Izina ry'umuryango rirakenewe."
+        } else {
+            "Family name is required."
+        };
+        return Err(ApiError::conflict(msg, user.locale));
+    }
+
     let family_id = Uuid::new_v4();
     let invite_code = generate_4char_invite_code();
     let currency = payload
@@ -291,7 +450,7 @@ pub async fn create_family(
         "#,
     )
     .bind(family_id)
-    .bind(&payload.name)
+    .bind(family_name)
     .bind(&payload.description)
     .bind(&currency)
     .bind(user.user_id)
@@ -317,7 +476,7 @@ pub async fn create_family(
     .map_err(|e| ApiError::database(e, user.locale))?;
 
     // 3. Create initial family custody wallet
-    let wallet_name = format!("{} Vault", payload.name);
+    let wallet_name = format!("{} Vault", family_name);
     sqlx::query(
         r#"
         INSERT INTO wallets (id, scope, user_id, family_id, wallet_type, name, currency, balance, custodian_id, is_active, created_at, updated_at)
@@ -369,7 +528,7 @@ pub async fn create_family(
 
     let family = Family {
         id: family_id,
-        name: payload.name.clone(),
+        name: family_name.to_string(),
         description: payload.description.clone(),
         currency,
         invite_code: Some(invite_code.clone()),
@@ -563,7 +722,20 @@ pub async fn join_family(
         .map_err(|e| ApiError::database(e, user.locale))?;
     }
 
-    // 3. Mark any matching pending phone invites as ACCEPTED
+    // 3. Mark only this user's matching pending phone invite(s) as ACCEPTED
+    if let Some(invite_id) = payload.invite_id {
+        let _ = sqlx::query(
+            r#"
+            UPDATE family_phone_invites
+            SET status = 'ACCEPTED'
+            WHERE id = $1
+            "#,
+        )
+        .bind(invite_id)
+        .execute(&mut *tx)
+        .await;
+    }
+
     let user_phone = sqlx::query_scalar::<_, String>("SELECT phone FROM users WHERE id = $1")
         .bind(user.user_id)
         .fetch_optional(&mut *tx)
@@ -577,7 +749,7 @@ pub async fn join_family(
             r#"
             UPDATE family_phone_invites
             SET status = 'ACCEPTED'
-            WHERE family_id = $1 AND (invited_phone = $2 OR status = 'PENDING')
+            WHERE family_id = $1 AND invited_phone = $2 AND status = 'PENDING'
             "#,
         )
         .bind(family.id)

@@ -11,7 +11,7 @@ use crate::RootView;
 use crate::state::AppState;
 
 const PHONE_PLACEHOLDER: &str = "+250 788 000 000";
-const NAME_PLACEHOLDER: &str = "Kwizera Aimable";
+const NAME_PLACEHOLDER: &str = "Full Name";
 const PASSWORD_PLACEHOLDER: &str = "••••••••";
 
 pub struct AuthInputs {
@@ -51,6 +51,13 @@ impl AuthInputs {
             confirm_password,
             _subscriptions: subscriptions,
         }
+    }
+
+    pub fn clear_passwords(&self, window: &mut Window, cx: &mut Context<RootView>) {
+        self.password
+            .update(cx, |input, cx| input.set_value("", window, cx));
+        self.confirm_password
+            .update(cx, |input, cx| input.set_value("", window, cx));
     }
 }
 

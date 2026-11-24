@@ -41,7 +41,11 @@
     "wallet": "Wallet",
     "actor": "Actor",
     "amount": "Amount",
-    "no_results": "No transactions found"
+    "no_results": "No transactions found",
+    "refresh": "Refresh",
+    "you_badge": "(You)",
+    "notes": "Notes",
+    "optional": "Optional"
   },
   "auth": {
     "login_title": "Log In",
@@ -64,7 +68,13 @@
     "sign_in_subtitle": "Access your custody wallets, projects, and family financial records",
     "dont_have_account": "Don't have an account? ",
     "create_account": "Create Account",
-    "logging_in": "Logging in..."
+    "logging_in": "Logging in...",
+    "creating_account": "Creating account...",
+    "logout": "Log Out",
+    "logged_out": "Logged out successfully.",
+    "full_name_required": "Full name is required.",
+    "password_too_short": "Password must be at least 6 characters.",
+    "session_expired": "Your session expired. Please log in again."
   },
   "onboarding": {
     "title": "Welcome to Umuryango Ledger",
@@ -80,7 +90,15 @@
     "continue_to_dashboard": "Continue to Dashboard",
     "you_were_added_to": "You were added to {family_name}",
     "joined_family_success": "Joined family successfully!",
-    "family_created_code": "Family created! Invite Code: {code}"
+    "family_created_code": "Family created! Invite Code: {code}",
+    "family_name_required": "Please enter a family name.",
+    "invited_by": "Invited by {name}",
+    "family_placeholder": "e.g. Abahire Family",
+    "phone_placeholder": "+250 788 123 456",
+    "code_placeholder": "e.g. HK0N",
+    "creating_family": "Creating...",
+    "joining_family": "Joining...",
+    "remove_phone": "Remove"
   },
   "scopes": {
     "personal_money": "My Personal Money",
@@ -104,8 +122,8 @@
     "income_vs_expenses": "Income vs Expenses",
     "expenses_by_category": "Expenses by Category",
     "quick_handover_btn": "+ Handover Custody",
-    "inflow_outflow_chart": "Income vs Expenses (Bar Chart)",
-    "categories_chart": "Expense Categories (Donut)",
+    "inflow_outflow_chart": "Income vs Expenses",
+    "categories_chart": "Expense Categories",
     "overview_subtitle": "Financial overview & recent movements",
     "family_subtitle": "Real-time multi-tenant view of custody wallets, custodians, and handovers",
     "personal_subtitle": "Isolated personal finances and private expense tracking",
@@ -123,7 +141,8 @@
     "open_mothers_report": "Open Mother's Report",
     "due_date_tag": "Due: Dec 15",
     "held_by_parents": "Held by Mama & Papa",
-    "custodian_keza": "Custodian: Keza Clarisse (Mama)"
+    "custodian_keza": "Custodian: Keza Clarisse (Mama)",
+    "no_expenses_yet": "No expenses recorded yet."
   },
   "wallets": {
     "title": "Wallets & Custody",
@@ -146,7 +165,15 @@
     "channel_momo": "MoMo",
     "channel_cash": "Cash in Hand",
     "custodian_label": "Custodian: {name}",
-    "in_hand_label": "In Hand ({custodians})"
+    "in_hand_label": "In Hand ({custodians})",
+    "no_wallets": "No wallets in this scope yet. Add a wallet to get started.",
+    "wallet_name": "Wallet Name",
+    "wallet_name_placeholder": "e.g. MTN MoMo or BK Account",
+    "channel": "Channel",
+    "account_number": "Account / Phone Number (Optional)",
+    "wallet_created": "Wallet created successfully!",
+    "wallet_name_required": "Wallet name is required.",
+    "unassigned_custodian": "Unassigned"
   },
   "transactions": {
     "title": "Transactions",
@@ -192,7 +219,9 @@
     "search_placeholder": "Search transactions...",
     "type_income": "Income",
     "type_expense": "Expenses",
-    "type_handover": "Handovers"
+    "type_handover": "Handovers",
+    "saved_offline": "Saved offline. Will sync automatically when connected.",
+    "select_destination_wallet": "Select Destination Wallet"
   },
   "report": {
     "title": "Reports",
@@ -233,7 +262,9 @@
     "switch_to_other_lang": "Switch Language",
     "demo_family_name": "Mugisha & Keza Family",
     "demo_mothers_headline": "Mother's Summary Report",
-    "demo_mothers_desc": "Simplified, elder-friendly breakdown of all family custody holdings and obligations"
+    "demo_mothers_desc": "Simplified, elder-friendly breakdown of all family custody holdings and obligations",
+    "family_required_for_link": "Switch to Family scope to generate a shareable Magic Link.",
+    "no_wallets_in_report": "No wallets in this scope yet."
   },
   "projects": {
     "title": "Projects",
@@ -257,7 +288,12 @@
     "demo_house_desc": "Joint renovation and repairs for the family home",
     "demo_school_title": "School Fees (Term 1)",
     "demo_school_desc": "Q1 education budget for younger siblings",
-    "status_in_progress": "In Progress"
+    "status_in_progress": "In Progress",
+    "project_name": "Project Name",
+    "project_description": "Description (Optional)",
+    "project_created": "Project created successfully!",
+    "family_scope_required": "Switch to Family scope to create or view family projects.",
+    "name_required": "Project name is required."
   },
   "loans": {
     "title": "Loans & Debts",
@@ -284,7 +320,15 @@
     "lent_out_title": "Money Lent Out",
     "no_lent_out": "No money lent out recorded yet.",
     "borrowed_title": "Money Borrowed",
-    "no_borrowed": "No borrowed debt recorded yet."
+    "no_borrowed": "No borrowed debt recorded yet.",
+    "direction": "Loan Direction",
+    "counterparty_placeholder": "e.g. Person or institution name",
+    "loan_created": "Loan recorded successfully!",
+    "repayment_recorded": "Repayment recorded successfully!",
+    "repay_amount": "Repayment Amount (RWF)",
+    "counterparty_required": "Counterparty name is required.",
+    "status_repaid": "Repaid",
+    "status_active": "Active"
   },
   "future_plans": {
     "title": "Future Plans",
@@ -298,7 +342,14 @@
     "add_plan_btn": "+ New Plan",
     "target_label": "Target: {target} RWF",
     "allocated_label": "Allocated: {allocated} RWF ({pct}%)",
-    "allocate_btn": "Allocate Funds"
+    "allocate_btn": "Allocate Funds",
+    "plan_title_placeholder": "e.g. School Fees or Land Purchase",
+    "plan_created": "Future plan created successfully!",
+    "funds_allocated": "Funds allocated to plan!",
+    "allocate_amount": "Amount to Allocate (RWF)",
+    "title_required": "Plan title is required.",
+    "status_achieved": "Achieved",
+    "status_planned": "Planned"
   },
   "members": {
     "title": "Family Members",
@@ -314,7 +365,14 @@
     "role_label": "Role: {role}",
     "head_desc": "Full authority: create projects, authorize handovers, approve members.",
     "custodian_desc": "Custody authority: holds designated cash/MoMo/Bank wallets, logs transactions.",
-    "member_desc": "Auditing & visibility: views Mother's Reports, tracks family wealth and progress."
+    "member_desc": "Auditing & visibility: views Mother's Reports, tracks family wealth and progress.",
+    "no_family_selected": "You are currently in Personal scope or have not joined a family yet.",
+    "setup_family_btn": "Create or Join Family",
+    "no_members": "No family members loaded yet.",
+    "invite_member": "Invite by Phone",
+    "invite_sent": "Invitation sent successfully!",
+    "role_updated": "Member role updated!",
+    "phone_required": "Phone number is required."
   },
   "settings": {
     "title": "Settings",
@@ -335,7 +393,12 @@
     "appearance_mode": "Appearance Mode",
     "brand_palette": "Brand Palette Tokens",
     "persisted_sqlite": "Persisted to SQLite",
-    "typography_sqlite": "Typography & Offline SQLite Engine"
+    "typography_sqlite": "Typography & Offline SQLite Engine",
+    "account_section": "Account & Session",
+    "signed_in_as": "Signed in as",
+    "active_family_label": "Active Family",
+    "none_family": "None (Personal only)",
+    "api_server_label": "API Server"
   },
   "notifications": {
     "title": "Notifications",

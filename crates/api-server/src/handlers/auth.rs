@@ -6,13 +6,12 @@ use argon2::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use umuryango_core_domain::models::{FamilyRole, PendingFamilyInvite, User};
+use umuryango_core_domain::models::{FamilyRole, FamilyWithRole, PendingFamilyInvite, User};
 use umuryango_i18n::{Locale, Translator, terms};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::error::{ApiError, LocalizedErrorResponse};
-use crate::handlers::families::FamilyWithRole;
 use crate::middleware::{AuthenticatedUser, RequestLocale, create_jwt};
 use crate::state::AppState;
 
@@ -103,6 +102,16 @@ pub async fn register(
 ) -> Result<HttpResponse, ApiError> {
     let loc = payload.preferred_locale.unwrap_or(locale.0);
 
+    let full_name = payload.full_name.trim();
+    if full_name.is_empty() {
+        let msg = if loc == Locale::Rw {
+            "Ugomba gutanga amazina yawe yose."
+        } else {
+            "Full name is required."
+        };
+        return Err(ApiError::conflict(msg, loc));
+    }
+
     let raw_phone = payload
         .phone
         .as_deref()
@@ -180,7 +189,7 @@ pub async fn register(
     .bind(user_id)
     .bind(&payload.email)
     .bind(&clean_phone)
-    .bind(&payload.full_name)
+    .bind(full_name)
     .bind(&gender_val)
     .bind(&password_hash)
     .bind(loc.as_str())
@@ -280,7 +289,7 @@ pub async fn register(
         phone: clean_phone.clone(),
         phone_number: Some(clean_phone),
         gender: gender_val,
-        full_name: payload.full_name.clone(),
+        full_name: full_name.to_string(),
         preferred_locale: loc,
         is_active: true,
         created_at: now,
@@ -324,6 +333,11 @@ pub async fn login(
         .or(payload.login.as_deref())
         .unwrap_or("")
         .trim();
+
+    if raw_login.is_empty() || payload.password.is_empty() {
+        let msg = umuryango_i18n::t(loc, "errors.phone_password_required");
+        return Err(ApiError::unauthorized(msg, loc));
+    }
 
     let clean_phone = normalize_phone(raw_login);
 

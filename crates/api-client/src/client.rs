@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use reqwest::Client;
 use reqwest::header::{ACCEPT_LANGUAGE, AUTHORIZATION, HeaderMap, HeaderValue};
 use rust_decimal::Decimal;
@@ -6,8 +7,8 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
 use umuryango_core_domain::models::{
-    Family, FamilyRole, FuturePlan, Loan, PendingFamilyInvite, Project, Transaction,
-    TransactionType, User, Wallet, WalletChannel,
+    Family, FamilyMemberView, FamilyRole, FamilyWithRole, FuturePlan, Loan, LoanDirection,
+    PendingFamilyInvite, Project, Transaction, TransactionType, User, Wallet, WalletChannel,
 };
 use umuryango_core_domain::reporting::MothersReport;
 use umuryango_core_domain::scope::LedgerScope;
@@ -38,6 +39,27 @@ pub enum ApiClientError {
     Generic(String),
 }
 
+impl ApiClientError {
+    /// Human-readable message suitable for displaying in UI toast notifications.
+    pub fn user_message(&self, locale: Locale) -> String {
+        match self {
+            ApiClientError::ServerError { message, .. } if !message.trim().is_empty() => {
+                message.clone()
+            }
+            ApiClientError::Reqwest(_) => umuryango_i18n::t(locale, "errors.network_offline"),
+            other => other.to_string(),
+        }
+    }
+
+    pub fn is_unauthorized(&self) -> bool {
+        matches!(self, ApiClientError::ServerError { status: 401, .. })
+    }
+
+    pub fn is_network_error(&self) -> bool {
+        matches!(self, ApiClientError::Reqwest(_))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthResponse {
     pub token: String,
@@ -52,7 +74,7 @@ pub struct AuthResponse {
     #[serde(default)]
     pub locale: Option<Locale>,
     #[serde(default)]
-    pub families: Vec<Family>,
+    pub families: Vec<FamilyWithRole>,
     #[serde(default)]
     pub pending_invites: Vec<PendingFamilyInvite>,
 }
@@ -87,11 +109,28 @@ pub struct CreateFamilyRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateFamilyResponse {
+    pub family: Family,
+    pub invite_code: String,
+    #[serde(default)]
+    pub added_invites_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JoinFamilyRequest {
     pub invite_code: Option<String>,
     pub invite_id: Option<Uuid>,
     pub display_name: Option<String>,
     pub role: Option<FamilyRole>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JoinFamilyResponse {
+    pub status: String,
+    pub family_id: Uuid,
+    pub family_name: String,
+    pub role: FamilyRole,
+    pub family: Family,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,6 +145,42 @@ pub struct CreateWalletRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CustodyWalletView {
+    pub id: Uuid,
+    pub scope: LedgerScope,
+    pub channel: WalletChannel,
+    pub name: String,
+    pub account_number: Option<String>,
+    pub currency: String,
+    pub balance: Decimal,
+    pub custodian_id: Option<Uuid>,
+    pub custodian_name: Option<String>,
+    pub is_active: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl CustodyWalletView {
+    pub fn into_wallet(self) -> (Wallet, Option<String>) {
+        let custodian_name = self.custodian_name;
+        let wallet = Wallet {
+            id: self.id,
+            scope: self.scope,
+            channel: self.channel,
+            name: self.name,
+            account_number: self.account_number,
+            currency: self.currency,
+            balance: self.balance,
+            custodian_id: self.custodian_id,
+            is_active: self.is_active,
+            created_at: self.created_at,
+            updated_at: self.updated_at,
+        };
+        (wallet, custodian_name)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateTransactionRequest {
     pub scope: String,
     pub family_id: Option<Uuid>,
@@ -117,7 +192,7 @@ pub struct CreateTransactionRequest {
     pub description: Option<String>,
     pub paid_to: Option<String>,
     pub receipt_url: Option<String>,
-    pub tx_date: Option<chrono::DateTime<chrono::Utc>>,
+    pub tx_date: Option<DateTime<Utc>>,
     pub idempotency_key: Option<Uuid>,
 }
 
@@ -140,33 +215,36 @@ pub struct CreateProjectRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateLoanRequest {
+    pub scope: String,
     pub family_id: Option<Uuid>,
     pub counterparty_name: String,
-    pub counterparty_phone: Option<String>,
-    pub direction: String,
     pub principal_amount: Decimal,
-    pub currency: String,
-    pub reason: Option<String>,
+    pub interest_rate: Option<Decimal>,
     pub due_date: Option<chrono::NaiveDate>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreatePlanRequest {
-    pub family_id: Option<Uuid>,
-    pub title: String,
-    pub target_amount: Decimal,
-    pub target_date: Option<chrono::NaiveDate>,
-    pub category: String,
+    pub direction: LoanDirection,
     pub notes: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ShareLinkResponse {
-    pub share_url: String,
-    pub token: String,
-    pub expires_at: chrono::DateTime<chrono::Utc>,
+pub struct CreatePlanRequest {
+    pub scope: String,
+    pub family_id: Option<Uuid>,
+    pub title: String,
+    pub description: Option<String>,
+    pub estimated_cost: Decimal,
+    pub target_date: Option<chrono::NaiveDate>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShareLinkResponse {
+    pub share_token: String,
+    pub share_url: String,
+    #[serde(default)]
+    pub whatsapp_preview_text: String,
+    pub expires_at: DateTime<Utc>,
+}
+
+#[derive(Clone)]
 pub struct ApiClient {
     base_url: String,
     pub ws_url: String,
@@ -187,6 +265,10 @@ impl ApiClient {
             auth_token: Arc::new(RwLock::new(None)),
             locale: Arc::new(RwLock::new(locale)),
         }
+    }
+
+    pub fn base_url(&self) -> &str {
+        &self.base_url
     }
 
     pub async fn set_token(&self, token: Option<String>) {
@@ -272,7 +354,9 @@ impl ApiClient {
             .json(req)
             .send()
             .await?;
-        Self::handle_response(resp).await
+        let auth = Self::handle_response::<AuthResponse>(resp).await?;
+        self.set_token(Some(auth.token.clone())).await;
+        Ok(auth)
     }
 
     pub async fn login(&self, req: &LoginRequest) -> Result<AuthResponse, ApiClientError> {
@@ -309,7 +393,7 @@ impl ApiClient {
 
     // ================= FAMILIES =================
 
-    pub async fn list_families(&self) -> Result<Vec<Family>, ApiClientError> {
+    pub async fn list_families(&self) -> Result<Vec<FamilyWithRole>, ApiClientError> {
         let url = format!("{}{}", self.base_url, ApiEndpoints::FAMILIES);
         let resp = self
             .http
@@ -318,6 +402,55 @@ impl ApiClient {
             .send()
             .await?;
         Self::handle_response(resp).await
+    }
+
+    pub async fn list_family_members(
+        &self,
+        family_id: Uuid,
+    ) -> Result<Vec<FamilyMemberView>, ApiClientError> {
+        let url = format!(
+            "{}{}/{}/members",
+            self.base_url,
+            ApiEndpoints::FAMILIES,
+            family_id
+        );
+        let resp = self
+            .http
+            .get(&url)
+            .headers(self.build_headers(None).await)
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
+    pub async fn invite_family_member(
+        &self,
+        family_id: Uuid,
+        phone: &str,
+        role: FamilyRole,
+    ) -> Result<(), ApiClientError> {
+        let url = format!(
+            "{}{}/{}/invites",
+            self.base_url,
+            ApiEndpoints::FAMILIES,
+            family_id
+        );
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.build_headers(None).await)
+            .json(&serde_json::json!({
+                "phone": phone,
+                "role": role
+            }))
+            .send()
+            .await?;
+        if resp.status().is_success() {
+            Ok(())
+        } else {
+            Self::handle_response::<serde_json::Value>(resp).await?;
+            Ok(())
+        }
     }
 
     pub async fn list_pending_invites(&self) -> Result<Vec<PendingFamilyInvite>, ApiClientError> {
@@ -331,7 +464,10 @@ impl ApiClient {
         Self::handle_response(resp).await
     }
 
-    pub async fn create_family(&self, req: &CreateFamilyRequest) -> Result<Family, ApiClientError> {
+    pub async fn create_family_detailed(
+        &self,
+        req: &CreateFamilyRequest,
+    ) -> Result<CreateFamilyResponse, ApiClientError> {
         let url = format!("{}{}", self.base_url, ApiEndpoints::FAMILIES);
         let resp = self
             .http
@@ -340,35 +476,30 @@ impl ApiClient {
             .json(req)
             .send()
             .await?;
-        #[derive(Deserialize)]
-        struct CreateFamResp {
-            family: Family,
-        }
-        let res = Self::handle_response::<CreateFamResp>(resp).await?;
+        Self::handle_response(resp).await
+    }
+
+    pub async fn create_family(&self, req: &CreateFamilyRequest) -> Result<Family, ApiClientError> {
+        let res = self.create_family_detailed(req).await?;
         Ok(res.family)
     }
 
     pub async fn join_family(&self, invite_code: &str) -> Result<Family, ApiClientError> {
-        let url = format!("{}{}/join", self.base_url, ApiEndpoints::FAMILIES);
-        let resp = self
-            .http
-            .post(&url)
-            .headers(self.build_headers(None).await)
-            .json(&serde_json::json!({ "invite_code": invite_code }))
-            .send()
+        let res = self
+            .join_family_detailed(&JoinFamilyRequest {
+                invite_code: Some(invite_code.to_string()),
+                invite_id: None,
+                display_name: None,
+                role: None,
+            })
             .await?;
-        #[derive(Deserialize)]
-        struct JoinFamResp {
-            family: Family,
-        }
-        let res = Self::handle_response::<JoinFamResp>(resp).await?;
         Ok(res.family)
     }
 
-    pub async fn join_family_request(
+    pub async fn join_family_detailed(
         &self,
         req: &JoinFamilyRequest,
-    ) -> Result<Family, ApiClientError> {
+    ) -> Result<JoinFamilyResponse, ApiClientError> {
         let url = format!("{}{}/join", self.base_url, ApiEndpoints::FAMILIES);
         let resp = self
             .http
@@ -377,11 +508,14 @@ impl ApiClient {
             .json(req)
             .send()
             .await?;
-        #[derive(Deserialize)]
-        struct JoinFamResp {
-            family: Family,
-        }
-        let res = Self::handle_response::<JoinFamResp>(resp).await?;
+        Self::handle_response(resp).await
+    }
+
+    pub async fn join_family_request(
+        &self,
+        req: &JoinFamilyRequest,
+    ) -> Result<Family, ApiClientError> {
+        let res = self.join_family_detailed(req).await?;
         Ok(res.family)
     }
 
@@ -420,7 +554,10 @@ impl ApiClient {
 
     // ================= WALLETS =================
 
-    pub async fn list_wallets(&self, scope: &LedgerScope) -> Result<Vec<Wallet>, ApiClientError> {
+    pub async fn list_wallets_detailed(
+        &self,
+        scope: &LedgerScope,
+    ) -> Result<Vec<CustodyWalletView>, ApiClientError> {
         let mut url = format!("{}{}", self.base_url, ApiEndpoints::WALLETS);
         match scope {
             LedgerScope::Personal { .. } => url.push_str("?scope=personal"),
@@ -435,6 +572,11 @@ impl ApiClient {
             .send()
             .await?;
         Self::handle_response(resp).await
+    }
+
+    pub async fn list_wallets(&self, scope: &LedgerScope) -> Result<Vec<Wallet>, ApiClientError> {
+        let detailed = self.list_wallets_detailed(scope).await?;
+        Ok(detailed.into_iter().map(|v| v.into_wallet().0).collect())
     }
 
     pub async fn create_wallet(&self, req: &CreateWalletRequest) -> Result<Wallet, ApiClientError> {
@@ -635,8 +777,8 @@ impl ApiClient {
     pub async fn get_mothers_report(
         &self,
         scope: &LedgerScope,
-        start: chrono::DateTime<chrono::Utc>,
-        end: chrono::DateTime<chrono::Utc>,
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
     ) -> Result<MothersReport, ApiClientError> {
         let mut url = format!(
             "{}{}?start={}&end={}",
@@ -663,7 +805,8 @@ impl ApiClient {
     pub async fn create_share_link(
         &self,
         family_id: Uuid,
-        expires_days: i64,
+        locale: Locale,
+        valid_days: i64,
     ) -> Result<ShareLinkResponse, ApiClientError> {
         let url = format!("{}/api/v1/reports/share", self.base_url);
         let resp = self
@@ -672,7 +815,8 @@ impl ApiClient {
             .headers(self.build_headers(None).await)
             .json(&serde_json::json!({
                 "family_id": family_id,
-                "expires_days": expires_days
+                "locale": locale.as_str(),
+                "valid_days": valid_days
             }))
             .send()
             .await?;

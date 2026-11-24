@@ -11,14 +11,12 @@ fn main() {
     println!("Initializing Umuryango Ledger GPUI desktop/mobile application...");
     let db =
         LocalDatabase::open_default().unwrap_or_else(|_| LocalDatabase::open_in_memory().unwrap());
-    let mut state = AppState::default();
-    state.load_from_db(&db);
-
+    let state = AppState::default();
     let db_arc = Arc::new(Mutex::new(db));
 
     println!(
-        "Application ready. Active scope: {:?}, Locale: {:?}",
-        state.active_scope, state.locale
+        "Application ready. API: {}, Locale: {:?}",
+        state.api_base_url, state.locale
     );
 
     let app = gpui_kit::application().with_assets(AppAssets);

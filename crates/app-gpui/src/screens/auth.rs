@@ -133,8 +133,10 @@ impl AuthScreen {
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(theme.accent_primary)
                             .on_click(cx.listener(|this, _, _, cx| {
-                                this.state.auth_mode_register = !this.state.auth_mode_register;
-                                cx.notify();
+                                if !this.state.is_busy {
+                                    this.state.auth_mode_register = !this.state.auth_mode_register;
+                                    cx.notify();
+                                }
                             }))
                             .child(if is_register {
                                 Translator::t(state.locale, terms::ALREADY_HAVE_ACCOUNT, None)
@@ -152,6 +154,11 @@ impl AuthScreen {
         cx: &Context<RootView>,
     ) -> impl IntoElement {
         let t = |key| Translator::t(state.locale, key, None);
+        let submit_label = if state.is_busy {
+            umuryango_i18n::t(state.locale, "auth.logging_in")
+        } else {
+            t(terms::LOGIN_TITLE)
+        };
 
         div()
             .w_full()
@@ -173,7 +180,8 @@ impl AuthScreen {
             ))
             .child(Self::submit_button(
                 "auth-login-submit-btn",
-                t(terms::LOGIN_TITLE),
+                submit_label,
+                state.is_busy,
                 theme,
                 cx,
                 |this, cx| this.handle_login_submit(cx),
@@ -187,6 +195,11 @@ impl AuthScreen {
         cx: &Context<RootView>,
     ) -> impl IntoElement {
         let t = |key| Translator::t(state.locale, key, None);
+        let submit_label = if state.is_busy {
+            umuryango_i18n::t(state.locale, "auth.creating_account")
+        } else {
+            t(terms::CREATE_ACCOUNT)
+        };
 
         div()
             .w_full()
@@ -222,7 +235,8 @@ impl AuthScreen {
             ))
             .child(Self::submit_button(
                 "auth-register-submit-btn",
-                t(terms::CREATE_ACCOUNT),
+                submit_label,
+                state.is_busy,
                 theme,
                 cx,
                 |this, cx| this.handle_register_submit(cx),
@@ -268,6 +282,7 @@ impl AuthScreen {
     fn submit_button(
         id: &'static str,
         label: String,
+        is_busy: bool,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
         on_submit: fn(&mut RootView, &mut Context<RootView>),
@@ -281,7 +296,11 @@ impl AuthScreen {
             .gap(px(8.0))
             .py(px(10.0))
             .rounded(px(8.0))
-            .bg(theme.accent_primary)
+            .bg(if is_busy {
+                theme.accent_primary.opacity(0.6)
+            } else {
+                theme.accent_primary
+            })
             .text_sm()
             .font_weight(gpui_kit::FontWeight::BOLD)
             .text_color(theme.bg_canvas)

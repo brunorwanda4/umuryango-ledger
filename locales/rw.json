@@ -41,7 +41,11 @@
     "wallet": "Konti",
     "actor": "Uwabikoze",
     "amount": "Amafaranga",
-    "no_results": "Nta bikorwa bibonetse"
+    "no_results": "Nta bikorwa bibonetse",
+    "refresh": "Vugurura",
+    "you_badge": "(Wowe)",
+    "notes": "Ibisobanuro",
+    "optional": "Si itegeko"
   },
   "auth": {
     "login_title": "Injira muri Konti",
@@ -64,7 +68,13 @@
     "sign_in_subtitle": "Genzura amakonti, imishinga, n'ibitabo by'umuryango wawe",
     "dont_have_account": "Ntabwo uragira konti? ",
     "create_account": "Fungura konti hano",
-    "logging_in": "Muri kwinjira..."
+    "logging_in": "Muri kwinjira...",
+    "creating_account": "Konti irimo gufungurwa...",
+    "logout": "Sohoka",
+    "logged_out": "Wasohotse neza.",
+    "full_name_required": "Amazina yawe arakenewe.",
+    "password_too_short": "Ijambo ry'ibanga rigomba kugira nibura inyuguti 6.",
+    "session_expired": "Igihe cyo kwinjira cyarangiye. Ongera winjire."
   },
   "onboarding": {
     "title": "Murakaza neza muri Umuryango Ledger",
@@ -80,7 +90,15 @@
     "continue_to_dashboard": "Komeza kuri Dashboard",
     "you_were_added_to": "Washyizwe mu muryango wa {family_name}",
     "joined_family_success": "Mwinjiye mu muryango neza!",
-    "family_created_code": "Umuryango waremwe! Kode: {code}"
+    "family_created_code": "Umuryango waremwe! Kode: {code}",
+    "family_name_required": "Andika izina ry'umuryango.",
+    "invited_by": "Watumiwe na {name}",
+    "family_placeholder": "urugero: Umuryango w'Abahire",
+    "phone_placeholder": "+250 788 123 456",
+    "code_placeholder": "urugero: HK0N",
+    "creating_family": "Birimo kuremwa...",
+    "joining_family": "Birimo kwinjira...",
+    "remove_phone": "Kuraho"
   },
   "scopes": {
     "personal_money": "Amafaranga Yanjye",
@@ -104,8 +122,8 @@
     "income_vs_expenses": "Ibyinjijwe n'Ibyasohotse",
     "expenses_by_category": "Ibyiciro by'Amakoreshereze",
     "quick_handover_btn": "+ Guhererekanya",
-    "inflow_outflow_chart": "Ibyinjijwe n'Ibyasohotse (Bar Chart)",
-    "categories_chart": "Ibyiciro by'Amakoreshereze (Donut)",
+    "inflow_outflow_chart": "Ibyinjijwe n'Ibyasohotse",
+    "categories_chart": "Ibyiciro by'Amakoreshereze",
     "overview_subtitle": "Incamake y'umutungo n'ibikorwa biheruka",
     "family_subtitle": "Irebere uko umutungo w'umuryango wifashe muri rusange n'abawubitse",
     "personal_subtitle": "Konti zawe bwite zitarangirizwa mu muryango",
@@ -123,7 +141,8 @@
     "open_mothers_report": "Fungura Raporo y'Ababyeyi",
     "due_date_tag": "Igihe cyo kwishyura: 15/12",
     "held_by_parents": "Imbaho z'ababyeyi (Mama & Papa)",
-    "custodian_keza": "Umubikizi: Keza Clarisse (Mama)"
+    "custodian_keza": "Umubikizi: Keza Clarisse (Mama)",
+    "no_expenses_yet": "Nta mafaranga yasohotse arandikwa."
   },
   "wallets": {
     "title": "Konti z'Umutungo",
@@ -146,7 +165,15 @@
     "channel_momo": "MoMo",
     "channel_cash": "Amafaranga mu Ntoki",
     "custodian_label": "Umubikizi: {name}",
-    "in_hand_label": "Mu Ntoki ({custodians})"
+    "in_hand_label": "Mu Ntoki ({custodians})",
+    "no_wallets": "Nta konti zihari muri iki cyiciro. Ongeraho konti utangire.",
+    "wallet_name": "Izina rya Konti",
+    "wallet_name_placeholder": "urugero: MTN MoMo cyangwa BK",
+    "channel": "Ubwoko bwa Konti",
+    "account_number": "Nimero ya Konti / Telefoni (Si itegeko)",
+    "wallet_created": "Konti yongeweho neza!",
+    "wallet_name_required": "Izina rya konti rirakenewe.",
+    "unassigned_custodian": "Nta mubikizi"
   },
   "transactions": {
     "title": "Ibikorwa",
@@ -192,7 +219,9 @@
     "search_placeholder": "Shakisha...",
     "type_income": "Ibyinjira",
     "type_expense": "Ibisohoka",
-    "type_handover": "Ihererekanya"
+    "type_handover": "Ihererekanya",
+    "saved_offline": "Byabitswe offline. Bizahuzwa nuramuka ubonye murandasi.",
+    "select_destination_wallet": "Hitamo Konti Yakira"
   },
   "report": {
     "title": "Raporo",
@@ -233,7 +262,9 @@
     "switch_to_other_lang": "Hindura Ururimi",
     "demo_family_name": "Umuryango Mugisha & Keza",
     "demo_mothers_headline": "Raporo y'Ababyeyi n'Abakambwe",
-    "demo_mothers_desc": "Incamake yoroshye gusobanukira ku mutungo wose w'umuryango n'amadeni bihari"
+    "demo_mothers_desc": "Incamake yoroshye gusobanukira ku mutungo wose w'umuryango n'amadeni bihari",
+    "family_required_for_link": "Jya muri Konti y'Umuryango kugira ngo ukore Ihuza ry'Ako Kanya.",
+    "no_wallets_in_report": "Nta konti ziri muri iyi raporo."
   },
   "projects": {
     "title": "Imishinga",
@@ -257,7 +288,12 @@
     "demo_house_desc": "Gusana no kuvugurura inzu y'umuryango",
     "demo_school_title": "Minerval y'Abana (Igihembwe cya 1)",
     "demo_school_desc": "Amafaranga y'ishuri y'abana bato",
-    "status_in_progress": "Iri Gukorwa"
+    "status_in_progress": "Iri Gukorwa",
+    "project_name": "Izina ry'Umushinga",
+    "project_description": "Ibisobanuro (Si itegeko)",
+    "project_created": "Umushinga washinzwe neza!",
+    "family_scope_required": "Jya muri Konti y'Umuryango kugira ngo ukore imishinga y'umuryango.",
+    "name_required": "Izina ry'umushinga rirakenewe."
   },
   "loans": {
     "title": "Amadeni n'Inguzanyo",
@@ -284,7 +320,15 @@
     "lent_out_title": "Ayo Twagurije Abandi (Lent Out)",
     "no_lent_out": "Nta mwenda wahawe abandi wanditswe.",
     "borrowed_title": "Ayo Twagujije (Money Borrowed)",
-    "no_borrowed": "Nta mwenda twagujije wanditswe."
+    "no_borrowed": "Nta mwenda twagujije wanditswe.",
+    "direction": "Ubwoko bw'Inguzanyo",
+    "counterparty_placeholder": "urugero: Izina ry'umuntu cyangwa ikigo",
+    "loan_created": "Inguzanyo yanditswe neza!",
+    "repayment_recorded": "Ubwishyu bwanditswe neza!",
+    "repay_amount": "Amafaranga yo Kwishyura (RWF)",
+    "counterparty_required": "Izina ry'uwo mugiranye amasezerano rirakenewe.",
+    "status_repaid": "Yarishyuwe",
+    "status_active": "Irakomeje"
   },
   "future_plans": {
     "title": "Imigambi y'Ejo Hazaza",
@@ -298,7 +342,14 @@
     "add_plan_btn": "+ Umugambi Mushya",
     "target_label": "Intego: {target} RWF",
     "allocated_label": "Byamaze gushyirwaho: {allocated} RWF ({pct}%)",
-    "allocate_btn": "Shyiraho Amafaranga"
+    "allocate_btn": "Shyiraho Amafaranga",
+    "plan_title_placeholder": "urugero: Minerval cyangwa Kugura Isambu",
+    "plan_created": "Umugambi mushya wanditswe neza!",
+    "funds_allocated": "Amafaranga yashyizwe ku mugambi!",
+    "allocate_amount": "Amafaranga yo Gushyiraho (RWF)",
+    "title_required": "Izina ry'umugambi rirakenewe.",
+    "status_achieved": "Byagezweho",
+    "status_planned": "Biracyategerejwe"
   },
   "members": {
     "title": "Abagize Umuryango",
@@ -314,7 +365,14 @@
     "role_label": "Inshingano: {role}",
     "head_desc": "Ubuyobozi bwose: gushyiraho imishinga, guhererekanya no kwemeza abanyamuryango.",
     "custodian_desc": "Ububikizi: afite amakonti n'umutungo mu ntoki cyangwa MoMo, yandika ibikoreshejwe.",
-    "member_desc": "Kureba no kugenzura: abona raporo y'umuryango, akurikirana iterambere ry'umutungo."
+    "member_desc": "Kureba no kugenzura: abona raporo y'umuryango, akurikirana iterambere ry'umutungo.",
+    "no_family_selected": "Ubu uri muri konti bwite cyangwa nturinjira mu muryango.",
+    "setup_family_btn": "Rema cyangwa Injira mu Muryango",
+    "no_members": "Nta banyamuryango babonetse.",
+    "invite_member": "Tumira kuri Telefoni",
+    "invite_sent": "Ubutumire bwoherejwe neza!",
+    "role_updated": "Inshingano zahinduwe neza!",
+    "phone_required": "Nimero ya telefoni irakenewe."
   },
   "settings": {
     "title": "Igenamiterere",
@@ -335,7 +393,12 @@
     "appearance_mode": "Umucyo n'Umwijima (Appearance Mode)",
     "brand_palette": "Amabara y'Insanganyamatsiko (Palette Tokens)",
     "persisted_sqlite": "Byasubijwe mu mwimerere",
-    "typography_sqlite": "Inyandiko n'Ububiko bwa SQLite"
+    "typography_sqlite": "Inyandiko n'Ububiko bwa SQLite",
+    "account_section": "Konti yawe n'Umwirondoro",
+    "signed_in_as": "Winjiye nka",
+    "active_family_label": "Umuryango Ukoreshwa",
+    "none_family": "Nta wuhari (Konti bwite gusa)",
+    "api_server_label": "Seriveri ya API"
   },
   "notifications": {
     "title": "Integuza",

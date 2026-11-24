@@ -1,3 +1,6 @@
+mod actions_auth;
+mod actions_ledger;
+pub mod api_bridge;
 pub mod assets;
 pub mod common;
 pub mod components;
@@ -12,23 +15,26 @@ pub mod web;
 pub use web::mount_gpui_app;
 
 use std::sync::{Arc, Mutex};
-use uuid::Uuid;
 
+use api_bridge::ApiBridge;
+use components::entity_modal_inputs::EntityModalInputs;
+use components::entity_modals::EntityModalDialog;
 use components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use components::quick_entry::{QuickEntryDialog, QuickEntryForm, QuickEntryMode};
+use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
+use components::quick_entry_inputs::QuickEntryInputs;
 use gpui_kit::{
     Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement,
     Styled, Window, div, hsla, px,
 };
 pub use safe_area::SafeAreaInsets;
+use screens::auth_inputs::AuthInputs;
+use screens::onboarding_inputs::OnboardingInputs;
 use state::{AppState, Screen};
 use theme::ThemeMode;
 #[cfg(not(target_arch = "wasm32"))]
 use umuryango_api_client::{RealtimeClient, RealtimeHandle};
-use umuryango_core_domain::models::FamilyRole;
+#[cfg(not(target_arch = "wasm32"))]
 use umuryango_core_domain::realtime::RealtimeEvent;
-use umuryango_core_domain::scope::LedgerScope;
-use umuryango_i18n::Locale;
 
 /// Official 256x256 embedded emblem icon
 pub const APP_ICON_256_PNG: &[u8] = include_bytes!("../assets/icons/icon-256.png");
@@ -36,9 +42,12 @@ pub const APP_ICON_256_PNG: &[u8] = include_bytes!("../assets/icons/icon-256.png
 pub struct RootView {
     pub state: AppState,
     pub db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>,
-    pub family_id: Uuid,
+    pub api: ApiBridge,
     pub quick_entry_form: QuickEntryForm,
-    pub auth_inputs: screens::auth_inputs::AuthInputs,
+    pub auth_inputs: AuthInputs,
+    pub onboarding_inputs: OnboardingInputs,
+    pub quick_entry_inputs: QuickEntryInputs,
+    pub entity_modal_inputs: EntityModalInputs,
 }
 
 impl RootView {
@@ -50,78 +59,62 @@ impl RootView {
     ) -> Self {
         Self::new_with_db(state, db, window, cx)
     }
+
     #[cfg(target_arch = "wasm32")]
     pub fn new_wasm(state: AppState, window: &mut Window, cx: &mut Context<Self>) -> Self {
         Self::new_with_db(state, None, window, cx)
     }
+
     fn new_with_db(
-        state: AppState,
+        mut state: AppState,
         db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let family_id = match state.active_scope {
-            LedgerScope::Family { family_id } => family_id,
-            LedgerScope::Personal { .. } => Uuid::new_v4(),
-        };
+        #[cfg(not(target_arch = "wasm32"))]
+        let restored_token = db
+            .as_ref()
+            .and_then(|d| d.lock().ok())
+            .and_then(|locked| state.restore_session_from_db(&locked));
+
+        let api = ApiBridge::new(state.locale);
+        state.api_base_url = api.base_url();
         state.theme.apply_to_kit(cx);
+
         let form = QuickEntryForm {
             source_wallet_id: state.active_wallets().first().map(|w| w.id),
+            destination_wallet_id: state.active_wallets().get(1).map(|w| w.id),
             ..Default::default()
         };
 
-        Self {
+        let locale = state.locale;
+        let auth_inputs = AuthInputs::new(window, cx);
+        let onboarding_inputs = OnboardingInputs::new(locale, window, cx);
+        let quick_entry_inputs = QuickEntryInputs::new(window, cx);
+        let entity_modal_inputs = EntityModalInputs::new(window, cx);
+
+        #[allow(unused_mut)]
+        let mut view = Self {
             state,
             db,
-            family_id,
+            api,
             quick_entry_form: form,
-            auth_inputs: screens::auth_inputs::AuthInputs::new(window, cx),
+            auth_inputs,
+            onboarding_inputs,
+            quick_entry_inputs,
+            entity_modal_inputs,
+        };
+
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(token) = restored_token {
+            view.verify_restored_session(token, cx);
         }
+
+        view
     }
 
     pub fn select_screen(&mut self, screen: Screen, cx: &mut Context<Self>) {
         self.state.select_screen(screen);
-        cx.notify();
-    }
-
-    pub fn switch_to_family_scope(&mut self, cx: &mut Context<Self>) {
-        if !self.state.active_scope.is_family() {
-            let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
-            let scope = LedgerScope::Family {
-                family_id: self.family_id,
-            };
-            self.state.switch_scope(
-                scope,
-                Some("Umuryango w'Abahire".to_string()),
-                FamilyRole::Head,
-                db_lock.as_deref(),
-            );
-            self.quick_entry_form.source_wallet_id =
-                self.state.active_wallets().first().map(|w| w.id);
-            cx.notify();
-        }
-    }
-
-    pub fn switch_to_personal_scope(&mut self, cx: &mut Context<Self>) {
-        if self.state.active_scope.is_family() {
-            let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
-            let scope = LedgerScope::Personal {
-                user_id: self.state.user_id,
-            };
-            self.state
-                .switch_scope(scope, None, FamilyRole::Member, db_lock.as_deref());
-            self.quick_entry_form.source_wallet_id =
-                self.state.active_wallets().first().map(|w| w.id);
-            cx.notify();
-        }
-    }
-
-    pub fn toggle_locale(&mut self, cx: &mut Context<Self>) {
-        let new_locale = match self.state.locale {
-            Locale::Rw => Locale::En,
-            Locale::En => Locale::Rw,
-        };
-        self.state.switch_locale(new_locale);
         cx.notify();
     }
 
@@ -169,59 +162,6 @@ impl RootView {
         cx.notify();
     }
 
-    pub fn open_quick_entry(&mut self, cx: &mut Context<Self>) {
-        if self.quick_entry_form.source_wallet_id.is_none() {
-            self.quick_entry_form.source_wallet_id =
-                self.state.active_wallets().first().map(|w| w.id);
-        }
-        self.state.show_quick_entry = true;
-        cx.notify();
-    }
-
-    pub fn close_quick_entry(&mut self, cx: &mut Context<Self>) {
-        self.state.show_quick_entry = false;
-        cx.notify();
-    }
-
-    pub fn set_quick_entry_mode(&mut self, mode: QuickEntryMode, cx: &mut Context<Self>) {
-        self.quick_entry_form.mode = mode;
-        cx.notify();
-    }
-
-    pub fn submit_quick_entry(&mut self, cx: &mut Context<Self>) {
-        let actor_id = self.state.user_id;
-        match QuickEntryDialog::build_transaction(
-            &self.quick_entry_form,
-            &self.state.active_scope,
-            actor_id,
-        ) {
-            Ok(tx) => {
-                let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
-                let db_ref = db_lock.as_deref();
-                match self
-                    .state
-                    .log_transaction(tx, self.state.active_role, db_ref)
-                {
-                    Ok(()) => {
-                        self.state.show_quick_entry = false;
-                        let msg = umuryango_i18n::t(
-                            self.state.locale,
-                            "transactions.transaction_recorded",
-                        );
-                        self.state.set_toast(msg, false);
-                    }
-                    Err(e) => {
-                        self.state.set_toast(e.to_string(), true);
-                    }
-                }
-            }
-            Err(err) => {
-                self.state.set_toast(err, true);
-            }
-        }
-        cx.notify();
-    }
-
     pub fn dismiss_toast(&mut self, cx: &mut Context<Self>) {
         self.state.clear_toast();
         cx.notify();
@@ -233,108 +173,62 @@ impl RootView {
         cx.notify();
     }
 
-    pub fn handle_login_submit(&mut self, cx: &mut Context<Self>) {
-        if self.state.auth_phone.trim().is_empty() {
-            self.state.auth_phone = "+250788000000".to_string();
-        }
-        self.state.is_authenticated = true;
-        if self.state.active_family_name.is_none() {
-            self.state.current_screen = Screen::Onboarding;
+    fn render_toast(
+        &self,
+        theme: &theme::SemanticTheme,
+        top_safe_area: gpui_kit::Pixels,
+        cx: &Context<Self>,
+    ) -> Option<impl IntoElement> {
+        let (msg, is_error) = self.state.toast_message.as_ref()?;
+        let bg = if *is_error {
+            theme.expense_color.opacity(0.15)
         } else {
-            self.state.current_screen = Screen::Dashboard;
-        }
-        let msg = umuryango_i18n::t(self.state.locale, "auth.login_success");
-        self.state.set_toast(msg, false);
-        cx.notify();
-    }
-
-    pub fn handle_register_submit(&mut self, cx: &mut Context<Self>) {
-        if self.state.auth_full_name.trim().is_empty() {
-            self.state.auth_full_name = "Kwizera Aimable".to_string();
-        }
-        if self.state.auth_phone.trim().is_empty() {
-            self.state.auth_phone = "+250788123456".to_string();
-        }
-        self.state.user_name = self.state.auth_full_name.clone();
-        self.state.is_authenticated = true;
-        self.state.current_screen = Screen::Onboarding;
-        let msg = umuryango_i18n::t(self.state.locale, "auth.account_created");
-        self.state.set_toast(msg, false);
-        cx.notify();
-    }
-
-    pub fn handle_accept_invite(
-        &mut self,
-        invite_id: Uuid,
-        family_name: String,
-        cx: &mut Context<Self>,
-    ) {
-        let new_family_id = Uuid::new_v4();
-        self.state.active_family_name = Some(family_name);
-        self.state.active_scope = LedgerScope::Family {
-            family_id: new_family_id,
+            theme.bg_elevated
         };
-        self.state.pending_invites.retain(|i| i.id != invite_id);
-        self.state.current_screen = Screen::Dashboard;
-        let msg = umuryango_i18n::Translator::t(
-            self.state.locale,
-            umuryango_i18n::terms::CONTINUE_TO_DASHBOARD,
-            None,
-        );
-        self.state.set_toast(msg, false);
-        cx.notify();
-    }
-
-    pub fn handle_create_family_submit(&mut self, cx: &mut Context<Self>) {
-        let fam_name = if self.state.onboarding_family_name.trim().is_empty() {
-            "Umuryango Wacu".to_string()
+        let border = if *is_error {
+            theme.expense_color
         } else {
-            self.state.onboarding_family_name.trim().to_string()
+            theme.income_color
         };
-        let new_family_id = Uuid::new_v4();
-        self.state.active_family_name = Some(fam_name);
-        self.state.active_scope = LedgerScope::Family {
-            family_id: new_family_id,
-        };
-        self.state.current_screen = Screen::Dashboard;
-        let msg = umuryango_i18n::t_args(
-            self.state.locale,
-            "onboarding.family_created_code",
-            &[("code", "HK0N")],
-        );
-        self.state.set_toast(msg, false);
-        cx.notify();
-    }
 
-    pub fn handle_join_family_submit(&mut self, cx: &mut Context<Self>) {
-        let code = self.state.onboarding_join_code.trim().to_uppercase();
-        let final_code = if code.is_empty() {
-            "HK0N".to_string()
-        } else {
-            code
-        };
-        let new_family_id = Uuid::new_v4();
-        self.state.active_family_name = Some(format!("Family {}", final_code));
-        self.state.active_scope = LedgerScope::Family {
-            family_id: new_family_id,
-        };
-        self.state.current_screen = Screen::Dashboard;
-        let msg = umuryango_i18n::Translator::t(
-            self.state.locale,
-            umuryango_i18n::terms::CONTINUE_TO_DASHBOARD,
-            None,
-        );
-        self.state.set_toast(msg, false);
-        cx.notify();
-    }
-
-    pub fn handle_skip_onboarding(&mut self, cx: &mut Context<Self>) {
-        self.state.active_scope = LedgerScope::Personal {
-            user_id: self.state.user_id,
-        };
-        self.state.active_family_name = None;
-        self.state.current_screen = Screen::Dashboard;
-        cx.notify();
+        Some(
+            div()
+                .id("app-toast-dismiss")
+                .cursor_pointer()
+                .on_click(cx.listener(|this, _, _, cx| {
+                    this.dismiss_toast(cx);
+                }))
+                .absolute()
+                .top(px(16.0) + top_safe_area)
+                .right(px(16.0))
+                .max_w(px(420.0))
+                .flex()
+                .items_center()
+                .gap(px(8.0))
+                .p(px(12.0))
+                .rounded(px(8.0))
+                .bg(bg)
+                .border_1()
+                .border_color(border)
+                .text_xs()
+                .font_weight(gpui_kit::FontWeight::SEMIBOLD)
+                .text_color(theme.text_primary)
+                .child(app_icon(
+                    if *is_error {
+                        AppIcon::Error
+                    } else {
+                        AppIcon::Success
+                    },
+                    IconSize::Sm,
+                    if *is_error {
+                        IconTone::Expense
+                    } else {
+                        IconTone::Income
+                    },
+                    theme,
+                ))
+                .child(msg.clone()),
+        )
     }
 }
 
@@ -350,10 +244,14 @@ impl Render for RootView {
                 cx,
             )
             .into_any_element(),
-            Screen::Onboarding => {
-                screens::OnboardingScreen::render("screen-onboarding", &self.state, &theme, cx)
-                    .into_any_element()
-            }
+            Screen::Onboarding => screens::OnboardingScreen::render(
+                "screen-onboarding",
+                &self.state,
+                &self.onboarding_inputs,
+                &theme,
+                cx,
+            )
+            .into_any_element(),
             Screen::Dashboard => {
                 screens::DashboardScreen::render("screen-dashboard", &self.state, &theme, cx)
                     .into_any_element()
@@ -398,57 +296,7 @@ impl Render for RootView {
                 .font_family(theme.font_family)
                 .relative()
                 .child(screen_element)
-                .children(if let Some((msg, is_error)) = &self.state.toast_message {
-                    let bg = if *is_error {
-                        theme.expense_color.opacity(0.15)
-                    } else {
-                        theme.bg_elevated
-                    };
-                    let border = if *is_error {
-                        theme.expense_color
-                    } else {
-                        theme.income_color
-                    };
-                    Some(
-                        div()
-                            .id("app-toast-dismiss")
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.dismiss_toast(cx);
-                            }))
-                            .absolute()
-                            .top(px(16.0) + top_safe_area)
-                            .right(px(16.0))
-                            .flex()
-                            .items_center()
-                            .gap(px(8.0))
-                            .p(px(12.0))
-                            .rounded(px(8.0))
-                            .bg(bg)
-                            .border_1()
-                            .border_color(border)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_primary)
-                            .child(app_icon(
-                                if *is_error {
-                                    AppIcon::Error
-                                } else {
-                                    AppIcon::Success
-                                },
-                                IconSize::Sm,
-                                if *is_error {
-                                    IconTone::Expense
-                                } else {
-                                    IconTone::Income
-                                },
-                                &theme,
-                            ))
-                            .child(msg.clone()),
-                    )
-                } else {
-                    None
-                });
+                .children(self.render_toast(&theme, top_safe_area, cx));
         }
 
         div()
@@ -458,6 +306,7 @@ impl Render for RootView {
             .h_full()
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
+            .relative()
             // Desktop Sidebar Navigation
             .child(components::Sidebar::render(
                 "app-sidebar",
@@ -480,57 +329,7 @@ impl Render for RootView {
                         &theme,
                     ))
                     .child(div().flex_1().w_full().h_full().child(screen_element))
-                    .children(if let Some((msg, is_error)) = &self.state.toast_message {
-                        let bg = if *is_error {
-                            theme.expense_color.opacity(0.15)
-                        } else {
-                            theme.bg_elevated
-                        };
-                        let border = if *is_error {
-                            theme.expense_color
-                        } else {
-                            theme.income_color
-                        };
-                        Some(
-                            div()
-                                .id("app-toast-dismiss")
-                                .cursor_pointer()
-                                .on_click(cx.listener(|this, _, _, cx| {
-                                    this.dismiss_toast(cx);
-                                }))
-                                .absolute()
-                                .top(px(16.0) + top_safe_area)
-                                .right(px(16.0))
-                                .flex()
-                                .items_center()
-                                .gap(px(8.0))
-                                .p(px(12.0))
-                                .rounded(px(8.0))
-                                .bg(bg)
-                                .border_1()
-                                .border_color(border)
-                                .text_xs()
-                                .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                .text_color(theme.text_primary)
-                                .child(app_icon(
-                                    if *is_error {
-                                        AppIcon::Error
-                                    } else {
-                                        AppIcon::Success
-                                    },
-                                    IconSize::Sm,
-                                    if *is_error {
-                                        IconTone::Expense
-                                    } else {
-                                        IconTone::Income
-                                    },
-                                    &theme,
-                                ))
-                                .child(msg.clone()),
-                        )
-                    } else {
-                        None
-                    }),
+                    .children(self.render_toast(&theme, top_safe_area, cx)),
             )
             // Realtime Notifications Drawer
             .children(if self.state.show_notifications_drawer {
@@ -558,8 +357,10 @@ impl Render for RootView {
                         .child(QuickEntryDialog::render(
                             "app-quick-entry-dialog",
                             &self.quick_entry_form,
+                            &self.quick_entry_inputs,
                             wallets,
                             is_family,
+                            self.state.is_busy,
                             self.state.locale,
                             &theme,
                             cx,
@@ -568,6 +369,24 @@ impl Render for RootView {
             } else {
                 None
             })
+            // Entity Creation / Update Modal Overlay
+            .children(self.state.active_modal.as_ref().map(|modal| {
+                div()
+                    .absolute()
+                    .inset_0()
+                    .bg(hsla(0.0, 0.0, 0.0, 0.5))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .child(EntityModalDialog::render(
+                        "app-entity-modal-dialog",
+                        modal,
+                        &self.state,
+                        &self.entity_modal_inputs,
+                        &theme,
+                        cx,
+                    ))
+            }))
     }
 }
 

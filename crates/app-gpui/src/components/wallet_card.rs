@@ -26,16 +26,16 @@ impl WalletCard {
     }
 
     pub fn format_balance(wallet: &Wallet) -> String {
-        format!("{} RWF", wallet.balance)
+        format!("{} {}", wallet.balance, wallet.currency)
     }
 
-    pub fn render(
-        id: impl Into<ElementId>,
+    pub fn render<T: Into<ElementId>>(
+        id: T,
         wallet: &Wallet,
         custodian_name: Option<&str>,
         locale: Locale,
         theme: &SemanticTheme,
-    ) -> impl IntoElement {
+    ) -> impl IntoElement + use<T> {
         let channel_str = Self::channel_label(wallet.channel, locale);
         let channel_ico = Self::channel_icon(wallet.channel);
         let balance_str = Self::format_balance(wallet);
@@ -108,7 +108,8 @@ impl WalletCard {
                     .text_color(theme.text_muted)
                     .children(if is_family {
                         let custodian_label = Translator::t(locale, terms::HELD_BY, None);
-                        let name = custodian_name.unwrap_or("Family Custodian");
+                        let fallback = umuryango_i18n::t(locale, "wallets.unassigned_custodian");
+                        let name = custodian_name.unwrap_or(&fallback);
                         vec![
                             app_icon(AppIcon::Members, IconSize::Xs, IconTone::Muted, theme)
                                 .into_any_element(),

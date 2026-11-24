@@ -1,12 +1,13 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px, relative};
 use rust_decimal::Decimal;
+use rust_decimal::prelude::ToPrimitive;
 use umuryango_core_domain::models::Project;
 use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use crate::state::AppState;
+use crate::state::{ActiveModal, AppState};
 use crate::theme::SemanticTheme;
 
 pub struct ProjectsScreen;
@@ -60,8 +61,8 @@ impl ProjectsScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.open_quick_entry(cx);
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.open_modal(ActiveModal::AddProject, window, cx);
                             }))
                             .child(app_icon(
                                 AppIcon::Add,
@@ -83,7 +84,11 @@ impl ProjectsScreen {
                     .text_sm()
                     .text_center()
                     .text_color(theme.text_muted)
-                    .child(umuryango_i18n::t(state.locale, "projects.no_projects"))
+                    .child(if state.active_scope.is_family() {
+                        umuryango_i18n::t(state.locale, "projects.no_projects")
+                    } else {
+                        umuryango_i18n::t(state.locale, "projects.family_scope_required")
+                    })
                     .into_any_element()
             } else {
                 div()
@@ -101,11 +106,15 @@ impl ProjectsScreen {
     }
 
     fn render_project_card(project: &Project, theme: &SemanticTheme) -> impl IntoElement {
-        let pct = if project.target_amount > Decimal::ZERO {
-            ((project.allocated_amount / project.target_amount) * Decimal::new(100, 0)).to_string()
+        let ratio = if project.target_amount > Decimal::ZERO {
+            (project.allocated_amount / project.target_amount)
+                .to_f32()
+                .unwrap_or(0.0)
+                .clamp(0.0, 1.0)
         } else {
-            "0".to_string()
+            0.0
         };
+        let pct = (ratio * 100.0).round() as i32;
 
         div()
             .p(px(16.0))
@@ -181,7 +190,7 @@ impl ProjectsScreen {
                             .h_full()
                             .rounded(px(4.0))
                             .bg(theme.income_color)
-                            .w(px(140.0)),
+                            .w(relative(ratio)),
                     ),
             )
     }

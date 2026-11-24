@@ -16,6 +16,10 @@ impl SettingsScreen {
         cx: &Context<RootView>,
     ) -> impl IntoElement {
         let locale = state.locale;
+        let active_family = state
+            .active_family_name
+            .clone()
+            .unwrap_or_else(|| umuryango_i18n::t(locale, "settings.none_family"));
 
         div()
             .id(id)
@@ -53,9 +57,85 @@ impl SettingsScreen {
                                     .text_color(theme.text_primary)
                                     .child(umuryango_i18n::t(locale, "settings.theme_appearance")),
                             )
-                            .child(div().text_xs().text_color(theme.text_muted).child(
-                                umuryango_i18n::t(locale, "settings.theme_subtitle"),
-                            )),
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child(umuryango_i18n::t(locale, "settings.theme_subtitle")),
+                            ),
+                    ),
+            )
+            // Section 0: Account & Session (real authenticated user + Logout)
+            .child(
+                div()
+                    .p(px(20.0))
+                    .rounded(px(12.0))
+                    .bg(theme.bg_surface)
+                    .border_1()
+                    .border_color(theme.border_subtle)
+                    .mb(px(20.0))
+                    .flex()
+                    .flex_row()
+                    .justify_between()
+                    .items_center()
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(4.0))
+                            .child(
+                                div()
+                                    .text_base()
+                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(umuryango_i18n::t(locale, "settings.account_section")),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.text_secondary)
+                                    .child(format!(
+                                        "{}: {} ({})",
+                                        umuryango_i18n::t(locale, "settings.signed_in_as"),
+                                        state.user_name,
+                                        state.user_phone
+                                    )),
+                            )
+                            .child(div().text_xs().text_color(theme.text_muted).child(format!(
+                                "{}: {}",
+                                umuryango_i18n::t(locale, "settings.active_family_label"),
+                                active_family
+                            )))
+                            .child(div().text_xs().text_color(theme.text_muted).child(format!(
+                                "{}: {}",
+                                umuryango_i18n::t(locale, "settings.api_server_label"),
+                                state.api_base_url
+                            ))),
+                    )
+                    .child(
+                        div()
+                            .id("settings-logout-btn")
+                            .flex()
+                            .items_center()
+                            .gap(px(6.0))
+                            .px(px(14.0))
+                            .py(px(8.0))
+                            .rounded(px(8.0))
+                            .bg(theme.expense_color)
+                            .text_xs()
+                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .text_color(theme.bg_canvas)
+                            .cursor_pointer()
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.handle_logout(window, cx);
+                            }))
+                            .child(app_icon(
+                                AppIcon::Close,
+                                IconSize::Xs,
+                                IconTone::OnPrimaryButton,
+                                theme,
+                            ))
+                            .child(umuryango_i18n::t(locale, "auth.logout")),
                     ),
             )
             // Section 1: Mode Switcher (Light / Dark)
@@ -79,7 +159,6 @@ impl SettingsScreen {
                         div()
                             .flex()
                             .gap(px(12.0))
-                            // Light mode card
                             .child(
                                 div()
                                     .id("settings-light-mode-card")
@@ -121,17 +200,17 @@ impl SettingsScreen {
                                                 div()
                                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                                     .text_sm()
-                                                    .child("Light Mode (Umucyo)"),
+                                                    .child(umuryango_i18n::t(
+                                                        locale,
+                                                        "settings.light_mode",
+                                                    )),
                                             ),
                                     )
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .mt(px(4.0))
-                                            .child(umuryango_i18n::t(locale, "settings.light_theme_desc")),
-                                    ),
+                                    .child(div().text_xs().mt(px(4.0)).child(umuryango_i18n::t(
+                                        locale,
+                                        "settings.light_theme_desc",
+                                    ))),
                             )
-                            // Dark mode card
                             .child(
                                 div()
                                     .id("settings-dark-mode-card")
@@ -173,19 +252,20 @@ impl SettingsScreen {
                                                 div()
                                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                                     .text_sm()
-                                                    .child("Dark Mode (Umwijima)"),
+                                                    .child(umuryango_i18n::t(
+                                                        locale,
+                                                        "settings.dark_mode",
+                                                    )),
                                             ),
                                     )
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .mt(px(4.0))
-                                            .child(umuryango_i18n::t(locale, "settings.dark_theme_desc")),
-                                    ),
+                                    .child(div().text_xs().mt(px(4.0)).child(umuryango_i18n::t(
+                                        locale,
+                                        "settings.dark_theme_desc",
+                                    ))),
                             ),
                     ),
             )
-            // Section 2: Customizable Brand Palette
+            // Section 2: Brand Palette
             .child(
                 div()
                     .p(px(20.0))
@@ -210,7 +290,10 @@ impl SettingsScreen {
                                             .text_base()
                                             .font_weight(gpui_kit::FontWeight::BOLD)
                                             .text_color(theme.text_primary)
-                                            .child(umuryango_i18n::t(locale, "settings.brand_palette")),
+                                            .child(umuryango_i18n::t(
+                                                locale,
+                                                "settings.brand_palette",
+                                            )),
                                     )
                                     .child(
                                         div()
@@ -222,7 +305,10 @@ impl SettingsScreen {
                                             .border_color(theme.border_subtle)
                                             .text_xs()
                                             .text_color(theme.accent_secondary)
-                                            .child(umuryango_i18n::t(locale, "settings.persisted_sqlite")),
+                                            .child(umuryango_i18n::t(
+                                                locale,
+                                                "settings.persisted_sqlite",
+                                            )),
                                     ),
                             )
                             .child(
@@ -235,7 +321,7 @@ impl SettingsScreen {
                                     .bg(theme.accent_primary)
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(crate::theme::hex_to_hsla("#ffffff"))
+                                    .text_color(theme.bg_canvas)
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.reset_theme_palette(cx);
                                     }))
@@ -250,95 +336,66 @@ impl SettingsScreen {
                             .child(Self::render_color_token_card(
                                 "primary",
                                 &state.theme_config.primary,
-                                "Main Brand Primary (#ba181b)",
+                                "Main Brand Primary",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "primary_hover",
                                 &state.theme_config.primary_hover,
-                                "Hover / Active (#e5383b)",
+                                "Hover / Active",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "primary_pressed",
                                 &state.theme_config.primary_pressed,
-                                "Pressed / Badges (#a4161a)",
+                                "Pressed / Badges",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "primary_deep",
                                 &state.theme_config.primary_deep,
-                                "Deep Crimson / Elevated (#660708)",
+                                "Deep Crimson",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "dark_canvas",
                                 &state.theme_config.dark_canvas,
-                                "Dark Canvas BG (#0b090a)",
+                                "Dark Canvas",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "dark_surface",
                                 &state.theme_config.dark_surface,
-                                "Dark Surface / Cards (#161a1d)",
+                                "Dark Surface",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "text_muted",
                                 &state.theme_config.text_muted,
-                                "Text Muted / Subtle (#b1a7a6)",
+                                "Text Muted",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "light_border",
                                 &state.theme_config.light_border,
-                                "Light Border / Headers (#d3d3d3)",
+                                "Light Border",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "light_canvas",
                                 &state.theme_config.light_canvas,
-                                "Light Canvas BG (#f5f3f4)",
+                                "Light Canvas",
                                 theme,
                             ))
                             .child(Self::render_color_token_card(
                                 "light_surface",
                                 &state.theme_config.light_surface,
-                                "Light Surface / Cards (#ffffff)",
+                                "Light Surface",
                                 theme,
                             )),
                     ),
             )
-            // Section 3: Typography & Offline Storage Status
-            .child(
-                div()
-                    .p(px(20.0))
-                    .rounded(px(12.0))
-                    .bg(theme.bg_surface)
-                    .border_1()
-                    .border_color(theme.border_subtle)
-                    .mb(px(20.0))
-                    .child(
-                        div()
-                            .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .mb(px(8.0))
-                            .child(umuryango_i18n::t(locale, "settings.typography_sqlite")),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap(px(6.0))
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child("• Font Family: Archivo (Regular, Medium, SemiBold, Bold bundled & registered via text_system)")
-                            .child("• Local Storage: umuryango_offline.db (WAL mode enabled, full offline caching of wallets & sync queue)")
-                            .child("• Idempotency: All offline mutations assigned unique UUIDs to guarantee zero duplication on sync"),
-                    ),
-            )
-            // Section 4: About Umuryango Ledger
+            // Section 3: About
             .child(
                 div()
                     .p(px(20.0))
@@ -370,18 +427,10 @@ impl SettingsScreen {
                                     .text_color(theme.text_primary)
                                     .child(umuryango_i18n::t(locale, "settings.about_app")),
                             )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child("Version 0.1.0 • Multi-tenant Family & Personal Accountability"),
-                            )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.accent_secondary)
-                                    .child("Built with Rust, GPUI, Actix-web, SQLite & Next.js"),
-                            ),
+                            .child(div().text_xs().text_color(theme.text_muted).child(format!(
+                                "v{} • PostgreSQL + SQLite WAL",
+                                env!("CARGO_PKG_VERSION")
+                            ))),
                     ),
             )
     }
@@ -403,7 +452,6 @@ impl SettingsScreen {
             .bg(theme.bg_canvas)
             .border_1()
             .border_color(theme.border_subtle)
-            // Swatch
             .child(div().w_full().h(px(40.0)).rounded(px(6.0)).bg(color))
             .child(
                 div()

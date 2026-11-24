@@ -5,7 +5,7 @@ use umuryango_i18n::{Locale, Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use crate::state::AppState;
+use crate::state::{ActiveModal, AppState};
 use crate::theme::SemanticTheme;
 
 pub struct FuturePlansScreen;
@@ -59,8 +59,8 @@ impl FuturePlansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.open_quick_entry(cx);
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.open_modal(ActiveModal::AddPlan, window, cx);
                             }))
                             .child(app_icon(
                                 AppIcon::Add,
@@ -105,11 +105,19 @@ impl FuturePlansScreen {
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        let status_badge = if plan.is_achieved {
-            ("Byagezweho / Achieved", theme.income_color)
+        let (status_label, status_color) = if plan.is_achieved {
+            (
+                umuryango_i18n::t(locale, "future_plans.status_achieved"),
+                theme.income_color,
+            )
         } else {
-            ("Biracyategerejwe / Planned", theme.text_muted)
+            (
+                umuryango_i18n::t(locale, "future_plans.status_planned"),
+                theme.text_muted,
+            )
         };
+        let plan_id = plan.id;
+        let plan_title = plan.title.clone();
 
         div()
             .p(px(16.0))
@@ -150,8 +158,8 @@ impl FuturePlansScreen {
                             .bg(theme.bg_elevated)
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(status_badge.1)
-                            .child(status_badge.0),
+                            .text_color(status_color)
+                            .child(status_label),
                     ),
             )
             .child(
@@ -171,11 +179,15 @@ impl FuturePlansScreen {
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.income_color)
-                            .child(format!("Estimated: {} RWF", plan.estimated_cost)),
+                            .child(format!(
+                                "{}: {} RWF",
+                                umuryango_i18n::t(locale, "future_plans.estimated_cost"),
+                                plan.estimated_cost
+                            )),
                     )
                     .child(
                         div()
-                            .id(format!("plan-alloc-{}", plan.id))
+                            .id(format!("plan-alloc-{}", plan_id))
                             .px(px(10.0))
                             .py(px(4.0))
                             .rounded(px(6.0))
@@ -184,8 +196,15 @@ impl FuturePlansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.open_quick_entry(cx);
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.open_modal(
+                                    ActiveModal::AllocatePlan {
+                                        plan_id,
+                                        title: plan_title.clone(),
+                                    },
+                                    window,
+                                    cx,
+                                );
                             }))
                             .child(umuryango_i18n::t(locale, "future_plans.allocate_funds")),
                     ),

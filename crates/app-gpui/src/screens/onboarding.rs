@@ -2,7 +2,9 @@ use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Translator, terms};
 
+use super::onboarding_inputs::OnboardingInputs;
 use crate::RootView;
+use crate::common::input::text_field;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::lang_toggle::LangToggle;
 use crate::state::AppState;
@@ -14,6 +16,7 @@ impl OnboardingScreen {
     pub fn render(
         id: impl Into<ElementId>,
         state: &AppState,
+        inputs: &OnboardingInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
@@ -120,17 +123,17 @@ impl OnboardingScreen {
                                     .child(Translator::t(state.locale, terms::TAGLINE, None)),
                             ),
                     )
-                    // Pending Invites Banner (if non-empty)
+                    // Pending Invites Banner (from real PostgreSQL)
                     .children(if !state.pending_invites.is_empty() {
                         Some(Self::render_pending_invites(state, theme, cx))
                     } else {
                         None
                     })
                     // Option 1: Create Family Card
-                    .child(Self::render_create_family_card(state, theme, cx))
+                    .child(Self::render_create_family_card(state, inputs, theme, cx))
                     // Option 2: Join Family Card
-                    .child(Self::render_join_family_card(state, theme, cx))
-                    // Option 3: Skip for now Action
+                    .child(Self::render_join_family_card(state, inputs, theme, cx))
+                    // Option 3: Skip for now -> Personal Ledger
                     .child(
                         div()
                             .w_full()
@@ -201,7 +204,11 @@ impl OnboardingScreen {
                     .map(|(idx, invite)| {
                         let invite_id = invite.id;
                         let family_name = invite.family_name.clone();
-                        let invited_by = invite.invited_by_name.clone();
+                        let invited_by = umuryango_i18n::t_args(
+                            state.locale,
+                            "onboarding.invited_by",
+                            &[("name", &invite.invited_by_name)],
+                        );
 
                         div()
                             .id(format!("invite-{}", idx))
@@ -237,7 +244,7 @@ impl OnboardingScreen {
                                         div()
                                             .text_xs()
                                             .text_color(theme.text_muted)
-                                            .child(format!("By: {}", invited_by)),
+                                            .child(invited_by),
                                     ),
                             )
                             .child(
@@ -252,11 +259,7 @@ impl OnboardingScreen {
                                     .text_color(theme.bg_canvas)
                                     .cursor_pointer()
                                     .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.handle_accept_invite(
-                                            invite_id,
-                                            family_name.clone(),
-                                            cx,
-                                        );
+                                        this.handle_accept_invite(invite_id, cx);
                                     }))
                                     .child(Translator::t(state.locale, terms::JOIN_BTN, None)),
                             )
@@ -266,9 +269,16 @@ impl OnboardingScreen {
 
     fn render_create_family_card(
         state: &AppState,
+        inputs: &OnboardingInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
+        let submit_label = if state.is_busy {
+            umuryango_i18n::t(state.locale, "onboarding.creating_family")
+        } else {
+            Translator::t(state.locale, terms::CONTINUE_TO_DASHBOARD, None)
+        };
+
         div()
             .w_full()
             .p(px(18.0))
@@ -299,97 +309,88 @@ impl OnboardingScreen {
                             .child(Translator::t(state.locale, terms::CREATE_FAMILY, None)),
                     ),
             )
-            // Family Name Input
+            // Editable Family Name Input
+            .child(text_field(
+                "onboarding-family-name-input",
+                Translator::t(state.locale, terms::FAMILY_NAME, None),
+                &inputs.family_name,
+                theme,
+            ))
+            // Editable Member Phone Input + Add Button + Chips
             .child(
                 div()
                     .flex()
                     .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::FAMILY_NAME, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child(if state.onboarding_family_name.is_empty() {
-                                "Umuryango w'Abahire".to_string()
-                            } else {
-                                state.onboarding_family_name.clone()
-                            }),
-                    ),
-            )
-            // Repeatable Phone Number Inputs
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(6.0))
+                    .gap(px(8.0))
                     .child(
                         div()
                             .flex()
                             .flex_row()
-                            .justify_between()
-                            .items_center()
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_color(theme.text_muted)
-                                    .child(Translator::t(
-                                        state.locale,
-                                        terms::ADD_MEMBER_PHONE,
-                                        None,
-                                    )),
-                            )
+                            .items_end()
+                            .gap(px(8.0))
+                            .child(div().flex_1().child(text_field(
+                                "onboarding-member-phone-input",
+                                Translator::t(state.locale, terms::ADD_MEMBER_PHONE, None),
+                                &inputs.member_phone,
+                                theme,
+                            )))
                             .child(
                                 div()
                                     .id("add-member-phone-btn")
+                                    .px(px(12.0))
+                                    .py(px(8.0))
+                                    .rounded(px(8.0))
+                                    .bg(theme.bg_elevated)
+                                    .border_1()
+                                    .border_color(theme.border_subtle)
                                     .cursor_pointer()
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.accent_primary)
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.state.onboarding_member_phones.push(String::new());
-                                        cx.notify();
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.add_onboarding_phone_with_window(window, cx);
                                     }))
-                                    .child(format!(
-                                        "+ {}",
-                                        Translator::t(state.locale, terms::ADD_PHONE_BTN, None)
-                                    )),
+                                    .child(Translator::t(state.locale, terms::ADD_PHONE_BTN, None)),
                             ),
                     )
-                    .children(state.onboarding_member_phones.iter().enumerate().map(
-                        |(idx, phone)| {
-                            div()
-                                .id(format!("phone-{}", idx))
-                                .w_full()
-                                .px(px(12.0))
-                                .py(px(7.0))
-                                .rounded(px(8.0))
-                                .bg(theme.bg_canvas)
-                                .border_1()
-                                .border_color(theme.border_subtle)
-                                .text_xs()
-                                .text_color(theme.text_primary)
-                                .child(if phone.is_empty() {
-                                    "+250 788 000 000".to_string()
-                                } else {
-                                    phone.clone()
-                                })
-                        },
-                    )),
+                    .children(if !state.onboarding_member_phones.is_empty() {
+                        Some(div().flex().flex_wrap().gap(px(6.0)).children(
+                            state.onboarding_member_phones.iter().enumerate().map(
+                                |(idx, phone)| {
+                                    div()
+                                        .id(format!("phone-chip-{}", idx))
+                                        .flex()
+                                        .items_center()
+                                        .gap(px(6.0))
+                                        .px(px(10.0))
+                                        .py(px(4.0))
+                                        .rounded(px(6.0))
+                                        .bg(theme.bg_canvas)
+                                        .border_1()
+                                        .border_color(theme.border_subtle)
+                                        .text_xs()
+                                        .text_color(theme.text_primary)
+                                        .child(phone.clone())
+                                        .child(
+                                            div()
+                                                .id(format!("phone-chip-rm-{}", idx))
+                                                .cursor_pointer()
+                                                .on_click(cx.listener(move |this, _, _, cx| {
+                                                    this.remove_onboarding_phone(idx, cx);
+                                                }))
+                                                .child(app_icon(
+                                                    AppIcon::Close,
+                                                    IconSize::Xs,
+                                                    IconTone::Muted,
+                                                    theme,
+                                                )),
+                                        )
+                                },
+                            ),
+                        ))
+                    } else {
+                        None
+                    }),
             )
             // Create Family Submit Button
             .child(
@@ -402,7 +403,11 @@ impl OnboardingScreen {
                     .gap(px(8.0))
                     .py(px(10.0))
                     .rounded(px(8.0))
-                    .bg(theme.accent_primary)
+                    .bg(if state.is_busy {
+                        theme.accent_primary.opacity(0.6)
+                    } else {
+                        theme.accent_primary
+                    })
                     .text_sm()
                     .font_weight(gpui_kit::FontWeight::BOLD)
                     .text_color(theme.bg_canvas)
@@ -416,19 +421,22 @@ impl OnboardingScreen {
                         IconTone::OnPrimaryButton,
                         theme,
                     ))
-                    .child(Translator::t(
-                        state.locale,
-                        terms::CONTINUE_TO_DASHBOARD,
-                        None,
-                    )),
+                    .child(submit_label),
             )
     }
 
     fn render_join_family_card(
         state: &AppState,
+        inputs: &OnboardingInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
+        let submit_label = if state.is_busy {
+            umuryango_i18n::t(state.locale, "onboarding.joining_family")
+        } else {
+            Translator::t(state.locale, terms::JOIN_BTN, None)
+        };
+
         div()
             .w_full()
             .p(px(18.0))
@@ -459,39 +467,13 @@ impl OnboardingScreen {
                             .child(Translator::t(state.locale, terms::JOIN_FAMILY, None)),
                     ),
             )
-            // 4-Character Code Input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::ENTER_4_CHAR_CODE, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(16.0))
-                            .py(px(10.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .text_center()
-                            .child(if state.onboarding_join_code.is_empty() {
-                                "HK0N".to_string()
-                            } else {
-                                state.onboarding_join_code.clone()
-                            }),
-                    ),
-            )
+            // Editable 4-Character Code Input
+            .child(text_field(
+                "onboarding-join-code-input",
+                Translator::t(state.locale, terms::ENTER_4_CHAR_CODE, None),
+                &inputs.join_code,
+                theme,
+            ))
             // Join Family Submit Button
             .child(
                 div()
@@ -503,7 +485,11 @@ impl OnboardingScreen {
                     .gap(px(8.0))
                     .py(px(10.0))
                     .rounded(px(8.0))
-                    .bg(theme.accent_primary)
+                    .bg(if state.is_busy {
+                        theme.accent_primary.opacity(0.6)
+                    } else {
+                        theme.accent_primary
+                    })
                     .text_sm()
                     .font_weight(gpui_kit::FontWeight::BOLD)
                     .text_color(theme.bg_canvas)
@@ -517,7 +503,7 @@ impl OnboardingScreen {
                         IconTone::OnPrimaryButton,
                         theme,
                     ))
-                    .child(Translator::t(state.locale, terms::JOIN_BTN, None)),
+                    .child(submit_label),
             )
     }
 }

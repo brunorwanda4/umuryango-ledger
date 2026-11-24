@@ -1,12 +1,17 @@
+pub mod entity_modal_inputs;
+pub mod entity_modals;
 pub mod icon;
 pub mod lang_toggle;
 pub mod notifications_drawer;
 pub mod quick_entry;
+pub mod quick_entry_inputs;
 pub mod scope_switcher;
 pub mod sidebar;
 pub mod tx_row;
 pub mod wallet_card;
 
+#[allow(unused_imports)]
+pub use entity_modals::EntityModalDialog;
 #[allow(unused_imports)]
 pub use icon::{AppIcon, IconSize, IconTone, app_icon, icon_button};
 #[allow(unused_imports)]

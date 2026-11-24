@@ -1,11 +1,12 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use rust_decimal::Decimal;
 use umuryango_core_domain::models::{Loan, LoanDirection};
 use umuryango_i18n::{Locale, Translator, terms};
 
 use crate::RootView;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use crate::state::AppState;
+use crate::state::{ActiveModal, AppState};
 use crate::theme::SemanticTheme;
 
 pub struct LoansScreen;
@@ -71,8 +72,8 @@ impl LoansScreen {
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.bg_canvas)
                             .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.open_quick_entry(cx);
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.open_modal(ActiveModal::AddLoan, window, cx);
                             }))
                             .child(app_icon(
                                 AppIcon::Add,
@@ -83,7 +84,7 @@ impl LoansScreen {
                             .child(umuryango_i18n::t(state.locale, "loans.record_loan_btn")),
                     ),
             )
-            // Section 1: Lent Out (Ayo twagurije)
+            // Section 1: Lent Out
             .child(
                 div()
                     .mb(px(24.0))
@@ -113,14 +114,14 @@ impl LoansScreen {
                             lent_loans
                                 .into_iter()
                                 .map(|l| {
-                                    Self::render_loan_row(l, true, state.locale, theme)
+                                    Self::render_loan_row(l, true, state.locale, theme, cx)
                                         .into_any_element()
                                 })
                                 .collect()
                         },
                     )),
             )
-            // Section 2: Borrowed (Ayo twagujije)
+            // Section 2: Borrowed
             .child(
                 div()
                     .child(
@@ -149,7 +150,7 @@ impl LoansScreen {
                             borrowed_loans
                                 .into_iter()
                                 .map(|l| {
-                                    Self::render_loan_row(l, false, state.locale, theme)
+                                    Self::render_loan_row(l, false, state.locale, theme, cx)
                                         .into_any_element()
                                 })
                                 .collect()
@@ -163,6 +164,7 @@ impl LoansScreen {
         is_lent: bool,
         locale: Locale,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
         let color = if is_lent {
             theme.income_color
@@ -174,6 +176,10 @@ impl LoansScreen {
         } else {
             IconTone::Expense
         };
+        let is_repaid = loan.balance_remaining <= Decimal::ZERO;
+        let loan_id = loan.id;
+        let counterparty = loan.counterparty_name.clone();
+        let remaining = loan.balance_remaining;
 
         div()
             .flex()
@@ -228,25 +234,50 @@ impl LoansScreen {
                                     .text_color(color)
                                     .child(format!("{} RWF", loan.balance_remaining)),
                             )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(format!("Principal: {} RWF", loan.principal_amount)),
-                            ),
+                            .child(div().text_xs().text_color(theme.text_muted).child(format!(
+                                "{}: {} RWF",
+                                umuryango_i18n::t(locale, "loans.principal"),
+                                loan.principal_amount
+                            ))),
                     )
-                    .child(
+                    .child(if is_repaid {
                         div()
                             .px(px(10.0))
                             .py(px(4.0))
                             .rounded(px(6.0))
+                            .bg(theme.income_color.opacity(0.15))
+                            .text_xs()
+                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .text_color(theme.income_color)
+                            .child(umuryango_i18n::t(locale, "loans.status_repaid"))
+                            .into_any_element()
+                    } else {
+                        div()
+                            .id(format!("loan-repay-btn-{}", loan_id))
+                            .px(px(10.0))
+                            .py(px(4.0))
+                            .rounded(px(6.0))
                             .bg(theme.bg_elevated)
+                            .border_1()
+                            .border_color(theme.border_subtle)
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(theme.text_primary)
                             .cursor_pointer()
-                            .child(umuryango_i18n::t(locale, "loans.repay_btn")),
-                    ),
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.open_modal(
+                                    ActiveModal::RepayLoan {
+                                        loan_id,
+                                        counterparty: counterparty.clone(),
+                                        remaining,
+                                    },
+                                    window,
+                                    cx,
+                                );
+                            }))
+                            .child(umuryango_i18n::t(locale, "loans.repay_btn"))
+                            .into_any_element()
+                    }),
             )
     }
 }

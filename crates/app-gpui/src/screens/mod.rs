@@ -5,6 +5,7 @@ pub mod future_plans;
 pub mod loans;
 pub mod members;
 pub mod onboarding;
+pub mod onboarding_inputs;
 pub mod projects;
 pub mod report_view;
 pub mod settings;

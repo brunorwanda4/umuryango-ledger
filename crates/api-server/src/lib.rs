@@ -47,6 +47,14 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
                     )
                     .route("/join", web::post().to(handlers::families::join_family))
                     .route(
+                        "/{family_id}/members",
+                        web::get().to(handlers::families::list_family_members),
+                    )
+                    .route(
+                        "/{family_id}/invites",
+                        web::post().to(handlers::families::invite_member_by_phone),
+                    )
+                    .route(
                         "/{family_id}/members/{member_id}/role",
                         web::patch().to(handlers::families::update_member_role),
                     ),

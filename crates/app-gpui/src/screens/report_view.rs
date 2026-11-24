@@ -20,7 +20,6 @@ impl ReportViewScreen {
         let now = chrono::Utc::now();
         let period_start = now - chrono::Duration::days(30);
 
-        // Compute Mother's Report using pure domain financial brain
         let report = generate_mothers_report(
             state.active_scope,
             &state.wallets,
@@ -37,13 +36,6 @@ impl ReportViewScreen {
 
         let share_text = whatsapp_text.clone();
         let share_success = umuryango_i18n::t(state.locale, "report.share_copied");
-
-        let magic_link = format!(
-            "https://ledger.umuryango.rw/reports/magic/{}",
-            state.active_scope.family_id().unwrap_or(state.user_id)
-        );
-        let link_success = umuryango_i18n::t(state.locale, "report.link_copied");
-
         let copy_preview_text = whatsapp_text.clone();
         let copy_preview_success = share_success.clone();
 
@@ -81,7 +73,7 @@ impl ReportViewScreen {
                                 ),
                             ),
                     )
-                    // Export Actions: WhatsApp Share & Magic Link
+                    // Export Actions: WhatsApp Share & Real API Magic Link
                     .child(
                         div()
                             .flex()
@@ -114,7 +106,10 @@ impl ReportViewScreen {
                                         IconTone::OnPrimaryButton,
                                         theme,
                                     ))
-                                    .child("WhatsApp Share"),
+                                    .child(umuryango_i18n::t(
+                                        state.locale,
+                                        "report.whatsapp_share",
+                                    )),
                             )
                             .child(
                                 div()
@@ -130,12 +125,8 @@ impl ReportViewScreen {
                                     .text_xs()
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
-                                    .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.copy_to_clipboard(
-                                            magic_link.clone(),
-                                            link_success.clone(),
-                                            cx,
-                                        );
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.handle_create_magic_link(cx);
                                     }))
                                     .child(app_icon(
                                         AppIcon::Language,
@@ -143,7 +134,7 @@ impl ReportViewScreen {
                                         IconTone::OnPrimaryButton,
                                         theme,
                                     ))
-                                    .child("Magic Link"),
+                                    .child(umuryango_i18n::t(state.locale, "report.magic_link")),
                             ),
                     ),
             )
@@ -154,7 +145,6 @@ impl ReportViewScreen {
                     .flex_row()
                     .gap(px(16.0))
                     .mb(px(24.0))
-                    // Total Income Card
                     .child(
                         div()
                             .flex_1()
@@ -187,7 +177,6 @@ impl ReportViewScreen {
                                     .child(format!("{} RWF", report.total_income)),
                             ),
                     )
-                    // Total Expenses Card
                     .child(
                         div()
                             .flex_1()
@@ -220,7 +209,6 @@ impl ReportViewScreen {
                                     .child(format!("{} RWF", report.total_expenses)),
                             ),
                     )
-                    // Closing Net Balance
                     .child(
                         div()
                             .flex_1()
@@ -254,7 +242,7 @@ impl ReportViewScreen {
                             ),
                     ),
             )
-            // Section: Cash Breakdown Held by Each Custodian (Person)
+            // Cash Breakdown Held by Each Custodian
             .child(
                 div()
                     .p(px(20.0))
@@ -275,47 +263,61 @@ impl ReportViewScreen {
                                 None,
                             )),
                     )
-                    .child(div().flex().flex_col().gap(px(8.0)).children(
-                        report.custodian_balances.iter().map(|c| {
-                            div()
-                                .flex()
-                                .flex_row()
-                                .justify_between()
-                                .items_center()
-                                .py(px(8.0))
-                                .px(px(12.0))
-                                .rounded(px(6.0))
-                                .bg(theme.bg_canvas)
-                                .child(
-                                    div()
-                                        .flex()
-                                        .items_center()
-                                        .gap(px(8.0))
-                                        .child(app_icon(
-                                            AppIcon::Members,
-                                            IconSize::Xs,
-                                            IconTone::Muted,
-                                            theme,
-                                        ))
-                                        .child(
-                                            div()
-                                                .text_sm()
-                                                .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                                .text_color(theme.text_primary)
-                                                .child(c.wallet_name.clone()),
-                                        ),
-                                )
-                                .child(
-                                    div()
-                                        .text_sm()
-                                        .font_weight(gpui_kit::FontWeight::BOLD)
-                                        .text_color(theme.income_color)
-                                        .child(format!("{} RWF", c.balance)),
-                                )
-                        }),
-                    )),
+                    .child(if report.custodian_balances.is_empty() {
+                        div()
+                            .text_xs()
+                            .text_color(theme.text_muted)
+                            .child(umuryango_i18n::t(
+                                state.locale,
+                                "report.no_wallets_in_report",
+                            ))
+                            .into_any_element()
+                    } else {
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(8.0))
+                            .children(report.custodian_balances.iter().map(|c| {
+                                div()
+                                    .flex()
+                                    .flex_row()
+                                    .justify_between()
+                                    .items_center()
+                                    .py(px(8.0))
+                                    .px(px(12.0))
+                                    .rounded(px(6.0))
+                                    .bg(theme.bg_canvas)
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .gap(px(8.0))
+                                            .child(app_icon(
+                                                AppIcon::Members,
+                                                IconSize::Xs,
+                                                IconTone::Muted,
+                                                theme,
+                                            ))
+                                            .child(
+                                                div()
+                                                    .text_sm()
+                                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                                    .text_color(theme.text_primary)
+                                                    .child(c.wallet_name.clone()),
+                                            ),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(gpui_kit::FontWeight::BOLD)
+                                            .text_color(theme.income_color)
+                                            .child(format!("{} RWF", c.balance)),
+                                    )
+                            }))
+                            .into_any_element()
+                    }),
             )
-            // Section: WhatsApp Formatted Preview Box
+            // WhatsApp Formatted Preview Box
             .child(
                 div()
                     .p(px(20.0))
@@ -366,7 +368,7 @@ impl ReportViewScreen {
                                         IconTone::Muted,
                                         theme,
                                     ))
-                                    .child("Copy Text"),
+                                    .child(umuryango_i18n::t(state.locale, "report.copy_text")),
                             ),
                     )
                     .child(

@@ -7,8 +7,9 @@ use crate::error::LocalizedErrorResponse;
 use crate::handlers::{
     auth::{self, AuthResponse, LoginPayload, RegisterPayload, UpdateLocalePayload},
     families::{
-        self, CreateFamilyRequest, CreateFamilyResponse, FamilyWithRole, JoinFamilyRequest,
-        JoinFamilyResponse, UpdateMemberRoleRequest, UpdateMemberRoleResponse,
+        self, CreateFamilyRequest, CreateFamilyResponse, FamilyMemberView, FamilyWithRole,
+        InviteMemberRequest, JoinFamilyRequest, JoinFamilyResponse, UpdateMemberRoleRequest,
+        UpdateMemberRoleResponse,
     },
     projects::{
         self, AllocatePlanRequest, AllocatePlanResponse, CreateLoanRequest, CreatePlanRequest,
@@ -66,6 +67,8 @@ impl Modify for SecurityAddon {
         auth::login,
         auth::update_locale,
         families::list_families,
+        families::list_family_members,
+        families::invite_member_by_phone,
         families::list_pending_invites,
         families::create_family,
         families::join_family,
@@ -104,6 +107,7 @@ impl Modify for SecurityAddon {
             User,
             Family,
             FamilyMember,
+            FamilyMemberView,
             PendingFamilyInvite,
             Wallet,
             Transaction,
@@ -118,6 +122,7 @@ impl Modify for SecurityAddon {
             AuthResponse,
             CreateFamilyRequest,
             CreateFamilyResponse,
+            InviteMemberRequest,
             JoinFamilyRequest,
             JoinFamilyResponse,
             UpdateMemberRoleRequest,

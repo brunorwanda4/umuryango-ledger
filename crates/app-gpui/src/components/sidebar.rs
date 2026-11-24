@@ -66,13 +66,12 @@ impl Sidebar {
             .border_r_1()
             .border_color(theme.border_subtle)
             .font_family(theme.font_family)
-            // Top Section: Brand + Scope Switcher + Sync Badge
+            // Top Section: Brand + Scope Switcher + Clickable Sync Badge
             .child(
                 div()
                     .flex()
                     .flex_col()
                     .gap(px(14.0))
-                    // Brand title with custom emblem & Notification Bell
                     .child(
                         div()
                             .flex()
@@ -107,7 +106,7 @@ impl Sidebar {
                                                 div()
                                                     .text_xs()
                                                     .text_color(theme.text_muted)
-                                                    .child("Finance Ledger"),
+                                                    .child(state.user_name.clone()),
                                             ),
                                     ),
                             )
@@ -172,9 +171,10 @@ impl Sidebar {
                         theme,
                         cx,
                     ))
-                    // Sync status badge
+                    // Clickable sync status badge (triggers real PostgreSQL refresh)
                     .child(
                         div()
+                            .id("sidebar-sync-refresh-btn")
                             .flex()
                             .items_center()
                             .gap(px(6.0))
@@ -187,6 +187,10 @@ impl Sidebar {
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(sync_color)
+                            .cursor_pointer()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.refresh_active_scope(cx);
+                            }))
                             .child(app_icon(sync_icon, IconSize::Xs, sync_tone, theme))
                             .child(sync_label),
                     ),
@@ -240,58 +244,90 @@ impl Sidebar {
                         )
                 }),
             ))
-            // Bottom Section: Language & Light/Dark Theme Toggles
+            // Bottom Section: Language, Theme, and Logout
             .child(
                 div()
                     .flex()
-                    .flex_row()
-                    .items_center()
-                    .justify_between()
+                    .flex_col()
+                    .gap(px(8.0))
                     .pt(px(12.0))
                     .border_t_1()
                     .border_color(theme.border_subtle)
-                    // Language toggle
-                    .child(LangToggle::render(
-                        "sidebar-lang-toggle",
-                        state.locale,
-                        theme,
-                        cx,
-                    ))
-                    // Mode toggle
                     .child(
                         div()
-                            .id("sidebar-theme-toggle")
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .justify_between()
+                            .child(LangToggle::render(
+                                "sidebar-lang-toggle",
+                                state.locale,
+                                theme,
+                                cx,
+                            ))
+                            .child(
+                                div()
+                                    .id("sidebar-theme-toggle")
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(6.0))
+                                    .px(px(10.0))
+                                    .py(px(4.0))
+                                    .rounded(px(6.0))
+                                    .bg(theme.bg_elevated)
+                                    .border_1()
+                                    .border_color(theme.border_subtle)
+                                    .text_xs()
+                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                    .text_color(theme.text_primary)
+                                    .cursor_pointer()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.toggle_theme(cx);
+                                    }))
+                                    .child(app_icon(
+                                        if state.theme_mode.is_dark() {
+                                            AppIcon::Sun
+                                        } else {
+                                            AppIcon::Moon
+                                        },
+                                        IconSize::Xs,
+                                        IconTone::Default,
+                                        theme,
+                                    ))
+                                    .child(if state.theme_mode.is_dark() {
+                                        umuryango_i18n::t(state.locale, "settings.light_mode")
+                                    } else {
+                                        umuryango_i18n::t(state.locale, "settings.dark_mode")
+                                    }),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .id("sidebar-logout-btn")
+                            .w_full()
                             .flex()
                             .items_center()
+                            .justify_center()
                             .gap(px(6.0))
-                            .px(px(10.0))
-                            .py(px(4.0))
+                            .py(px(6.0))
                             .rounded(px(6.0))
-                            .bg(theme.bg_elevated)
+                            .bg(theme.bg_surface)
                             .border_1()
                             .border_color(theme.border_subtle)
                             .text_xs()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.text_primary)
+                            .text_color(theme.expense_color)
                             .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.toggle_theme(cx);
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.handle_logout(window, cx);
                             }))
                             .child(app_icon(
-                                if state.theme_mode.is_dark() {
-                                    AppIcon::Sun
-                                } else {
-                                    AppIcon::Moon
-                                },
+                                AppIcon::Close,
                                 IconSize::Xs,
-                                IconTone::Default,
+                                IconTone::Expense,
                                 theme,
                             ))
-                            .child(if state.theme_mode.is_dark() {
-                                "Light"
-                            } else {
-                                "Dark"
-                            }),
+                            .child(umuryango_i18n::t(state.locale, "auth.logout")),
                     ),
             )
     }
