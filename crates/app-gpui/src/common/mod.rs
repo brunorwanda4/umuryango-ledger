@@ -14,6 +14,7 @@ pub mod radio;
 pub mod separator;
 pub mod skeleton;
 pub mod spinner;
+pub mod textarea;
 pub mod utils;
 
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
@@ -37,6 +38,7 @@ pub use separator::{
 };
 pub use skeleton::{Skeleton, skeleton};
 pub use spinner::{Spinner, spinner, spinner_static};
+pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use utils::{
     PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, card_surface_shadow,
     focus_ring_shadow, invalid_ring_shadow, overlay_surface_shadow, to_preset_uppercase,
