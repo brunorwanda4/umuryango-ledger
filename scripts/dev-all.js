@@ -1,7 +1,17 @@
 #!/usr/bin/env bun
-import { spawn as nodeSpawn } from "node:child_process";
 import { watch as fsWatch, existsSync } from "node:fs";
 import path from "node:path";
+import {
+  CARGO_WATCH_INSTALL,
+  DEBOUNCE_MS,
+  RUST_SERVICES,
+  cargoRunCommand,
+  cargoWatchCommand,
+  hasCargoWatch,
+  isIgnoredPath,
+  spawnTree,
+  stopTree,
+} from "./lib/cargo-dev.js";
 
 const args = process.argv.slice(2);
 
@@ -16,51 +26,7 @@ const colors = {
   red: "\x1b[31m",
 };
 
-// ---- Watch configuration ----
-// Folder names are relative to the repo root. Adjust them to match your layout.
-// Put shared code (models, protocol, etc.) in both lists, so a change there restarts both.
-const WATCH_PATHS = {
-  backend: ["crates/api-server", "crates/core-domain", "crates/i18n", "locales"],
-  native: [
-    "crates/app-gpui",
-    "crates/core-domain",
-    "crates/storage-local",
-    "crates/api-client",
-    "crates/i18n",
-    "assets",
-    "locales",
-  ],
-  frontend: [], // Next.js hot-reloads on its own, so the runner never restarts it
-};
-const DEBOUNCE_MS = 400;
-const KILL_TIMEOUT_MS = 5000;
-const IGNORED_DIRS = new Set(["target", "node_modules", ".next", ".git", "dist", "out"]);
-
 const bunExe = process.execPath;
-
-const SERVICE_DEFINITIONS = {
-  backend: {
-    name: "backend",
-    color: colors.cyan,
-    cmd: [bunExe, "run", "scripts/dev-backend.js", "--no-watch"],
-    desc: "Actix-web API (http://127.0.0.1:4433)",
-    watch: WATCH_PATHS.backend,
-  },
-  frontend: {
-    name: "frontend",
-    color: colors.green,
-    cmd: [bunExe, "run", "--cwd", "web", "dev"],
-    desc: "Next.js Web Portal (http://localhost:3000)",
-    watch: WATCH_PATHS.frontend,
-  },
-  native: {
-    name: "native",
-    color: colors.magenta,
-    cmd: [bunExe, "run", "scripts/dev-native.js", "--no-watch"],
-    desc: "GPUI Native Client",
-    watch: WATCH_PATHS.native,
-  },
-};
 
 function printHelp() {
   console.log(`
@@ -95,7 +61,9 @@ Options:
   -h, --help          Show this help message
 
 Watching:
-  A change in a service's folders restarts only that service.
+  Rust services (backend, app) run under cargo-watch: a change in a service's
+  crates rebuilds and restarts only that service. Without cargo-watch installed
+  a built-in file watcher is used instead (${CARGO_WATCH_INSTALL}).
   The frontend is never restarted by the runner (Next.js hot-reloads).
 `);
 }
@@ -207,6 +175,34 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 
+// ---- Service definitions ----
+
+const useCargoWatch = watchEnabled && hasCargoWatch();
+
+function rustService(key, color, desc) {
+  const def = RUST_SERVICES[key];
+  return {
+    name: def.name,
+    color,
+    desc,
+    // cargo-watch restarts the service itself; the fs watcher is only the fallback.
+    cmd: useCargoWatch ? cargoWatchCommand(def) : cargoRunCommand(def),
+    watch: watchEnabled && !useCargoWatch ? def.watch : [],
+  };
+}
+
+const SERVICE_DEFINITIONS = {
+  backend: rustService("backend", colors.cyan, "Actix-web API (http://127.0.0.1:4433)"),
+  frontend: {
+    name: "frontend",
+    color: colors.green,
+    cmd: [bunExe, "run", "--cwd", "web", "dev"],
+    desc: "Next.js Web Portal (http://localhost:3000)",
+    watch: [], // Next.js hot-reloads on its own, so the runner never restarts it
+  },
+  native: rustService("native", colors.magenta, "GPUI Native Client"),
+};
+
 let activeServices = new Set();
 
 if (onlyMode) {
@@ -251,6 +247,12 @@ if (servicesToStart.length === 0) {
   process.exit(1);
 }
 
+function watchSummary() {
+  if (!watchEnabled) return "off (--no-watch)";
+  if (useCargoWatch) return "cargo-watch (only the changed service rebuilds)";
+  return `built-in watcher (faster restarts: ${CARGO_WATCH_INSTALL})`;
+}
+
 console.log(
   `${colors.bold}============================================================${colors.reset}`,
 );
@@ -258,9 +260,7 @@ console.log(`${colors.bold}  Umuryango Concurrent Development Runner${colors.res
 for (const svc of servicesToStart) {
   console.log(`  - ${svc.color}${svc.name.padEnd(10)}${colors.reset}: ${svc.desc}`);
 }
-console.log(
-  `  Watch: ${watchEnabled ? "on (only the changed service restarts)" : "off (--no-watch)"}`,
-);
+console.log(`  Watch: ${watchSummary()}`);
 console.log(`  Press ${colors.yellow}Ctrl+C${colors.reset} to stop all services.`);
 console.log(
   `${colors.bold}============================================================\n${colors.reset}`,
@@ -271,36 +271,10 @@ console.log(
 const stateByService = new Map(); // name -> { child, chain }
 let stopping = false;
 
-function signalTree(child, signal) {
-  if (!child || child.pid == null) return;
-  if (process.platform === "win32") {
-    // taskkill /T kills the whole tree (bun -> cargo -> built binary)
-    nodeSpawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
-    return;
-  }
-  try {
-    process.kill(-child.pid, signal); // child runs in its own process group
-  } catch {
-    try {
-      child.kill(signal);
-    } catch {}
-  }
-}
-
 async function stopChild(child) {
   if (!child) return;
   child.intentionalStop = true;
-
-  if (child.exitCode === null && child.signalCode === null) {
-    signalTree(child, "SIGINT");
-    await Promise.race([
-      new Promise((resolve) => child.once("exit", resolve)),
-      new Promise((resolve) => setTimeout(resolve, KILL_TIMEOUT_MS)),
-    ]);
-  }
-
-  // Kill leftovers (e.g. the compiled API server still holding port 4433)
-  signalTree(child, "SIGKILL");
+  await stopTree(child);
 }
 
 function prefixStream(readable, svc, isError) {
@@ -328,12 +302,14 @@ function prefixStream(readable, svc, isError) {
   });
 }
 
+const childEnv = { ...process.env, FORCE_COLOR: "1" };
+// Keep cargo's colored output when its stdout is piped through the prefixer.
+if (!rawOutput) childEnv.CARGO_TERM_COLOR = "always";
+
 function launch(svc) {
-  const [command, ...cmdArgs] = svc.cmd;
-  const child = nodeSpawn(command, cmdArgs, {
+  const child = spawnTree(svc.cmd, {
     stdio: rawOutput ? "inherit" : ["inherit", "pipe", "pipe"],
-    env: { ...process.env, FORCE_COLOR: "1" },
-    detached: process.platform !== "win32", // own process group, so we can kill the whole tree
+    env: childEnv,
   });
   child.intentionalStop = false;
 
@@ -345,7 +321,7 @@ function launch(svc) {
   child.on("exit", (code, signal) => {
     if (stopping || child.intentionalStop) return;
     const reason = code !== null ? `code ${code}` : `signal ${signal}`;
-    const hint = watchEnabled ? " (save a file to restart it)" : "";
+    const hint = svc.watch.length > 0 ? " (save a file to restart it)" : "";
     console.error(
       `${svc.color}[${svc.name}]${colors.reset} ${colors.red}Process exited with ${reason}${hint}${colors.reset}`,
     );
@@ -370,26 +346,10 @@ function scheduleRestart(svc, changedFile) {
   });
 }
 
-// ---- File watching ----
-
-function isIgnored(filename) {
-  const segments = filename.split(/[\\/]/);
-  if (segments.some((seg) => IGNORED_DIRS.has(seg))) return true;
-  if (
-    filename.includes("app.ico") ||
-    filename.includes("AppIcon.icns") ||
-    filename.includes("icon-") ||
-    filename.includes("ic_launcher") ||
-    filename.includes(".desktop")
-  ) {
-    return true;
-  }
-  // Editor temp/backup files
-  return /(~|\.swp|\.tmp)$/i.test(filename);
-}
+// ---- Fallback file watching (only when cargo-watch is not installed) ----
 
 function startWatchers(svc) {
-  if (!watchEnabled || svc.watch.length === 0) return [];
+  if (svc.watch.length === 0) return [];
 
   const roots = svc.watch
     .map((p) => path.resolve(process.cwd(), p))
@@ -406,8 +366,9 @@ function startWatchers(svc) {
 
   return roots.map((root) =>
     fsWatch(root, { recursive: true }, (_eventType, filename) => {
-      if (!filename || isIgnored(filename)) return;
-      lastFile = filename;
+      const file = filename ?? path.basename(root);
+      if (isIgnoredPath(file)) return;
+      lastFile = file;
       clearTimeout(timer);
       timer = setTimeout(() => scheduleRestart(svc, lastFile), DEBOUNCE_MS);
     }),

@@ -82,3 +82,18 @@ tracing-actix-web = "0.7"
 # OpenAPI & Swagger UI
 utoipa = { version = "6.0", features = ["macros"] }
 utoipa-swagger-ui = { version = "10.0", features = ["actix-web"] }
+
+# ---- Faster dev builds ----
+# Workspace crates: incremental with line-tables-only debug info (smaller PDBs, faster links).
+[profile.dev]
+debug = "line-tables-only"
+
+# Third-party deps compile once and stay cached: optimize them so GPUI rendering
+# and Argon2 hashing run near release speed in dev, and drop their debug info.
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+# Build scripts and proc-macros (serde, sqlx, utoipa) run on every rebuild.
+[profile.dev.build-override]
+opt-level = 3
