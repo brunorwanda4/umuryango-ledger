@@ -15,20 +15,18 @@ use uuid::Uuid;
 use components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm, QuickEntryMode};
 use gpui_kit::{
-    AppContext, Context, InteractiveElement, IntoElement, ParentElement, Render,
+    Context, InteractiveElement, IntoElement, ParentElement, Render,
     StatefulInteractiveElement, Styled, Window, div, hsla, px,
 };
 pub use safe_area::SafeAreaInsets;
 use state::{AppState, Screen};
-use theme::{SemanticTheme, ThemeMode, archivo_font_bytes};
+use theme::ThemeMode;
 #[cfg(not(target_arch = "wasm32"))]
 use umuryango_api_client::{RealtimeClient, RealtimeHandle};
 use umuryango_core_domain::models::FamilyRole;
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::Locale;
-#[cfg(not(target_arch = "wasm32"))]
-use umuryango_storage_local::{CacheRepository, LocalDatabase};
 
 /// Official 256x256 embedded emblem icon
 pub const APP_ICON_256_PNG: &[u8] = include_bytes!("../assets/icons/icon-256.png");

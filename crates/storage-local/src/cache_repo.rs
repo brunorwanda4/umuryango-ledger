@@ -1,7 +1,6 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use rusqlite::{Result, params};
 use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use umuryango_core_domain::models::{
     FuturePlan, Loan, LoanDirection, LoanStatus, Project, ProjectStatus, Transaction,

@@ -118,6 +118,7 @@ impl TestServer {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn clean_db(&self) {
         sqlx::query(
             r#"

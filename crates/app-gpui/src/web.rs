@@ -1,10 +1,5 @@
 /// WebAssembly entry point for mounting the full GPUI app in the browser.
-use gpui_kit::AppContext;
 use wasm_bindgen::prelude::*;
-
-use crate::RootView;
-use crate::state::AppState;
-use crate::theme::archivo_font_bytes;
 
 /// Mounts the full GPUI application onto the DOM `<canvas>` specified by `canvas_id`.
 ///
@@ -14,6 +9,9 @@ use crate::theme::archivo_font_bytes;
 pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
     #[cfg(target_arch = "wasm32")]
     {
+        use crate::RootView;
+        use crate::state::AppState;
+        use crate::theme::archivo_font_bytes;
         use wasm_bindgen::JsCast;
 
         let window = web_sys::window()
