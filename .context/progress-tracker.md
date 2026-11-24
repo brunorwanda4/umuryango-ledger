@@ -59,6 +59,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `dd258be` | `feat(ui): add GPUI hooks and preset b1oaDsAa style utilities` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `56d4401` | `feat(ui): port shadcn direction to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `28dfc32` | `feat(ui): port shadcn separator to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `37e1622` | `feat(ui): port shadcn skeleton to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -73,7 +74,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 01. `direction.tsx` → `direction.rs`
 - [x] 02. `separator.tsx` → `separator.rs`
 - [x] 03. `skeleton.tsx` → `skeleton.rs`
-- [ ] 04. `spinner.tsx` → `spinner.rs`
+- [x] 04. `spinner.tsx` → `spinner.rs`
 - [ ] 05. `aspect-ratio.tsx` → `aspect_ratio.rs`
 - [ ] 06. `kbd.tsx` → `kbd.rs`
 - [ ] 07. `label.tsx` → `label.rs`
