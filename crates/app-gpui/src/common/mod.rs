@@ -8,6 +8,7 @@ pub mod button_group;
 pub mod card;
 pub mod direction;
 pub mod input;
+pub mod input_group;
 pub mod kbd;
 pub mod label;
 pub mod radio;
@@ -29,6 +30,10 @@ pub use card::{
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use input::{
     Input, InputContentType, InputState, KitInput, input_primitive, password_field, text_field,
+};
+pub use input_group::{
+    InputGroup, InputGroupAddon, InputGroupAddonAlign, InputGroupButtonSize, InputGroupText,
+    input_group_button, input_group_input, input_group_textarea,
 };
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
