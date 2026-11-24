@@ -54,3 +54,4 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `66bd970` | `feat(gpui): add reusable input and radio components and wire interactive auth form` | Tests skipped per user request |
 | **2026-11-24** | `c6aa642` | `feat(gpui): embed AppAssets icon source and refine auth password inputs and rw label` | Tests skipped per user request |
 | **2026-11-25** | `eb71ca3` | `feat(gpui, api): wire live API bridge, interactive entity modals, and family member endpoints` | Tests skipped per user request |
+| **2026-11-25** | `805aa69` | `style(ui): remove rounded styles across design docs, GPUI app, and web` | `cargo check --workspace`, `cargo clippy --all --workspace`, `cargo test -p umuryango-app --lib` (12 passed), workspace crate tests (19 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
