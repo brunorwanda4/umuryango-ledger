@@ -64,6 +64,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `c529373` | `feat(ui): port shadcn aspect-ratio to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `a0893c8` | `feat(ui): port shadcn kbd to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `d12803e` | `feat(ui): port shadcn label to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `24db7e7` | `feat(ui): port shadcn badge to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -83,7 +84,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 06. `kbd.tsx` → `kbd.rs`
 - [x] 07. `label.tsx` → `label.rs`
 - [x] 08. `badge.tsx` → `badge.rs`
-- [ ] 09. `button.tsx` → `button.rs`
+- [x] 09. `button.tsx` → `button.rs`
 - [ ] 10. `button-group.tsx` → `button_group.rs`
 - [ ] 11. `card.tsx` → `card.rs`
 - [ ] 12. `input.tsx` → `input.rs`

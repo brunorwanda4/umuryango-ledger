@@ -3,6 +3,7 @@
 
 pub mod aspect_ratio;
 pub mod badge;
+pub mod button;
 pub mod direction;
 pub mod input;
 pub mod kbd;
@@ -15,6 +16,7 @@ pub mod utils;
 
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
 pub use badge::{Badge, BadgeVariant, OverlayCountBadge, badge};
+pub use button::{Button, ButtonSize, ButtonVariant, KitButton, button};
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use input::{password_field, text_field};
 pub use kbd::{Kbd, KbdGroup};
