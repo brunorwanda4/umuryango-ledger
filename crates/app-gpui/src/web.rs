@@ -12,6 +12,7 @@ pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
         use crate::RootView;
         use crate::state::AppState;
         use crate::theme::archivo_font_bytes;
+        use gpui_kit::AppContext;
         use wasm_bindgen::JsCast;
 
         let window = web_sys::window()
@@ -41,10 +42,14 @@ pub fn mount_gpui_app(canvas_id: &str) -> Result<(), JsValue> {
                 )));
             }
 
-            let mut options = gpui_kit::WindowOptions::default();
-            options.titlebar = None;
+            let options = gpui_kit::WindowOptions {
+                titlebar: None,
+                ..Default::default()
+            };
 
-            let _ = cx.open_window(options, |_window, cx| cx.new(|_| RootView::new_wasm(state)));
+            let _ = gpui_kit::open_window(options, cx, |window, cx| {
+                cx.new(|cx| RootView::new_wasm(state, window, cx))
+            });
         });
     }
 

@@ -51,9 +51,12 @@ impl MembersScreen {
                                     .text_color(theme.text_primary)
                                     .child(title),
                             )
-                            .child(div().text_xs().text_color(theme.text_muted).child(
-                                umuryango_i18n::t(state.locale, "members.subtitle"),
-                            )),
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child(umuryango_i18n::t(state.locale, "members.subtitle")),
+                            ),
                     )
                     // Invite code badge & copy button
                     .child(

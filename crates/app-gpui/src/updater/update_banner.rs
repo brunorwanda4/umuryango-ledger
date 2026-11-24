@@ -120,7 +120,11 @@ impl UpdateBanner {
             }
             UpdateStatus::ReadyToRestart { version, .. } => {
                 let restart_text = Translator::t(locale, terms::UPDATE_RESTART_NOW, None);
-                let ready_msg = umuryango_i18n::t_args(locale, "updater.restart_ready", &[("version", version.as_str())]);
+                let ready_msg = umuryango_i18n::t_args(
+                    locale,
+                    "updater.restart_ready",
+                    &[("version", version.as_str())],
+                );
 
                 Some(
                     div()
@@ -161,7 +165,8 @@ impl UpdateBanner {
                 )
             }
             UpdateStatus::Failed { error } => {
-                let err_label = umuryango_i18n::t_args(locale, "updater.failed", &[("error", error.as_str())]);
+                let err_label =
+                    umuryango_i18n::t_args(locale, "updater.failed", &[("error", error.as_str())]);
 
                 Some(
                     div()

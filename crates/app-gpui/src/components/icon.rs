@@ -34,6 +34,8 @@ pub enum AppIcon {
     Close,
     ChevronDown,
     ChevronRight,
+    Eye,
+    EyeSlash,
 
     // Theme, Language & Status
     Sun,
@@ -82,6 +84,8 @@ impl AppIcon {
             AppIcon::Close => "xmark.svg",
             AppIcon::ChevronDown => "chevron-down.svg",
             AppIcon::ChevronRight => "chevron-right.svg",
+            AppIcon::Eye => "eye.svg",
+            AppIcon::EyeSlash => "eye-slash.svg",
             AppIcon::Sun => "sun.svg",
             AppIcon::Moon => "moon.svg",
             AppIcon::Language => "globe.svg",
@@ -128,6 +132,8 @@ impl AppIcon {
             AppIcon::Close => "crates/app-gpui/assets/icons/fontawesome/xmark.svg",
             AppIcon::ChevronDown => "crates/app-gpui/assets/icons/fontawesome/chevron-down.svg",
             AppIcon::ChevronRight => "crates/app-gpui/assets/icons/fontawesome/chevron-right.svg",
+            AppIcon::Eye => "crates/app-gpui/assets/icons/fontawesome/eye.svg",
+            AppIcon::EyeSlash => "crates/app-gpui/assets/icons/fontawesome/eye-slash.svg",
             AppIcon::Sun => "crates/app-gpui/assets/icons/fontawesome/sun.svg",
             AppIcon::Moon => "crates/app-gpui/assets/icons/fontawesome/moon.svg",
             AppIcon::Language => "crates/app-gpui/assets/icons/fontawesome/globe.svg",

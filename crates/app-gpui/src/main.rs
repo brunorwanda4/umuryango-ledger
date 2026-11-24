@@ -28,14 +28,16 @@ fn main() {
             eprintln!("Warning: Failed to load bundled Archivo fonts: {:?}", e);
         }
 
-        let mut options = gpui_kit::WindowOptions::default();
-        options.titlebar = Some(gpui_kit::TitlebarOptions {
-            title: Some("Umuryango Ledger".into()),
+        let options = gpui_kit::WindowOptions {
+            titlebar: Some(gpui_kit::TitlebarOptions {
+                title: Some("Umuryango Ledger".into()),
+                ..Default::default()
+            }),
             ..Default::default()
-        });
+        };
         let db_clone = Arc::clone(&db_arc);
-        let _ = cx.open_window(options, |_window, cx| {
-            cx.new(|_| RootView::new(state, Some(db_clone)))
+        let _ = gpui_kit::open_window(options, cx, |window, cx| {
+            cx.new(|cx| RootView::new(state, Some(db_clone), window, cx))
         });
     });
 }

@@ -67,9 +67,7 @@ impl QuickEntryDialog {
             .iter()
             .find(|w| Some(w.id) == form.source_wallet_id)
             .map(|w| format!("{} ({} RWF)", w.name, w.balance))
-            .unwrap_or_else(|| {
-                umuryango_i18n::t(locale, "wallets.select_wallet_placeholder")
-            });
+            .unwrap_or_else(|| umuryango_i18n::t(locale, "wallets.select_wallet_placeholder"));
 
         div()
             .id(id)
@@ -106,7 +104,10 @@ impl QuickEntryDialog {
                                     .text_lg()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(umuryango_i18n::t(locale, "transactions.log_new_transaction")),
+                                    .child(umuryango_i18n::t(
+                                        locale,
+                                        "transactions.log_new_transaction",
+                                    )),
                             ),
                     )
                     .child(

@@ -76,10 +76,9 @@ impl ReportViewScreen {
                                     .child(title),
                             )
                             .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(umuryango_i18n::t(state.locale, "report.report_subtitle")),
+                                div().text_xs().text_color(theme.text_muted).child(
+                                    umuryango_i18n::t(state.locale, "report.report_subtitle"),
+                                ),
                             ),
                     )
                     // Export Actions: WhatsApp Share & Magic Link
@@ -103,7 +102,11 @@ impl ReportViewScreen {
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
                                     .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.copy_to_clipboard(share_text.clone(), share_success.clone(), cx);
+                                        this.copy_to_clipboard(
+                                            share_text.clone(),
+                                            share_success.clone(),
+                                            cx,
+                                        );
                                     }))
                                     .child(app_icon(
                                         AppIcon::Share,
@@ -128,7 +131,11 @@ impl ReportViewScreen {
                                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                                     .cursor_pointer()
                                     .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.copy_to_clipboard(magic_link.clone(), link_success.clone(), cx);
+                                        this.copy_to_clipboard(
+                                            magic_link.clone(),
+                                            link_success.clone(),
+                                            cx,
+                                        );
                                     }))
                                     .child(app_icon(
                                         AppIcon::Language,
@@ -161,16 +168,9 @@ impl ReportViewScreen {
                                     .flex()
                                     .items_center()
                                     .justify_between()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child(Translator::t(
-                                                state.locale,
-                                                terms::TOTAL_INCOME,
-                                                None,
-                                            )),
-                                    )
+                                    .child(div().text_xs().text_color(theme.text_muted).child(
+                                        Translator::t(state.locale, terms::TOTAL_INCOME, None),
+                                    ))
                                     .child(app_icon(
                                         AppIcon::Income,
                                         IconSize::Sm,
@@ -201,16 +201,9 @@ impl ReportViewScreen {
                                     .flex()
                                     .items_center()
                                     .justify_between()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child(Translator::t(
-                                                state.locale,
-                                                terms::TOTAL_EXPENSES,
-                                                None,
-                                            )),
-                                    )
+                                    .child(div().text_xs().text_color(theme.text_muted).child(
+                                        Translator::t(state.locale, terms::TOTAL_EXPENSES, None),
+                                    ))
                                     .child(app_icon(
                                         AppIcon::Expense,
                                         IconSize::Sm,
@@ -241,16 +234,9 @@ impl ReportViewScreen {
                                     .flex()
                                     .items_center()
                                     .justify_between()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child(Translator::t(
-                                                state.locale,
-                                                terms::CLOSING_BALANCE,
-                                                None,
-                                            )),
-                                    )
+                                    .child(div().text_xs().text_color(theme.text_muted).child(
+                                        Translator::t(state.locale, terms::CLOSING_BALANCE, None),
+                                    ))
                                     .child(app_icon(
                                         AppIcon::Reports,
                                         IconSize::Sm,
@@ -289,49 +275,45 @@ impl ReportViewScreen {
                                 None,
                             )),
                     )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap(px(8.0))
-                            .children(report.custodian_balances.iter().map(|c| {
-                                div()
-                                    .flex()
-                                    .flex_row()
-                                    .justify_between()
-                                    .items_center()
-                                    .py(px(8.0))
-                                    .px(px(12.0))
-                                    .rounded(px(6.0))
-                                    .bg(theme.bg_canvas)
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .items_center()
-                                            .gap(px(8.0))
-                                            .child(app_icon(
-                                                AppIcon::Members,
-                                                IconSize::Xs,
-                                                IconTone::Muted,
-                                                theme,
-                                            ))
-                                            .child(
-                                                div()
-                                                    .text_sm()
-                                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                                    .text_color(theme.text_primary)
-                                                    .child(c.wallet_name.clone()),
-                                            ),
-                                    )
-                                    .child(
-                                        div()
-                                            .text_sm()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.income_color)
-                                            .child(format!("{} RWF", c.balance)),
-                                    )
-                            })),
-                    ),
+                    .child(div().flex().flex_col().gap(px(8.0)).children(
+                        report.custodian_balances.iter().map(|c| {
+                            div()
+                                .flex()
+                                .flex_row()
+                                .justify_between()
+                                .items_center()
+                                .py(px(8.0))
+                                .px(px(12.0))
+                                .rounded(px(6.0))
+                                .bg(theme.bg_canvas)
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .gap(px(8.0))
+                                        .child(app_icon(
+                                            AppIcon::Members,
+                                            IconSize::Xs,
+                                            IconTone::Muted,
+                                            theme,
+                                        ))
+                                        .child(
+                                            div()
+                                                .text_sm()
+                                                .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                                .text_color(theme.text_primary)
+                                                .child(c.wallet_name.clone()),
+                                        ),
+                                )
+                                .child(
+                                    div()
+                                        .text_sm()
+                                        .font_weight(gpui_kit::FontWeight::BOLD)
+                                        .text_color(theme.income_color)
+                                        .child(format!("{} RWF", c.balance)),
+                                )
+                        }),
+                    )),
             )
             // Section: WhatsApp Formatted Preview Box
             .child(
@@ -353,7 +335,10 @@ impl ReportViewScreen {
                                     .text_sm()
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
-                                    .child(umuryango_i18n::t(state.locale, "report.whatsapp_preview")),
+                                    .child(umuryango_i18n::t(
+                                        state.locale,
+                                        "report.whatsapp_preview",
+                                    )),
                             )
                             .child(
                                 div()
@@ -369,7 +354,11 @@ impl ReportViewScreen {
                                     .text_color(theme.text_muted)
                                     .cursor_pointer()
                                     .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.copy_to_clipboard(copy_preview_text.clone(), copy_preview_success.clone(), cx);
+                                        this.copy_to_clipboard(
+                                            copy_preview_text.clone(),
+                                            copy_preview_success.clone(),
+                                            cx,
+                                        );
                                     }))
                                     .child(app_icon(
                                         AppIcon::Copy,

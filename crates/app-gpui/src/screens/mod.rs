@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod auth_inputs;
 pub mod dashboard;
 pub mod future_plans;
 pub mod loans;

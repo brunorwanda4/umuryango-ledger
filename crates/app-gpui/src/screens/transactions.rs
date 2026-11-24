@@ -84,7 +84,10 @@ impl TransactionsScreen {
                             .text_sm()
                             .text_center()
                             .text_color(theme.text_muted)
-                            .child(umuryango_i18n::t(state.locale, "transactions.no_transactions"))
+                            .child(umuryango_i18n::t(
+                                state.locale,
+                                "transactions.no_transactions",
+                            ))
                             .into_any_element(),
                     ]
                 } else {

@@ -46,7 +46,10 @@ impl Translator {
         let key = if error_code.starts_with("errors.") {
             error_code.to_string()
         } else if error_code.starts_with("error-") {
-            format!("errors.{}", error_code.trim_start_matches("error-").replace('-', "_"))
+            format!(
+                "errors.{}",
+                error_code.trim_start_matches("error-").replace('-', "_")
+            )
         } else {
             format!("errors.{}", error_code.replace('-', "_").to_lowercase())
         };

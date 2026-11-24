@@ -1,7 +1,11 @@
+use crate::db_facade::LocalDatabase;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::db_facade::{CacheRepository, SyncMutation, SyncQueueRepository};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use umuryango_core_domain::DomainError;
+use umuryango_core_domain::SyncStatus;
 use umuryango_core_domain::ledger::LedgerValidator;
 use umuryango_core_domain::models::{
     FamilyMember, FamilyRole, FuturePlan, Loan, PendingFamilyInvite, Project, Transaction,
@@ -10,10 +14,6 @@ use umuryango_core_domain::models::{
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
-use umuryango_core_domain::SyncStatus;
-use crate::db_facade::LocalDatabase;
-#[cfg(not(target_arch = "wasm32"))]
-use crate::db_facade::{CacheRepository, SyncMutation, SyncQueueRepository};
 use uuid::Uuid;
 
 use crate::safe_area::SafeAreaInsets;

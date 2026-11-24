@@ -1,11 +1,12 @@
+pub mod common;
 pub mod components;
+pub mod db_facade;
 pub mod mobile;
 pub mod safe_area;
 pub mod screens;
 pub mod state;
 pub mod theme;
 pub mod updater;
-pub mod db_facade;
 pub mod web;
 pub use web::mount_gpui_app;
 
@@ -15,8 +16,8 @@ use uuid::Uuid;
 use components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm, QuickEntryMode};
 use gpui_kit::{
-    Context, InteractiveElement, IntoElement, ParentElement, Render,
-    StatefulInteractiveElement, Styled, Window, div, hsla, px,
+    Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement,
+    Styled, Window, div, hsla, px,
 };
 pub use safe_area::SafeAreaInsets;
 use state::{AppState, Screen};
@@ -36,29 +37,44 @@ pub struct RootView {
     pub db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>,
     pub family_id: Uuid,
     pub quick_entry_form: QuickEntryForm,
+    pub auth_inputs: screens::auth_inputs::AuthInputs,
 }
 
 impl RootView {
-    pub fn new(state: AppState, db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>) -> Self {
-        Self::new_with_db(state, db)
+    pub fn new(
+        state: AppState,
+        db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Self {
+        Self::new_with_db(state, db, window, cx)
     }
     #[cfg(target_arch = "wasm32")]
-    pub fn new_wasm(state: AppState) -> Self {
-        Self::new_with_db(state, None)
+    pub fn new_wasm(state: AppState, window: &mut Window, cx: &mut Context<Self>) -> Self {
+        Self::new_with_db(state, None, window, cx)
     }
-    fn new_with_db(state: AppState, db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>) -> Self {
+    fn new_with_db(
+        state: AppState,
+        db: Option<Arc<Mutex<crate::db_facade::LocalDatabase>>>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let family_id = match state.active_scope {
             LedgerScope::Family { family_id } => family_id,
             LedgerScope::Personal { .. } => Uuid::new_v4(),
         };
-        let mut form = QuickEntryForm::default();
-        form.source_wallet_id = state.active_wallets().first().map(|w| w.id);
+        state.theme.apply_to_kit(cx);
+        let form = QuickEntryForm {
+            source_wallet_id: state.active_wallets().first().map(|w| w.id),
+            ..Default::default()
+        };
 
         Self {
             state,
             db,
             family_id,
             quick_entry_form: form,
+            auth_inputs: screens::auth_inputs::AuthInputs::new(window, cx),
         }
     }
 
@@ -111,6 +127,7 @@ impl RootView {
     pub fn toggle_theme(&mut self, cx: &mut Context<Self>) {
         let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
         self.state.toggle_theme(db_lock.as_deref());
+        self.state.theme.apply_to_kit(cx);
         cx.notify();
     }
 
@@ -123,6 +140,7 @@ impl RootView {
         if self.state.theme_mode != target_mode {
             let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
             self.state.set_theme_mode(target_mode, db_lock.as_deref());
+            self.state.theme.apply_to_kit(cx);
             cx.notify();
         }
     }
@@ -131,6 +149,7 @@ impl RootView {
         let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
         self.state
             .set_theme_config(crate::theme::ThemeConfig::default(), db_lock.as_deref());
+        self.state.theme.apply_to_kit(cx);
         cx.notify();
     }
 
@@ -277,7 +296,11 @@ impl RootView {
             family_id: new_family_id,
         };
         self.state.current_screen = Screen::Dashboard;
-        let msg = umuryango_i18n::t_args(self.state.locale, "onboarding.family_created_code", &[("code", "HK0N")]);
+        let msg = umuryango_i18n::t_args(
+            self.state.locale,
+            "onboarding.family_created_code",
+            &[("code", "HK0N")],
+        );
         self.state.set_toast(msg, false);
         cx.notify();
     }
@@ -318,8 +341,14 @@ impl Render for RootView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.state.theme.clone();
         let screen_element = match self.state.current_screen {
-            Screen::Auth => screens::AuthScreen::render("screen-auth", &self.state, &theme, cx)
-                .into_any_element(),
+            Screen::Auth => screens::AuthScreen::render(
+                "screen-auth",
+                &self.state,
+                &self.auth_inputs,
+                &theme,
+                cx,
+            )
+            .into_any_element(),
             Screen::Onboarding => {
                 screens::OnboardingScreen::render("screen-onboarding", &self.state, &theme, cx)
                     .into_any_element()
@@ -528,7 +557,7 @@ impl Render for RootView {
                         .child(QuickEntryDialog::render(
                             "app-quick-entry-dialog",
                             &self.quick_entry_form,
-                            &wallets,
+                            wallets,
                             is_family,
                             self.state.locale,
                             &theme,

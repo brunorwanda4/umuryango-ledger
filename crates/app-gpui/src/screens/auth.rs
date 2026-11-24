@@ -2,7 +2,10 @@ use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Translator, terms};
 
+use super::auth_inputs::AuthInputs;
 use crate::RootView;
+use crate::common::input::{password_field, text_field};
+use crate::common::radio::{radio_field, radio_option};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::lang_toggle::LangToggle;
 use crate::state::AppState;
@@ -14,6 +17,7 @@ impl AuthScreen {
     pub fn render(
         id: impl Into<ElementId>,
         state: &AppState,
+        inputs: &AuthInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
@@ -116,9 +120,9 @@ impl AuthScreen {
                     )
                     // Form Fields
                     .child(if is_register {
-                        Self::render_register_form(state, theme, cx).into_any_element()
+                        Self::render_register_form(state, inputs, theme, cx).into_any_element()
                     } else {
-                        Self::render_login_form(state, theme, cx).into_any_element()
+                        Self::render_login_form(state, inputs, theme, cx).into_any_element()
                     })
                     // Toggle Between Login and Register
                     .child(
@@ -143,343 +147,152 @@ impl AuthScreen {
 
     fn render_login_form(
         state: &AppState,
+        inputs: &AuthInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
+        let t = |key| Translator::t(state.locale, key, None);
+
         div()
             .w_full()
             .flex()
             .flex_col()
             .gap(px(12.0))
-            // Phone input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::PHONE_NUMBER, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child(if state.auth_phone.is_empty() {
-                                "+250 788 000 000".to_string()
-                            } else {
-                                state.auth_phone.clone()
-                            }),
-                    ),
-            )
-            // Password input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::PASSWORD, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child(if state.auth_password.is_empty() {
-                                "••••••••".to_string()
-                            } else {
-                                "••••••••".to_string()
-                            }),
-                    ),
-            )
-            // Login Button
-            .child(
-                div()
-                    .id("auth-login-submit-btn")
-                    .w_full()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.0))
-                    .py(px(10.0))
-                    .rounded(px(8.0))
-                    .bg(theme.accent_primary)
-                    .text_sm()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(theme.bg_canvas)
-                    .cursor_pointer()
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.handle_login_submit(cx);
-                    }))
-                    .child(app_icon(
-                        AppIcon::Check,
-                        IconSize::Sm,
-                        IconTone::OnPrimaryButton,
-                        theme,
-                    ))
-                    .child(Translator::t(state.locale, terms::LOGIN_TITLE, None)),
-            )
+            .child(text_field(
+                "auth-login-phone",
+                t(terms::PHONE_NUMBER),
+                &inputs.phone,
+                theme,
+            ))
+            .child(password_field(
+                "auth-login-password",
+                t(terms::PASSWORD),
+                &inputs.password,
+                theme,
+                cx,
+            ))
+            .child(Self::submit_button(
+                "auth-login-submit-btn",
+                t(terms::LOGIN_TITLE),
+                theme,
+                cx,
+                |this, cx| this.handle_login_submit(cx),
+            ))
     }
 
     fn render_register_form(
         state: &AppState,
+        inputs: &AuthInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        let is_male = state.auth_gender == "MALE";
+        let t = |key| Translator::t(state.locale, key, None);
 
         div()
             .w_full()
             .flex()
             .flex_col()
             .gap(px(10.0))
-            // Full Name input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::FULL_NAME, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child(if state.auth_full_name.is_empty() {
-                                "Kwizera Aimable".to_string()
-                            } else {
-                                state.auth_full_name.clone()
-                            }),
-                    ),
-            )
-            // Phone input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::PHONE_NUMBER, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child(if state.auth_phone.is_empty() {
-                                "+250 788 123 456".to_string()
-                            } else {
-                                state.auth_phone.clone()
-                            }),
-                    ),
-            )
-            // Gender Selector: Male / Female
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::GENDER, None)),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .gap(px(8.0))
-                            .child(
-                                div()
-                                    .id("gender-male-btn")
-                                    .flex_1()
-                                    .py(px(6.0))
-                                    .rounded(px(6.0))
-                                    .bg(if is_male {
-                                        theme.accent_primary
-                                    } else {
-                                        theme.bg_canvas
-                                    })
-                                    .border_1()
-                                    .border_color(if is_male {
-                                        theme.accent_primary
-                                    } else {
-                                        theme.border_subtle
-                                    })
-                                    .text_center()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_color(if is_male {
-                                        theme.bg_canvas
-                                    } else {
-                                        theme.text_primary
-                                    })
-                                    .cursor_pointer()
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.state.auth_gender = "MALE".to_string();
-                                        cx.notify();
-                                    }))
-                                    .child(Translator::t(state.locale, terms::GENDER_MALE, None)),
-                            )
-                            .child(
-                                div()
-                                    .id("gender-female-btn")
-                                    .flex_1()
-                                    .py(px(6.0))
-                                    .rounded(px(6.0))
-                                    .bg(if !is_male {
-                                        theme.accent_primary
-                                    } else {
-                                        theme.bg_canvas
-                                    })
-                                    .border_1()
-                                    .border_color(if !is_male {
-                                        theme.accent_primary
-                                    } else {
-                                        theme.border_subtle
-                                    })
-                                    .text_center()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_color(if !is_male {
-                                        theme.bg_canvas
-                                    } else {
-                                        theme.text_primary
-                                    })
-                                    .cursor_pointer()
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.state.auth_gender = "FEMALE".to_string();
-                                        cx.notify();
-                                    }))
-                                    .child(Translator::t(state.locale, terms::GENDER_FEMALE, None)),
-                            ),
-                    ),
-            )
-            // Password input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::PASSWORD, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child("••••••••".to_string()),
-                    ),
-            )
-            // Password Again (Confirm Password) input
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(4.0))
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::CONFIRM_PASSWORD, None)),
-                    )
-                    .child(
-                        div()
-                            .w_full()
-                            .px(px(12.0))
-                            .py(px(8.0))
-                            .rounded(px(8.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_color(theme.text_primary)
-                            .child("••••••••".to_string()),
-                    ),
-            )
-            // Create Account Submit Button
-            .child(
-                div()
-                    .id("auth-register-submit-btn")
-                    .w_full()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.0))
-                    .py(px(10.0))
-                    .rounded(px(8.0))
-                    .bg(theme.accent_primary)
-                    .text_sm()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(theme.bg_canvas)
-                    .cursor_pointer()
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.handle_register_submit(cx);
-                    }))
-                    .child(app_icon(
-                        AppIcon::Check,
-                        IconSize::Sm,
-                        IconTone::OnPrimaryButton,
-                        theme,
-                    ))
-                    .child(Translator::t(state.locale, terms::CREATE_ACCOUNT, None)),
-            )
+            .child(text_field(
+                "auth-register-name",
+                t(terms::FULL_NAME),
+                &inputs.full_name,
+                theme,
+            ))
+            .child(text_field(
+                "auth-register-phone",
+                t(terms::PHONE_NUMBER),
+                &inputs.phone,
+                theme,
+            ))
+            .child(Self::render_gender_selector(state, theme, cx))
+            .child(password_field(
+                "auth-register-password",
+                t(terms::PASSWORD),
+                &inputs.password,
+                theme,
+                cx,
+            ))
+            .child(password_field(
+                "auth-register-confirm-password",
+                t(terms::CONFIRM_PASSWORD),
+                &inputs.confirm_password,
+                theme,
+                cx,
+            ))
+            .child(Self::submit_button(
+                "auth-register-submit-btn",
+                t(terms::CREATE_ACCOUNT),
+                theme,
+                cx,
+                |this, cx| this.handle_register_submit(cx),
+            ))
+    }
+
+    fn render_gender_selector(
+        state: &AppState,
+        theme: &SemanticTheme,
+        cx: &Context<RootView>,
+    ) -> impl IntoElement {
+        let selected = match state.auth_gender.as_str() {
+            "MALE" => Some(0),
+            "FEMALE" => Some(1),
+            _ => None,
+        };
+
+        radio_field(
+            "auth-register-gender",
+            Translator::t(state.locale, terms::GENDER, None),
+            [
+                radio_option(
+                    "gender-male",
+                    Translator::t(state.locale, terms::GENDER_MALE, None),
+                ),
+                radio_option(
+                    "gender-female",
+                    Translator::t(state.locale, terms::GENDER_FEMALE, None),
+                ),
+            ],
+            selected,
+            cx.listener(|this, index: &usize, _, cx| {
+                this.state.auth_gender = match *index {
+                    0 => "MALE".to_string(),
+                    _ => "FEMALE".to_string(),
+                };
+                cx.notify();
+            }),
+            theme,
+        )
+    }
+
+    fn submit_button(
+        id: &'static str,
+        label: String,
+        theme: &SemanticTheme,
+        cx: &Context<RootView>,
+        on_submit: fn(&mut RootView, &mut Context<RootView>),
+    ) -> impl IntoElement {
+        div()
+            .id(id)
+            .w_full()
+            .flex()
+            .items_center()
+            .justify_center()
+            .gap(px(8.0))
+            .py(px(10.0))
+            .rounded(px(8.0))
+            .bg(theme.accent_primary)
+            .text_sm()
+            .font_weight(gpui_kit::FontWeight::BOLD)
+            .text_color(theme.bg_canvas)
+            .cursor_pointer()
+            .on_click(cx.listener(move |this, _, _, cx| on_submit(this, cx)))
+            .child(app_icon(
+                AppIcon::Check,
+                IconSize::Sm,
+                IconTone::OnPrimaryButton,
+                theme,
+            ))
+            .child(label)
     }
 }

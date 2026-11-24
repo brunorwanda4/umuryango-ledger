@@ -72,31 +72,31 @@ impl FuturePlansScreen {
                     ),
             )
             // Plans list or empty state
-            .child(
-                div().flex().flex_col().gap(px(12.0)).children(
-                    if state.future_plans.is_empty() {
-                        vec![
-                            div()
-                                .p(px(24.0))
-                                .rounded(px(8.0))
-                                .bg(theme.bg_surface)
-                                .border_1()
-                                .border_color(theme.border_subtle)
-                                .text_sm()
-                                .text_center()
-                                .text_color(theme.text_muted)
-                                .child(umuryango_i18n::t(state.locale, "future_plans.no_plans"))
-                                .into_any_element(),
-                        ]
-                    } else {
-                        state
-                            .future_plans
-                            .iter()
-                            .map(|p| Self::render_plan_card(p, state.locale, theme, cx).into_any_element())
-                            .collect()
-                    },
-                ),
-            )
+            .child(div().flex().flex_col().gap(px(12.0)).children(
+                if state.future_plans.is_empty() {
+                    vec![
+                        div()
+                            .p(px(24.0))
+                            .rounded(px(8.0))
+                            .bg(theme.bg_surface)
+                            .border_1()
+                            .border_color(theme.border_subtle)
+                            .text_sm()
+                            .text_center()
+                            .text_color(theme.text_muted)
+                            .child(umuryango_i18n::t(state.locale, "future_plans.no_plans"))
+                            .into_any_element(),
+                    ]
+                } else {
+                    state
+                        .future_plans
+                        .iter()
+                        .map(|p| {
+                            Self::render_plan_card(p, state.locale, theme, cx).into_any_element()
+                        })
+                        .collect()
+                },
+            ))
     }
 
     fn render_plan_card(

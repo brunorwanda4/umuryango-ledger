@@ -194,7 +194,10 @@ impl DashboardScreen {
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .mb(px(12.0))
-                                    .child(umuryango_i18n::t(state.locale, "dashboard.inflow_outflow_chart")),
+                                    .child(umuryango_i18n::t(
+                                        state.locale,
+                                        "dashboard.inflow_outflow_chart",
+                                    )),
                             )
                             .child(
                                 div()
@@ -232,7 +235,10 @@ impl DashboardScreen {
                                     .font_weight(gpui_kit::FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .mb(px(12.0))
-                                    .child(umuryango_i18n::t(state.locale, "dashboard.categories_chart")),
+                                    .child(umuryango_i18n::t(
+                                        state.locale,
+                                        "dashboard.categories_chart",
+                                    )),
                             )
                             // Visual Donut Chart Breakdown
                             .child(
@@ -280,41 +286,42 @@ impl DashboardScreen {
                             .text_color(theme.text_primary)
                             .child(umuryango_i18n::t(state.locale, "dashboard.recent_activity")),
                     )
-                    .child(
-                        div().flex().flex_col().gap(px(8.0)).children(
-                            if state.transactions.is_empty() {
-                                vec![
-                                    div()
-                                        .p(px(16.0))
-                                        .rounded(px(8.0))
-                                        .bg(theme.bg_surface)
-                                        .border_1()
-                                        .border_color(theme.border_subtle)
-                                        .text_xs()
-                                        .text_color(theme.text_muted)
-                                        .child(umuryango_i18n::t(state.locale, "dashboard.no_recent_activity"))
-                                        .into_any_element(),
-                                ]
-                            } else {
-                                state
-                                    .transactions
-                                    .iter()
-                                    .take(6)
-                                    .enumerate()
-                                    .map(|(idx, tx)| {
-                                        TxRow::render(
-                                            format!("dash-tx-{}", idx),
-                                            tx,
-                                            Some(&state.user_name),
-                                            state.locale,
-                                            theme,
-                                        )
-                                        .into_any_element()
-                                    })
-                                    .collect()
-                            },
-                        ),
-                    ),
+                    .child(div().flex().flex_col().gap(px(8.0)).children(
+                        if state.transactions.is_empty() {
+                            vec![
+                                div()
+                                    .p(px(16.0))
+                                    .rounded(px(8.0))
+                                    .bg(theme.bg_surface)
+                                    .border_1()
+                                    .border_color(theme.border_subtle)
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child(umuryango_i18n::t(
+                                        state.locale,
+                                        "dashboard.no_recent_activity",
+                                    ))
+                                    .into_any_element(),
+                            ]
+                        } else {
+                            state
+                                .transactions
+                                .iter()
+                                .take(6)
+                                .enumerate()
+                                .map(|(idx, tx)| {
+                                    TxRow::render(
+                                        format!("dash-tx-{}", idx),
+                                        tx,
+                                        Some(&state.user_name),
+                                        state.locale,
+                                        theme,
+                                    )
+                                    .into_any_element()
+                                })
+                                .collect()
+                        },
+                    )),
             )
     }
 
