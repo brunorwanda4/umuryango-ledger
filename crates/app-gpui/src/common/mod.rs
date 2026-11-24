@@ -5,6 +5,7 @@ pub mod aspect_ratio;
 pub mod badge;
 pub mod button;
 pub mod button_group;
+pub mod card;
 pub mod direction;
 pub mod input;
 pub mod kbd;
@@ -20,6 +21,9 @@ pub use badge::{Badge, BadgeVariant, OverlayCountBadge, badge};
 pub use button::{Button, ButtonSize, ButtonVariant, KitButton, button};
 pub use button_group::{
     ButtonGroup, ButtonGroupOrientation, ButtonGroupSeparator, ButtonGroupText, KitButtonGroup,
+};
+pub use card::{
+    Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardSize, CardTitle,
 };
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use input::{password_field, text_field};
