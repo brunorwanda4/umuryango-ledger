@@ -56,6 +56,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `eb71ca3` | `feat(gpui, api): wire live API bridge, interactive entity modals, and family member endpoints` | Tests skipped per user request |
 | **2026-11-25** | `59db18c` | `feat(web): initialize shadcn UI setup and add button primitive` | Tests skipped per user request |
 | **2026-11-25** | `13d9781` | `feat(web): add all shadcn UI components` | `bun run typecheck`, `bun test` (4 passed), `bun run build` |
+| **2026-11-24** | `dd258be` | `feat(ui): add GPUI hooks and preset b1oaDsAa style utilities` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -67,7 +68,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] `web/src/hooks/use-highlighted-code.ts` & `web/src/lib/highlighter.tsx` → **Skipped (Documented):** Zero installed components in `web/src/components/ui/` (including `code-block.tsx`) and zero Umuryango Ledger views import or depend on Shiki syntax highlighting; omitted per Rule 1 (Zero Dead Code).
 
 ### B. All 63 Components (`web/src/components/ui/*.tsx` → `crates/app-gpui/src/common/*.rs`)
-- [ ] 01. `direction.tsx` → `direction.rs`
+- [x] 01. `direction.tsx` → `direction.rs`
 - [ ] 02. `separator.tsx` → `separator.rs`
 - [ ] 03. `skeleton.tsx` → `skeleton.rs`
 - [ ] 04. `spinner.tsx` → `spinner.rs`
