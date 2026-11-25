@@ -27,6 +27,7 @@ pub mod pagination;
 pub mod progress;
 pub mod radio;
 pub mod radio_group;
+pub mod scroll_area;
 pub mod separator;
 pub mod skeleton;
 pub mod slider;
@@ -102,6 +103,10 @@ pub use progress::{
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
 pub use radio_group::{
     RadioGroup as RadioGroupContainer, RadioGroupItem, RadioGroupOrientation,
+};
+pub use scroll_area::{
+    KitScrollable, KitScrollbar, ScrollArea, ScrollBar, ScrollBarOrientation, ScrollableElement,
+    ScrollbarAxis, ScrollbarHandle, ScrollbarMode,
 };
 pub use separator::{
     Separator, SeparatorOrientation, SeparatorStyle, horizontal_separator, vertical_separator,
