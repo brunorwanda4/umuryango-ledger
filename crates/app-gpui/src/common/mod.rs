@@ -18,6 +18,7 @@ pub mod input_otp;
 pub mod item;
 pub mod kbd;
 pub mod label;
+pub mod marker;
 pub mod native_select;
 pub mod progress;
 pub mod radio;
@@ -70,6 +71,7 @@ pub use item::{
 };
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
+pub use marker::{KitMarker, Marker, MarkerContent, MarkerIcon, MarkerVariant};
 pub use native_select::{
     NativeSelect, NativeSelectOptGroup, NativeSelectOption, NativeSelectSize,
 };
