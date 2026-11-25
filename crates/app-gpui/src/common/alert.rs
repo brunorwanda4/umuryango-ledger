@@ -6,8 +6,8 @@
 //! - `AlertTitle` (`text-sm font-semibold`), `AlertDescription` (`text-sm text-muted-foreground`),
 //!   `AlertAction` (`absolute top-2.5 right-3`).
 
-pub use gpui_kit::component::alert::Alert as KitAlert;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::alert::Alert as KitAlert;
 use gpui_kit::{
     AnyElement, App, FontWeight, IntoElement, ParentElement, RenderOnce, SharedString,
     StyleRefinement, Styled, Window, div, px,
@@ -111,7 +111,9 @@ impl RenderOnce for Alert {
 
         let (fg, stripe, icon_tone) = match self.variant {
             AlertVariant::Default => (tokens.card_foreground, tokens.foreground, IconTone::Default),
-            AlertVariant::Destructive => (tokens.destructive, tokens.destructive, IconTone::Expense),
+            AlertVariant::Destructive => {
+                (tokens.destructive, tokens.destructive, IconTone::Expense)
+            }
         };
 
         let has_action = self.action.is_some();
@@ -157,12 +159,12 @@ impl RenderOnce for Alert {
             );
 
         if let Some(icon) = self.icon {
-            root = root.child(
-                div()
-                    .pt(px(2.0))
-                    .flex_shrink_0()
-                    .child(app_icon(icon, IconSize::Md, icon_tone, &theme)),
-            );
+            root = root.child(div().pt(px(2.0)).flex_shrink_0().child(app_icon(
+                icon,
+                IconSize::Md,
+                icon_tone,
+                &theme,
+            )));
         }
 
         root = root.child(body);

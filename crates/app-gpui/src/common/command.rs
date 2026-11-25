@@ -13,11 +13,11 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::command::{
     Command as KitCommand, CommandEntry as KitCommandEntry, CommandGroup as KitCommandGroup,
     CommandItem as KitCommandItem, CommandState as KitCommandState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, Entity, FontWeight, InteractiveElement, IntoElement,
     ParentElement, RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled,
@@ -189,16 +189,15 @@ impl RenderOnce for CommandDialog {
     fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = resolve_theme(self.theme.as_ref(), cx);
 
-        let content = DialogContent::new(ElementId::Name(
-            format!("{}-cmd-content", self.id).into(),
-        ))
-        .show_close_button(self.show_close_button)
-        .theme(&theme)
-        .overflow_hidden()
-        .p(px(0.0))
-        .gap(px(0.0))
-        .refine_style(&self.style)
-        .children(self.children);
+        let content =
+            DialogContent::new(ElementId::Name(format!("{}-cmd-content", self.id).into()))
+                .show_close_button(self.show_close_button)
+                .theme(&theme)
+                .overflow_hidden()
+                .p(px(0.0))
+                .gap(px(0.0))
+                .refine_style(&self.style)
+                .children(self.children);
 
         let mut dlg = Dialog::new(self.id)
             .default_open(self.default_open)
@@ -272,16 +271,12 @@ impl RenderOnce for CommandInput {
                     InputGroupAddon::new()
                         .align(InputGroupAddonAlign::InlineEnd)
                         .theme(&theme)
-                        .child(
-                            div()
-                                .opacity(0.5)
-                                .child(app_icon(
-                                    AppIcon::Search,
-                                    IconSize::Sm,
-                                    IconTone::Muted,
-                                    &theme,
-                                )),
-                        ),
+                        .child(div().opacity(0.5).child(app_icon(
+                            AppIcon::Search,
+                            IconSize::Sm,
+                            IconTone::Muted,
+                            &theme,
+                        ))),
                 ),
         )
     }
@@ -581,16 +576,12 @@ impl RenderOnce for CommandItem {
         if let Some(sc) = self.shortcut {
             row = row.child(CommandShortcut::new(sc).theme(&theme));
         } else if self.checked {
-            row = row.child(
-                div()
-                    .ml_auto()
-                    .child(app_icon(
-                        AppIcon::Check,
-                        IconSize::Sm,
-                        IconTone::Default,
-                        &theme,
-                    )),
-            );
+            row = row.child(div().ml_auto().child(app_icon(
+                AppIcon::Check,
+                IconSize::Sm,
+                IconTone::Default,
+                &theme,
+            )));
         }
 
         if !self.disabled

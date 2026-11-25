@@ -6,11 +6,11 @@
 //!   and optional keyboard focus ring (`focus-visible:ring-ring/50`)
 //! - `ScrollBar`: `w-2.5` (`vertical`) or `h-2.5` (`horizontal`), `p-px`, thumb `rounded-none bg-border`.
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::scroll::{
     Scrollable as KitScrollable, ScrollableElement, Scrollbar as KitScrollbar, ScrollbarAxis,
     ScrollbarHandle, ScrollbarMode,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ElementId, FocusHandle, InteractiveElement, IntoElement, ParentElement,
     RenderOnce, ScrollHandle, StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,

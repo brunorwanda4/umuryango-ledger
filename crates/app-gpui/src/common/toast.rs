@@ -11,11 +11,11 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::notification::{
     Notification as KitNotification, NotificationList as KitNotificationList,
     NotificationSettings as KitNotificationSettings, NotificationType as KitNotificationType,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, AppContext as _, ClickEvent, ElementId, Entity, FontWeight,
     InteractiveElement, IntoElement, MouseButton, ParentElement, RenderOnce, SharedString,

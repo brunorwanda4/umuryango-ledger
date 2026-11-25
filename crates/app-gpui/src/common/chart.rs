@@ -11,11 +11,11 @@
 
 use std::collections::BTreeMap;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::chart::{
     AreaChart, BarChart, CandlestickChart, LineChart, PieChart, RadarChart, RadarLabel,
     SankeyChart, SankeyLabel,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ElementId, FontWeight, Hsla, InteractiveElement, IntoElement, ParentElement,
     RenderOnce, SharedString, StyleRefinement, Styled, Window, div, px,
@@ -42,10 +42,10 @@ fn resolve_theme(explicit: Option<&SemanticTheme>, cx: &App) -> SemanticTheme {
 pub fn preset_chart_color(series_index: usize, theme: &SemanticTheme) -> Hsla {
     let tokens = PresetTokens::from_theme(theme);
     match series_index % 5 {
-        0 => tokens.primary,         // #ba181b
-        1 => tokens.primary_hover,   // #e5383b
-        2 => tokens.primary_pressed, // #a4161a
-        3 => tokens.primary_deep,    // #660708
+        0 => tokens.primary,          // #ba181b
+        1 => tokens.primary_hover,    // #e5383b
+        2 => tokens.primary_pressed,  // #a4161a
+        3 => tokens.primary_deep,     // #660708
         _ => tokens.muted_foreground, // #b1a7a6
     }
 }
@@ -110,11 +110,7 @@ impl ChartConfig {
         }
     }
 
-    pub fn insert(
-        mut self,
-        key: impl Into<SharedString>,
-        series: ChartSeriesConfig,
-    ) -> Self {
+    pub fn insert(mut self, key: impl Into<SharedString>, series: ChartSeriesConfig) -> Self {
         self.series.insert(key.into(), series);
         self
     }
@@ -384,7 +380,11 @@ impl RenderOnce for ChartTooltipContent {
                     .items_center()
                     .justify_between()
                     .gap(px(12.0))
-                    .child(div().text_color(tokens.muted_foreground).child(series_label))
+                    .child(
+                        div()
+                            .text_color(tokens.muted_foreground)
+                            .child(series_label),
+                    )
                     .child(
                         div()
                             .font_weight(FontWeight::MEDIUM)

@@ -223,9 +223,10 @@ impl RenderOnce for InputGroupAddon {
             .font_weight(FontWeight::MEDIUM)
             .text_color(tokens.muted_foreground)
             .cx_when(!is_block, |d| d.justify_center().py(px(8.0)))
-            .cx_when(matches!(self.align, InputGroupAddonAlign::BlockStart), |d| {
-                d.w_full().justify_start().pt(px(12.0))
-            })
+            .cx_when(
+                matches!(self.align, InputGroupAddonAlign::BlockStart),
+                |d| d.w_full().justify_start().pt(px(12.0)),
+            )
             .cx_when(matches!(self.align, InputGroupAddonAlign::BlockEnd), |d| {
                 d.w_full().justify_start().pb(px(12.0))
             })

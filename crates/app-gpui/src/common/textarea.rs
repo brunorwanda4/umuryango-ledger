@@ -4,8 +4,8 @@
 //! `flex min-h-16 w-full resize-none rounded-none border-b border-b-input bg-transparent px-0 py-3 text-sm focus-visible:border-b-ring disabled:opacity-50 aria-invalid:border-b-destructive`
 //! Built on `gpui_kit::component::input::{Textarea, TextareaState}`.
 
-pub use gpui_kit::component::input::{Textarea as KitTextarea, TextareaState};
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::input::{Textarea as KitTextarea, TextareaState};
 use gpui_kit::{
     App, DefiniteLength, Entity, Focusable as _, FontWeight, IntoElement, ParentElement,
     RenderOnce, SharedString, StyleRefinement, Styled, Window, div, px,
@@ -123,7 +123,9 @@ impl RenderOnce for Textarea {
             .w_full()
             .py(px(12.0)) // py-3
             .rounded(PresetRadius::NONE)
-            .cx_when(!self.borderless, |d| d.border_b_1().border_color(border_bottom))
+            .cx_when(!self.borderless, |d| {
+                d.border_b_1().border_color(border_bottom)
+            })
             .preset_disabled(self.disabled)
             .refine_style(&self.style)
             .child(inner)

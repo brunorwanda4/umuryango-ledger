@@ -7,8 +7,8 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::tooltip::{Tooltip as KitTooltip, TooltipDefaults};
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::tooltip::{Tooltip as KitTooltip, TooltipDefaults};
 use gpui_kit::{
     AnyElement, AnyView, App, AppContext as _, Context, ElementId, InteractiveElement, IntoElement,
     ParentElement, Render, RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement,

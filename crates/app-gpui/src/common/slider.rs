@@ -6,10 +6,10 @@
 //!   with `ring-2 ring-ring/30` hover/focus ring
 //! - Built on `gpui_kit::component::slider::{Slider, SliderEvent, SliderScale, SliderState, SliderValue}`.
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::slider::{
     Slider as KitSlider, SliderEvent, SliderScale, SliderState, SliderValue,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     App, Entity, IntoElement, ParentElement, RenderOnce, SharedString, StyleRefinement, Styled,
     Window, div, px,
@@ -104,12 +104,14 @@ impl RenderOnce for Slider {
         }
 
         div()
-            .cx_when(matches!(self.orientation, SliderOrientation::Horizontal), |d| {
-                d.w_full()
-            })
-            .cx_when(matches!(self.orientation, SliderOrientation::Vertical), |d| {
-                d.h_full().min_h(px(160.0))
-            })
+            .cx_when(
+                matches!(self.orientation, SliderOrientation::Horizontal),
+                |d| d.w_full(),
+            )
+            .cx_when(
+                matches!(self.orientation, SliderOrientation::Vertical),
+                |d| d.h_full().min_h(px(160.0)),
+            )
             .preset_disabled(self.disabled)
             .refine_style(&self.style)
             .child(inner)

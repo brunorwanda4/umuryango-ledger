@@ -130,7 +130,9 @@ impl RenderOnce for CodeBlock {
         let is_sm = matches!(self.size, CodeBlockSize::Sm);
 
         let border_c = if is_destr {
-            tokens.destructive.opacity(if tokens.is_dark { 0.40 } else { 0.30 })
+            tokens
+                .destructive
+                .opacity(if tokens.is_dark { 0.40 } else { 0.30 })
         } else {
             tokens.input
         };
@@ -552,10 +554,9 @@ impl RenderOnce for CodeBlockLine {
                 ),
                 |d| d.bg(tokens.muted),
             )
-            .cx_when(
-                matches!(self.variant, CodeBlockLineVariant::Removed),
-                |d| d.bg(tokens.destructive_soft),
-            );
+            .cx_when(matches!(self.variant, CodeBlockLineVariant::Removed), |d| {
+                d.bg(tokens.destructive_soft)
+            });
 
         if let Some((sym, col)) = marker_prefix {
             row = row.child(div().w(px(10.0)).text_color(col).child(sym));

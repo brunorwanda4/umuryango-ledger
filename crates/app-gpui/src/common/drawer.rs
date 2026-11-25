@@ -229,7 +229,10 @@ impl RenderOnce for DrawerContent {
         let is_y = self.direction.is_vertical_axis();
         let on_esc = self.on_close;
 
-        let handle_first = matches!(self.direction, DrawerDirection::Down | DrawerDirection::Right);
+        let handle_first = matches!(
+            self.direction,
+            DrawerDirection::Down | DrawerDirection::Right
+        );
 
         let inner_body = div()
             .flex()
@@ -537,9 +540,7 @@ impl RenderOnce for Drawer {
             );
         }
 
-        if is_open
-            && let Some(mut content) = self.content
-        {
+        if is_open && let Some(mut content) = self.content {
             content.direction = self.direction;
             if self.show_swipe_handle {
                 content.show_swipe_handle = true;

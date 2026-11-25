@@ -11,14 +11,12 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::popover::{
-    Popover as KitPopover, PopoverState as KitPopoverState,
-};
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::popover::{Popover as KitPopover, PopoverState as KitPopoverState};
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FontWeight, InteractiveElement, IntoElement,
-    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString,
-    StatefulInteractiveElement, StyleRefinement, Styled, Window, deferred, div, px, relative,
+    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
+    StyleRefinement, Styled, Window, deferred, div, px, relative,
 };
 
 use crate::common::utils::{
@@ -496,18 +494,20 @@ impl RenderOnce for Popover {
             trigger_slot = trigger_slot.child(trig);
         }
         if !self.disabled {
-            trigger_slot = trigger_slot.cursor_pointer().on_click(move |_ev, window, cx| {
-                let next = !is_open;
-                if !is_controlled {
-                    state_toggle.update(cx, |v, cx| {
-                        *v = next;
-                        cx.notify();
-                    });
-                }
-                if let Some(cb) = &on_change_toggle {
-                    cb(&next, window, cx);
-                }
-            });
+            trigger_slot = trigger_slot
+                .cursor_pointer()
+                .on_click(move |_ev, window, cx| {
+                    let next = !is_open;
+                    if !is_controlled {
+                        state_toggle.update(cx, |v, cx| {
+                            *v = next;
+                            cx.notify();
+                        });
+                    }
+                    if let Some(cb) = &on_change_toggle {
+                        cb(&next, window, cx);
+                    }
+                });
         }
 
         let mut root = div()
@@ -518,9 +518,7 @@ impl RenderOnce for Popover {
             .refine_style(&self.style)
             .child(trigger_slot);
 
-        if is_open
-            && let Some(content) = self.content
-        {
+        if is_open && let Some(content) = self.content {
             let side = content.side;
             let side_offset = content.side_offset;
             let align = content.align;

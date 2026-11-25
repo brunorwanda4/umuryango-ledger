@@ -9,10 +9,10 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::accordion::{
     Accordion as KitAccordion, AccordionItem as KitAccordionItem,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ElementId, FocusHandle, FontWeight, InteractiveElement, IntoElement,
     KeyDownEvent, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
@@ -143,11 +143,7 @@ impl RenderOnce for Accordion {
         let total = self.items.len();
         let mode = self.mode;
 
-        let mut col = div()
-            .flex()
-            .flex_col()
-            .w_full()
-            .refine_style(&self.style);
+        let mut col = div().flex().flex_col().w_full().refine_style(&self.style);
 
         for (idx, mut item) in self.items.into_iter().enumerate() {
             let is_open = item.open_override.unwrap_or_else(|| active.contains(&idx));
@@ -216,10 +212,7 @@ impl AccordionItem {
         }
     }
 
-    pub fn simple(
-        title: impl Into<SharedString>,
-        body: impl IntoElement,
-    ) -> Self {
+    pub fn simple(title: impl Into<SharedString>, body: impl IntoElement) -> Self {
         Self::new(
             AccordionTrigger::new(title),
             AccordionContent::new().child(body),
@@ -397,13 +390,12 @@ impl RenderOnce for AccordionTrigger {
             .preset_disabled(self.disabled)
             .refine_style(&self.style)
             .child(head)
-            .child(
-                div()
-                    .ml_auto()
-                    .pt(px(2.0))
-                    .flex_shrink_0()
-                    .child(app_icon(chevron, IconSize::Sm, IconTone::Muted, &theme)),
-            );
+            .child(div().ml_auto().pt(px(2.0)).flex_shrink_0().child(app_icon(
+                chevron,
+                IconSize::Sm,
+                IconTone::Muted,
+                &theme,
+            )));
 
         if let Some(ref fh) = self.focus_handle {
             btn = btn.track_focus(fh);

@@ -101,10 +101,7 @@ impl RadioGroup {
         self
     }
 
-    pub fn on_change(
-        mut self,
-        handler: impl Fn(&usize, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    pub fn on_change(mut self, handler: impl Fn(&usize, &mut Window, &mut App) + 'static) -> Self {
         self.on_change = Some(Rc::new(handler));
         self
     }

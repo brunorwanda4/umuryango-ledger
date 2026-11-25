@@ -8,10 +8,10 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::hover_card::{
     HoverCard as KitHoverCard, HoverCardState as KitHoverCardState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ElementId, InteractiveElement, IntoElement, MouseButton, ParentElement,
     RenderOnce, StatefulInteractiveElement, StyleRefinement, Styled, Window, deferred, div, px,
@@ -373,9 +373,7 @@ impl RenderOnce for HoverCard {
                         s.card_hovered = false;
                         cx.notify();
                     });
-                    if prev
-                        && let Some(cb) = &on_change_out
-                    {
+                    if prev && let Some(cb) = &on_change_out {
                         cb(&false, window, cx);
                     }
                 }

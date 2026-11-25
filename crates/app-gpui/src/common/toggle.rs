@@ -5,8 +5,8 @@
 //! - Variants: `Default` (`bg-transparent`), `Outline` (`border border-input bg-transparent`)
 //! - Sizes: `Default` (`h-10 min-w-10 px-6`), `Sm` (`h-9 min-w-9 px-4`), `Lg` (`h-11 min-w-11 px-8`).
 
-pub use gpui_kit::component::button::Toggle as KitToggle;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::button::Toggle as KitToggle;
 use gpui_kit::{
     AnyElement, App, ElementId, FocusHandle, FontWeight, InteractiveElement, IntoElement,
     KeyDownEvent, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
@@ -156,10 +156,7 @@ impl Toggle {
         self
     }
 
-    pub fn on_change(
-        mut self,
-        handler: impl Fn(&bool, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    pub fn on_change(mut self, handler: impl Fn(&bool, &mut Window, &mut App) + 'static) -> Self {
         self.on_change = Some(Box::new(handler));
         self
     }

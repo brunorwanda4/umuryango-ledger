@@ -10,15 +10,15 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::combobox::{
     Combobox as KitCombobox, ComboboxChange as KitComboboxChange,
     ComboboxEvent as KitComboboxEvent, ComboboxState as KitComboboxState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, Entity, FontWeight, InteractiveElement, IntoElement,
-    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString,
-    StatefulInteractiveElement, StyleRefinement, Styled, Window, deferred, div, px,
+    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
+    StyleRefinement, Styled, Window, deferred, div, px,
 };
 
 use crate::common::button::{Button, ButtonSize, ButtonVariant};
@@ -289,21 +289,19 @@ impl RenderOnce for ComboboxInput {
             .theme(&theme);
 
         if self.show_clear {
-            let mut clr = ComboboxClear::new(ElementId::Name(
-                format!("{}-combo-clear", self.id).into(),
-            ))
-            .disabled(self.disabled)
-            .theme(&theme);
+            let mut clr =
+                ComboboxClear::new(ElementId::Name(format!("{}-combo-clear", self.id).into()))
+                    .disabled(self.disabled)
+                    .theme(&theme);
             if let Some(cb) = self.on_clear_click {
                 clr = clr.on_click(move |ev, window, cx| cb(ev, window, cx));
             }
             addon = addon.child(clr);
         } else if self.show_trigger {
-            let mut trig = ComboboxTrigger::new(ElementId::Name(
-                format!("{}-combo-trig", self.id).into(),
-            ))
-            .disabled(self.disabled)
-            .theme(&theme);
+            let mut trig =
+                ComboboxTrigger::new(ElementId::Name(format!("{}-combo-trig", self.id).into()))
+                    .disabled(self.disabled)
+                    .theme(&theme);
             if let Some(cb) = self.on_trigger_click {
                 trig = trig.on_click(move |ev, window, cx| cb(ev, window, cx));
             }
@@ -819,9 +817,8 @@ impl RenderOnce for Combobox {
                 .filter(|it| query.is_empty() || it.label.to_lowercase().contains(&query))
                 .collect();
 
-            let mut list = ComboboxList::new(ElementId::Name(
-                format!("{}-combo-list", self.id).into(),
-            ));
+            let mut list =
+                ComboboxList::new(ElementId::Name(format!("{}-combo-list", self.id).into()));
 
             if filtered.is_empty() {
                 list = list.child(ComboboxEmpty::new(self.empty_text).theme(&theme));

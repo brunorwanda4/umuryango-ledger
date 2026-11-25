@@ -427,7 +427,10 @@ fn render_option_row(
     let val = opt.value.clone();
 
     let mut row = div()
-        .id(ElementId::NamedInteger("native-select-opt".into(), idx as u64))
+        .id(ElementId::NamedInteger(
+            "native-select-opt".into(),
+            idx as u64,
+        ))
         .flex()
         .flex_row()
         .items_center()
@@ -438,12 +441,19 @@ fn render_option_row(
         .font_family(FONT_FAMILY)
         .text_sm()
         .text_color(tokens.popover_foreground)
-        .cx_when(is_selected, |d| d.bg(tokens.muted).font_weight(FontWeight::MEDIUM))
+        .cx_when(is_selected, |d| {
+            d.bg(tokens.muted).font_weight(FontWeight::MEDIUM)
+        })
         .preset_disabled(opt.disabled)
         .child(div().flex_1().truncate().child(opt.label));
 
     if is_selected {
-        row = row.child(app_icon(AppIcon::Check, IconSize::Sm, IconTone::AccentPrimary, theme));
+        row = row.child(app_icon(
+            AppIcon::Check,
+            IconSize::Sm,
+            IconTone::AccentPrimary,
+            theme,
+        ));
     }
 
     if !opt.disabled {

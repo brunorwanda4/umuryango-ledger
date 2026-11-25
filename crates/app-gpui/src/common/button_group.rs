@@ -5,8 +5,8 @@
 //! - `ButtonGroupText`: `flex items-center gap-2 border border-transparent border-b-input bg-transparent px-2.5 text-xs font-semibold uppercase`
 //! - `ButtonGroupSeparator`: `Separator` (`Vertical` default, `self-stretch bg-input`).
 
-pub use gpui_kit::component::button::ButtonGroup as KitButtonGroup;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::button::ButtonGroup as KitButtonGroup;
 use gpui_kit::{
     AnyElement, App, FontWeight, IntoElement, ParentElement, RenderOnce, SharedString,
     StyleRefinement, Styled, Window, div, px,
@@ -170,7 +170,9 @@ impl RenderOnce for ButtonGroupText {
             .font_weight(FontWeight::SEMIBOLD)
             .text_color(tokens.foreground)
             .cx_when(self.outlined, |d| d.border_1().border_color(tokens.border))
-            .cx_when(!self.outlined, |d| d.border_b_1().border_color(tokens.input))
+            .cx_when(!self.outlined, |d| {
+                d.border_b_1().border_color(tokens.input)
+            })
             .refine_style(&self.style);
 
         if let Some(icon) = self.icon {

@@ -11,8 +11,8 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::dialog::AlertDialog as KitAlertDialog;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::dialog::AlertDialog as KitAlertDialog;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, InteractiveElement, IntoElement, KeyDownEvent,
     MouseButton, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
@@ -663,9 +663,7 @@ impl RenderOnce for AlertDialog {
             );
         }
 
-        if is_open
-            && let Some(mut content) = self.content
-        {
+        if is_open && let Some(mut content) = self.content {
             let existing_esc = content.on_escape.take();
             let state_esc = state;
             let on_change_esc = self.on_open_change;

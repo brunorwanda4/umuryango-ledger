@@ -11,8 +11,8 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::pagination::Pagination as KitPagination;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::pagination::Pagination as KitPagination;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FocusHandle, IntoElement, ParentElement, RenderOnce,
     SharedString, StyleRefinement, Styled, Window, div, px,

@@ -618,11 +618,12 @@ impl RenderOnce for NavigationMenuLink {
         }
 
         if let Some(icon) = self.icon {
-            link = link.child(
-                div()
-                    .mt(px(2.0))
-                    .child(app_icon(icon, IconSize::Sm, IconTone::Muted, &theme)),
-            );
+            link = link.child(div().mt(px(2.0)).child(app_icon(
+                icon,
+                IconSize::Sm,
+                IconTone::Muted,
+                &theme,
+            )));
         }
 
         if self.label.is_some() || self.description.is_some() {
@@ -631,7 +632,12 @@ impl RenderOnce for NavigationMenuLink {
                 col = col.child(div().font_weight(FontWeight::MEDIUM).child(lbl));
             }
             if let Some(desc) = self.description {
-                col = col.child(div().text_xs().text_color(tokens.muted_foreground).child(desc));
+                col = col.child(
+                    div()
+                        .text_xs()
+                        .text_color(tokens.muted_foreground)
+                        .child(desc),
+                );
             }
             link = link.child(col);
         }

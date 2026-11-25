@@ -5,8 +5,8 @@
 //! - `EmptyHeader`, `EmptyMedia` (`Default` | `Icon` `40x40px` `rounded-none bg-muted` with `app_icon`),
 //!   `EmptyTitle` (`text-lg font-semibold uppercase`), `EmptyDescription`, `EmptyContent`.
 
-pub use gpui_kit::component::empty::Empty as KitEmpty;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::empty::Empty as KitEmpty;
 use gpui_kit::{
     AnyElement, App, FontWeight, IntoElement, ParentElement, RenderOnce, SharedString,
     StyleRefinement, Styled, Window, div, px, relative,

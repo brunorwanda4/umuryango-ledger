@@ -8,15 +8,17 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::tab::{Tab as KitTab, TabBar as KitTabBar};
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::tab::{Tab as KitTab, TabBar as KitTabBar};
 use gpui_kit::{
     AnyElement, App, ElementId, FocusHandle, FontWeight, InteractiveElement, IntoElement,
     KeyDownEvent, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
     StyleRefinement, Styled, Window, div, px,
 };
 
-use crate::common::utils::{PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, to_preset_uppercase};
+use crate::common::utils::{
+    PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, to_preset_uppercase,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::{FONT_FAMILY, SemanticTheme, ThemeConfig, ThemeMode};
 
@@ -126,10 +128,7 @@ impl Tabs {
         self
     }
 
-    pub fn on_change(
-        mut self,
-        handler: impl Fn(&usize, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    pub fn on_change(mut self, handler: impl Fn(&usize, &mut Window, &mut App) + 'static) -> Self {
         self.on_change = Some(Rc::new(handler));
         self
     }
@@ -440,7 +439,12 @@ impl RenderOnce for TabsTrigger {
             } else {
                 transparent
             };
-            (active_bg, active_border, tokens.foreground, IconTone::Default)
+            (
+                active_bg,
+                active_border,
+                tokens.foreground,
+                IconTone::Default,
+            )
         } else {
             (
                 transparent,
@@ -455,7 +459,10 @@ impl RenderOnce for TabsTrigger {
         };
 
         let mut tab = div()
-            .id(ElementId::NamedInteger("tab-trigger".into(), self.index as u64))
+            .id(ElementId::NamedInteger(
+                "tab-trigger".into(),
+                self.index as u64,
+            ))
             .relative()
             .flex()
             .flex_row()

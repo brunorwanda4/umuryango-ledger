@@ -6,8 +6,8 @@
 //! - Indeterminate: `border-primary bg-primary` with `AppIcon::Minus` (`14px`)
 //! - Focus & invalid rings + keyboard Space/Enter toggle.
 
-pub use gpui_kit::component::checkbox::Checkbox as KitCheckbox;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::checkbox::Checkbox as KitCheckbox;
 use gpui_kit::{
     App, ElementId, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent, ParentElement,
     RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,
@@ -39,7 +39,11 @@ impl CheckedState {
 
 impl From<bool> for CheckedState {
     fn from(value: bool) -> Self {
-        if value { Self::Checked } else { Self::Unchecked }
+        if value {
+            Self::Checked
+        } else {
+            Self::Unchecked
+        }
     }
 }
 
@@ -107,10 +111,7 @@ impl Checkbox {
         self
     }
 
-    pub fn on_change(
-        mut self,
-        handler: impl Fn(&bool, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    pub fn on_change(mut self, handler: impl Fn(&bool, &mut Window, &mut App) + 'static) -> Self {
         self.on_change = Some(Box::new(handler));
         self
     }
@@ -168,20 +169,12 @@ impl RenderOnce for Checkbox {
 
         match self.state {
             CheckedState::Checked => {
-                indicator_box = indicator_box.child(app_icon(
-                    AppIcon::Check,
-                    IconSize::Sm,
-                    check_tone,
-                    theme,
-                ));
+                indicator_box =
+                    indicator_box.child(app_icon(AppIcon::Check, IconSize::Sm, check_tone, theme));
             }
             CheckedState::Indeterminate => {
-                indicator_box = indicator_box.child(app_icon(
-                    AppIcon::Minus,
-                    IconSize::Sm,
-                    check_tone,
-                    theme,
-                ));
+                indicator_box =
+                    indicator_box.child(app_icon(AppIcon::Minus, IconSize::Sm, check_tone, theme));
             }
             CheckedState::Unchecked => {}
         }

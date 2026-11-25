@@ -277,7 +277,9 @@ impl RenderOnce for DropdownMenu {
 
             let mut popup = apply_anchored_position(
                 div()
-                    .id(ElementId::Name(format!("{}-dropdown-popup", self.id).into()))
+                    .id(ElementId::Name(
+                        format!("{}-dropdown-popup", self.id).into(),
+                    ))
                     .absolute(),
                 side,
                 side_offset,

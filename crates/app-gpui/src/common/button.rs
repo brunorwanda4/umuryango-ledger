@@ -7,12 +7,12 @@
 //!   `Icon` (`size-10`), `IconXs` (`size-7`), `IconSm` (`size-9`), `IconLg` (`size-11`)
 //! - Icons rendered strictly via `crate::components::icon::app_icon` (`IconSize::Xs` on `Xs`/`IconXs`, `IconSize::Sm` otherwise).
 
-pub use gpui_kit::component::button::Button as KitButton;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::button::Button as KitButton;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FocusHandle, FontWeight, InteractiveElement,
-    IntoElement, KeyDownEvent, ParentElement, RenderOnce, SharedString,
-    StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,
+    IntoElement, KeyDownEvent, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
+    StyleRefinement, Styled, Window, div, px,
 };
 
 use crate::common::spinner::Spinner;

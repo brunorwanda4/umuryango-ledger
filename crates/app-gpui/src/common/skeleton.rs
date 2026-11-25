@@ -3,8 +3,8 @@
 //! Matches `--preset b1oaDsAa`: `animate-pulse bg-muted` with sharp zero-radius
 //! corners (`PresetRadius::NONE`). Built on `gpui_kit::component::skeleton::Skeleton`.
 
-use gpui_kit::component::skeleton::Skeleton as KitSkeleton;
 use gpui_kit::component::StyledExt as _;
+use gpui_kit::component::skeleton::Skeleton as KitSkeleton;
 use gpui_kit::{App, Hsla, IntoElement, RenderOnce, StyleRefinement, Styled, Window};
 
 use crate::common::utils::{PresetRadius, PresetTokens};

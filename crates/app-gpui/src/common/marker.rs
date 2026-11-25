@@ -7,8 +7,8 @@
 //!   - `MarkerVariant::Border`: `border-b border-border pb-2`
 //! - `MarkerIcon` (`16px` `app_icon`), `MarkerContent`.
 
-pub use gpui_kit::component::marker::Marker as KitMarker;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::marker::Marker as KitMarker;
 use gpui_kit::{
     AnyElement, App, FontWeight, IntoElement, ParentElement, RenderOnce, SharedString,
     StyleRefinement, Styled, Window, div, px,

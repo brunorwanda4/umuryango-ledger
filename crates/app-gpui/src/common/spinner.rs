@@ -6,7 +6,9 @@
 
 use gpui_kit::component::spinner::Spinner as KitSpinner;
 use gpui_kit::component::{Icon, Sizable as _, Size, StyledExt as _};
-use gpui_kit::{App, Hsla, IntoElement, ParentElement, RenderOnce, StyleRefinement, Styled, Window, div, px};
+use gpui_kit::{
+    App, Hsla, IntoElement, ParentElement, RenderOnce, StyleRefinement, Styled, Window, div, px,
+};
 
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;

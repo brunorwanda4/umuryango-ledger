@@ -13,8 +13,8 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::sheet::Sheet as KitSheet;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::sheet::Sheet as KitSheet;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, InteractiveElement, IntoElement, KeyDownEvent,
     MouseButton, ParentElement, RenderOnce, StatefulInteractiveElement, StyleRefinement, Styled,
@@ -227,10 +227,16 @@ impl RenderOnce for SheetContent {
             .text_color(tokens.popover_foreground)
             .shadow(overlay_surface_shadow(&theme))
             .cx_when(matches!(self.side, SheetSide::Right), |d| {
-                d.h_full().w(side_w).border_l_1().border_color(tokens.border)
+                d.h_full()
+                    .w(side_w)
+                    .border_l_1()
+                    .border_color(tokens.border)
             })
             .cx_when(matches!(self.side, SheetSide::Left), |d| {
-                d.h_full().w(side_w).border_r_1().border_color(tokens.border)
+                d.h_full()
+                    .w(side_w)
+                    .border_r_1()
+                    .border_color(tokens.border)
             })
             .cx_when(matches!(self.side, SheetSide::Top), |d| {
                 d.w_full().border_b_1().border_color(tokens.border)
@@ -469,9 +475,7 @@ impl RenderOnce for Sheet {
             );
         }
 
-        if is_open
-            && let Some(mut content) = self.content
-        {
+        if is_open && let Some(mut content) = self.content {
             let side = content.side;
             let existing_close = content.on_close.take();
             let state_close = state.clone();

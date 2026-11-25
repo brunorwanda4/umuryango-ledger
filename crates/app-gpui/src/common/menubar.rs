@@ -8,8 +8,8 @@
 //! - `MenubarCheckboxItem` & `MenubarRadioItem`: left-positioned `AppIcon::Check` at `left-3` (`pl-9.5`)
 //! - Reuses `DropdownMenu*` primitives directly per Rule 2 (Strict Component Reuse).
 
-pub use gpui_kit::component::menu::AppMenuBar as KitAppMenuBar;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::menu::AppMenuBar as KitAppMenuBar;
 use gpui_kit::{
     AnyElement, App, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement,
     RenderOnce, SharedString, StyleRefinement, Styled, Window, div, px,

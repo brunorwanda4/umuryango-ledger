@@ -615,16 +615,12 @@ impl RenderOnce for DropdownMenuSubTrigger {
         }
 
         row.child(to_preset_uppercase(self.label.as_ref()))
-            .child(
-                div()
-                    .ml_auto()
-                    .child(app_icon(
-                        AppIcon::ChevronRight,
-                        IconSize::Sm,
-                        IconTone::Muted,
-                        &theme,
-                    )),
-            )
+            .child(div().ml_auto().child(app_icon(
+                AppIcon::ChevronRight,
+                IconSize::Sm,
+                IconTone::Muted,
+                &theme,
+            )))
             .refine_style(&self.style)
     }
 }

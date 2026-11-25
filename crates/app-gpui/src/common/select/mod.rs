@@ -18,8 +18,8 @@ pub use items::{
 use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FocusHandle, InteractiveElement, IntoElement,
-    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString,
-    StatefulInteractiveElement, StyleRefinement, Styled, Window, deferred, div, px,
+    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
+    StyleRefinement, Styled, Window, deferred, div, px,
 };
 
 use crate::common::popover::{PopoverAlign, PopoverSide, apply_anchored_position};
@@ -510,15 +510,14 @@ impl RenderOnce for Select {
         }
 
         let state_trig = state.clone();
-        let mut trigger = SelectTrigger::new(ElementId::Name(
-            format!("{}-select-trig", self.id).into(),
-        ))
-        .size(self.size)
-        .disabled(self.disabled)
-        .invalid(self.invalid)
-        .theme(&theme)
-        .w_full()
-        .child(val_el);
+        let mut trigger =
+            SelectTrigger::new(ElementId::Name(format!("{}-select-trig", self.id).into()))
+                .size(self.size)
+                .disabled(self.disabled)
+                .invalid(self.invalid)
+                .theme(&theme)
+                .w_full()
+                .child(val_el);
 
         if let Some(fh) = &self.focus_handle {
             trigger = trigger.track_focus(fh);

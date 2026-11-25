@@ -6,8 +6,8 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::collapsible::Collapsible as KitCollapsible;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::collapsible::Collapsible as KitCollapsible;
 use gpui_kit::{
     AnyElement, App, ElementId, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent,
     ParentElement, RenderOnce, StatefulInteractiveElement, StyleRefinement, Styled, Window, div,

@@ -4,9 +4,9 @@
 //! - `Avatar`: circular `rounded-full` (`Sm` `24px`, `Default` `32px`, `Lg` `40px`) with subtle `border-border`
 //! - `AvatarImage`, `AvatarFallback` (`initials_from_name`), `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`.
 
-pub use gpui_kit::component::avatar::{Avatar as KitAvatar, AvatarGroup as KitAvatarGroup};
 use gpui_kit::base::box_shadow;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::avatar::{Avatar as KitAvatar, AvatarGroup as KitAvatarGroup};
 use gpui_kit::{
     AnyElement, App, FontWeight, ImageSource, IntoElement, ObjectFit, ParentElement, RenderOnce,
     SharedString, StyleRefinement, Styled, StyledImage as _, Window, div, img, px,
@@ -35,9 +35,9 @@ impl AvatarSize {
 
     pub const fn badge_px(self) -> f32 {
         match self {
-            Self::Sm => 8.0,      // size-2
+            Self::Sm => 8.0,       // size-2
             Self::Default => 10.0, // size-2.5
-            Self::Lg => 12.0,     // size-3
+            Self::Lg => 12.0,      // size-3
         }
     }
 }
@@ -60,11 +60,7 @@ pub fn initials_from_name(name: &str) -> String {
     let parts: Vec<&str> = name.split_whitespace().filter(|s| !s.is_empty()).collect();
     match parts.as_slice() {
         [] => "?".to_string(),
-        [single] => single
-            .chars()
-            .take(2)
-            .collect::<String>()
-            .to_uppercase(),
+        [single] => single.chars().take(2).collect::<String>().to_uppercase(),
         [first, .., last] => {
             let mut out = String::with_capacity(2);
             if let Some(c) = first.chars().next() {

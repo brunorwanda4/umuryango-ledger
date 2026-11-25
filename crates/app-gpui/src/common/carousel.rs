@@ -10,13 +10,13 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::carousel::{
     Carousel as KitCarousel, CarouselContent as KitCarouselContent,
     CarouselEvent as KitCarouselEvent, CarouselItem as KitCarouselItem,
     CarouselNext as KitCarouselNext, CarouselPagination as KitCarouselPagination,
     CarouselPrevious as KitCarouselPrevious, CarouselState as KitCarouselState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, InteractiveElement, IntoElement, KeyDownEvent,
     ParentElement, RenderOnce, StyleRefinement, Styled, Window, div, px,
@@ -555,25 +555,23 @@ impl RenderOnce for Carousel {
                 let state_next = state;
                 let on_sel_next = self.on_select;
                 root = root.child(
-                    CarouselNext::new(ElementId::Name(
-                        format!("{}-carousel-next", self.id).into(),
-                    ))
-                    .orientation(self.orientation)
-                    .disabled(!can_next)
-                    .theme(&theme)
-                    .on_click(move |_ev, window, cx| {
-                        if let Some(next_idx) = calc_next() {
-                            if !is_controlled {
-                                state_next.update(cx, |v, cx| {
-                                    *v = next_idx;
-                                    cx.notify();
-                                });
+                    CarouselNext::new(ElementId::Name(format!("{}-carousel-next", self.id).into()))
+                        .orientation(self.orientation)
+                        .disabled(!can_next)
+                        .theme(&theme)
+                        .on_click(move |_ev, window, cx| {
+                            if let Some(next_idx) = calc_next() {
+                                if !is_controlled {
+                                    state_next.update(cx, |v, cx| {
+                                        *v = next_idx;
+                                        cx.notify();
+                                    });
+                                }
+                                if let Some(cb) = &on_sel_next {
+                                    cb(&next_idx, window, cx);
+                                }
                             }
-                            if let Some(cb) = &on_sel_next {
-                                cb(&next_idx, window, cx);
-                            }
-                        }
-                    }),
+                        }),
                 );
             }
         }

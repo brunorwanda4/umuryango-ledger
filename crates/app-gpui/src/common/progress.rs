@@ -7,8 +7,8 @@
 //! - `ProgressLabel`: `text-xs font-semibold uppercase`
 //! - `ProgressValue`: `ml-auto text-sm text-muted-foreground`.
 
-pub use gpui_kit::component::progress::{Progress as KitProgress, ProgressCircle};
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::progress::{Progress as KitProgress, ProgressCircle};
 use gpui_kit::{
     AnyElement, App, FontWeight, Hsla, IntoElement, ParentElement, RenderOnce, SharedString,
     StyleRefinement, Styled, Window, div, px, relative,

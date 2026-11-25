@@ -12,12 +12,12 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::bubble::{
     Bubble as KitBubble, BubbleContent as KitBubbleContent, BubbleGroup as KitBubbleGroup,
     BubbleReactionSide as KitBubbleReactionSide, BubbleReactions as KitBubbleReactions,
     BubbleVariant as KitBubbleVariant,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FocusHandle, InteractiveElement, IntoElement,
@@ -193,11 +193,7 @@ impl RenderOnce for Bubble {
             .min_w_0()
             .gap(px(4.0))
             .font_family(FONT_FAMILY)
-            .when_else(
-                is_ghost,
-                |el| el.max_w_full(),
-                |el| el.max_w(relative(0.8)),
-            )
+            .when_else(is_ghost, |el| el.max_w_full(), |el| el.max_w(relative(0.8)))
             .when(is_end, |el| el.ml_auto().items_end());
 
         if let Some(text) = self.text {

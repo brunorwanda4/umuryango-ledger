@@ -12,11 +12,11 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::table::{
     Column as KitTableColumn, ColumnSort as KitColumnSort, DataTable as KitDataTable,
     Table as KitTable, TableDelegate as KitTableDelegate, TableState as KitTableState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FontWeight, InteractiveElement, IntoElement,
     ParentElement, RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled,

@@ -11,12 +11,12 @@
 
 use std::rc::Rc;
 
-pub use gpui_kit::component::dialog::Dialog as KitDialog;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::dialog::Dialog as KitDialog;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FontWeight, InteractiveElement, IntoElement,
-    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString,
-    StatefulInteractiveElement, StyleRefinement, Styled, Window, deferred, div, hsla, px, relative,
+    KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
+    StyleRefinement, Styled, Window, deferred, div, hsla, px, relative,
 };
 
 use crate::common::button::{Button, ButtonSize, ButtonVariant};
@@ -762,9 +762,7 @@ impl RenderOnce for Dialog {
             );
         }
 
-        if is_open
-            && let Some(mut content) = self.content
-        {
+        if is_open && let Some(mut content) = self.content {
             let existing_close = content.on_close.take();
             let state_close = state.clone();
             let on_change_close = self.on_open_change.clone();

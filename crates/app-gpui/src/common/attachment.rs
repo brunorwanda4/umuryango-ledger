@@ -11,13 +11,13 @@
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::attachment::{
     Attachment as KitAttachment, AttachmentActions as KitAttachmentActions,
     AttachmentContent as KitAttachmentContent, AttachmentDescription as KitAttachmentDescription,
     AttachmentGroup as KitAttachmentGroup, AttachmentMedia as KitAttachmentMedia,
     AttachmentStatus as KitAttachmentStatus, AttachmentTitle as KitAttachmentTitle,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FontWeight, InteractiveElement, IntoElement, ObjectFit,
     ParentElement, RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled,
@@ -214,8 +214,12 @@ impl RenderOnce for Attachment {
             .border_color(border_c)
             .bg(tokens.card)
             .font_family(FONT_FAMILY)
-            .cx_when(matches!(self.size, AttachmentSize::Default), |d| d.text_sm())
-            .cx_when(!matches!(self.size, AttachmentSize::Default), |d| d.text_xs())
+            .cx_when(matches!(self.size, AttachmentSize::Default), |d| {
+                d.text_sm()
+            })
+            .cx_when(!matches!(self.size, AttachmentSize::Default), |d| {
+                d.text_xs()
+            })
             .text_color(tokens.card_foreground)
             .cx_when(!is_vert, |d| d.min_w(px(160.0)).items_center())
             .cx_when(is_vert, |d| d.w(px(120.0)).flex_col())

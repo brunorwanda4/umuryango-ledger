@@ -178,7 +178,10 @@ impl RenderOnce for InputOTP {
             let end = ((g + 1) * per_group).min(total_len);
             let mut grp = InputOTPGroup::new();
             for idx in start..end {
-                let ch = chars.get(idx).copied().map(|c| if is_masked { '*' } else { c });
+                let ch = chars
+                    .get(idx)
+                    .copied()
+                    .map(|c| if is_masked { '*' } else { c });
                 let slot_active = is_focused && !self.disabled && idx == active_idx;
                 grp = grp.child(
                     InputOTPSlot::new(idx)
@@ -314,7 +317,10 @@ impl RenderOnce for InputOTPSlot {
         };
 
         let mut cell = div()
-            .id(ElementId::NamedInteger("otp-slot".into(), self.index as u64))
+            .id(ElementId::NamedInteger(
+                "otp-slot".into(),
+                self.index as u64,
+            ))
             .relative()
             .flex()
             .items_center()
@@ -379,6 +385,11 @@ impl RenderOnce for InputOTPSeparator {
             .items_center()
             .justify_center()
             .refine_style(&self.style)
-            .child(app_icon(AppIcon::Minus, IconSize::Sm, IconTone::Muted, &theme))
+            .child(app_icon(
+                AppIcon::Minus,
+                IconSize::Sm,
+                IconTone::Muted,
+                &theme,
+            ))
     }
 }

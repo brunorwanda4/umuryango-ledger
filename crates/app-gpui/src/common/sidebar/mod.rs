@@ -17,6 +17,7 @@ mod submenu;
 
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::sidebar::{
     Sidebar as KitSidebar, SidebarCollapsible as KitSidebarCollapsible,
     SidebarFooter as KitSidebarFooter, SidebarGroup as KitSidebarGroup,
@@ -24,7 +25,6 @@ pub use gpui_kit::component::sidebar::{
     SidebarMenu as KitSidebarMenu, SidebarMenuItem as KitSidebarMenuItem,
     SidebarToggleButton as KitSidebarToggleButton,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, Entity, InteractiveElement, IntoElement, KeyDownEvent,
@@ -244,7 +244,10 @@ impl RenderOnce for SidebarProvider {
             .when(self.inset, |d| d.bg(tokens.card))
             .on_key_down(move |ev: &KeyDownEvent, win, app| {
                 let mods = &ev.keystroke.modifiers;
-                if ev.keystroke.key.eq_ignore_ascii_case(SIDEBAR_KEYBOARD_SHORTCUT)
+                if ev
+                    .keystroke
+                    .key
+                    .eq_ignore_ascii_case(SIDEBAR_KEYBOARD_SHORTCUT)
                     && (mods.platform || mods.control)
                 {
                     let mut next_desktop_open = None;
@@ -381,10 +384,7 @@ impl RenderOnce for Sidebar {
                 self.open_mobile.unwrap_or(snap.open_mobile),
             )
         } else {
-            (
-                self.open.unwrap_or(true),
-                self.open_mobile.unwrap_or(false),
-            )
+            (self.open.unwrap_or(true), self.open_mobile.unwrap_or(false))
         };
 
         if is_mobile(window) {
@@ -406,13 +406,7 @@ impl RenderOnce for Sidebar {
             .p_0()
             .bg(tokens.card)
             .text_color(tokens.card_foreground)
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .size_full()
-                    .children(self.children),
-            );
+            .child(div().flex().flex_col().size_full().children(self.children));
 
             return Sheet::new(ElementId::Name(format!("{}-mobile-sheet", self.id).into()))
                 .open(mobile_open)
@@ -435,8 +429,10 @@ impl RenderOnce for Sidebar {
             return div().w(px(0.0)).flex_shrink_0().into_any_element();
         }
 
-        let is_padded_variant =
-            matches!(self.variant, SidebarVariant::Floating | SidebarVariant::Inset);
+        let is_padded_variant = matches!(
+            self.variant,
+            SidebarVariant::Floating | SidebarVariant::Inset
+        );
         let icon_collapsed = !desktop_open && self.collapsible == SidebarCollapsible::Icon;
         let outer_width = if icon_collapsed {
             if is_padded_variant {

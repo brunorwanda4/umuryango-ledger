@@ -7,10 +7,10 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::menu::{
     ContextMenu as KitContextMenu, ContextMenuExt, ContextMenuState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ElementId, InteractiveElement, IntoElement, KeyDownEvent, MouseButton,
     MouseDownEvent, ParentElement, Pixels, Point, RenderOnce, StatefulInteractiveElement,

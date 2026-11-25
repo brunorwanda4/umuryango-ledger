@@ -12,11 +12,11 @@ pub use choice::{
     QuestionnaireChoice, QuestionnaireChoiceDescription, QuestionnaireChoiceType,
     QuestionnaireChoices,
 };
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::questionnaire::{
     QuestionnaireAnswer as KitQuestionnaireAnswer, QuestionnaireEvent as KitQuestionnaireEvent,
     QuestionnaireState as KitQuestionnaireState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, Entity, FocusHandle, FontWeight, IntoElement,

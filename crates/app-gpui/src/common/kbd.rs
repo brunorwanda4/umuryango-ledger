@@ -5,8 +5,8 @@
 //! - `KbdGroup`: `inline-flex items-center gap-1`
 //! Supports both arbitrary text/children and platform-formatted GPUI [`Keystroke`]s via `gpui_kit::component::kbd::Kbd`.
 
-use gpui_kit::component::kbd::Kbd as KitKbd;
 use gpui_kit::component::StyledExt as _;
+use gpui_kit::component::kbd::Kbd as KitKbd;
 use gpui_kit::{
     AnyElement, App, FontWeight, IntoElement, Keystroke, ParentElement, RenderOnce, SharedString,
     StyleRefinement, Styled, Window, div, px,
@@ -89,7 +89,9 @@ impl RenderOnce for Kbd {
             let tokens = PresetTokens::from_theme(theme);
             if self.on_tooltip {
                 (
-                    tokens.background.opacity(if tokens.is_dark { 0.10 } else { 0.20 }),
+                    tokens
+                        .background
+                        .opacity(if tokens.is_dark { 0.10 } else { 0.20 }),
                     tokens.background,
                 )
             } else {

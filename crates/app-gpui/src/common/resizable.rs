@@ -14,11 +14,11 @@ pub use gpui_kit::base::{
     ResizablePanelGroup as KitResizablePanelGroup, ResizableState, ResizeHandleContext,
     ResizeHandleRenderer, ResizeHandleState,
 };
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::resizable::{
     h_resizable as kit_h_resizable, resizable_panel as kit_resizable_panel,
     v_resizable as kit_v_resizable,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, Axis, ElementId, Entity, FocusHandle, InteractiveElement, IntoElement,
     ParentElement, Pixels, RenderOnce, StyleRefinement, Styled, Window, deferred, div, px,
@@ -62,47 +62,49 @@ pub fn preset_resize_handle_appearance(
     with_handle: bool,
     explicit_theme: Option<SemanticTheme>,
 ) -> ResizeHandleRenderer {
-    Rc::new(move |handle: &ResizeHandleContext, _window: &mut Window, cx: &mut App| {
-        let theme = resolve_theme(explicit_theme.as_ref(), cx);
-        let tokens = PresetTokens::from_theme(&theme);
-        let axis = handle.axis();
-        let state = handle.state();
+    Rc::new(
+        move |handle: &ResizeHandleContext, _window: &mut Window, cx: &mut App| {
+            let theme = resolve_theme(explicit_theme.as_ref(), cx);
+            let tokens = PresetTokens::from_theme(&theme);
+            let axis = handle.axis();
+            let state = handle.state();
 
-        let show_grip = with_handle || !matches!(state, ResizeHandleState::Idle);
-        let grip_color = match state {
-            ResizeHandleState::Dragging | ResizeHandleState::Pressed => tokens.ring,
-            ResizeHandleState::Hovered => tokens.muted_foreground,
-            ResizeHandleState::Idle => tokens.border,
-        };
-
-        let mut line = div().flex_none().flex().bg(tokens.border);
-        line = match axis {
-            Axis::Horizontal => line.w(px(1.0)).h_full().items_center(),
-            Axis::Vertical => line.h(px(1.0)).w_full().items_start().justify_center(),
-        };
-
-        if show_grip {
-            let grip = match axis {
-                Axis::Horizontal => div()
-                    .flex_none()
-                    .rounded(PresetRadius::NONE)
-                    .bg(grip_color)
-                    .w(px(4.0))
-                    .h(px(24.0))
-                    .ml(px(-1.5)),
-                Axis::Vertical => div()
-                    .flex_none()
-                    .rounded(PresetRadius::NONE)
-                    .bg(grip_color)
-                    .h(px(4.0))
-                    .w(px(24.0))
-                    .mt(px(-1.5)),
+            let show_grip = with_handle || !matches!(state, ResizeHandleState::Idle);
+            let grip_color = match state {
+                ResizeHandleState::Dragging | ResizeHandleState::Pressed => tokens.ring,
+                ResizeHandleState::Hovered => tokens.muted_foreground,
+                ResizeHandleState::Idle => tokens.border,
             };
-            line = line.child(deferred(grip).with_priority(1));
-        }
 
-        Some(line.into_any_element())
-    })
+            let mut line = div().flex_none().flex().bg(tokens.border);
+            line = match axis {
+                Axis::Horizontal => line.w(px(1.0)).h_full().items_center(),
+                Axis::Vertical => line.h(px(1.0)).w_full().items_start().justify_center(),
+            };
+
+            if show_grip {
+                let grip = match axis {
+                    Axis::Horizontal => div()
+                        .flex_none()
+                        .rounded(PresetRadius::NONE)
+                        .bg(grip_color)
+                        .w(px(4.0))
+                        .h(px(24.0))
+                        .ml(px(-1.5)),
+                    Axis::Vertical => div()
+                        .flex_none()
+                        .rounded(PresetRadius::NONE)
+                        .bg(grip_color)
+                        .h(px(4.0))
+                        .w(px(24.0))
+                        .mt(px(-1.5)),
+                };
+                line = line.child(deferred(grip).with_priority(1));
+            }
+
+            Some(line.into_any_element())
+        },
+    )
 }
 
 /// Resizable split pane container (`ResizablePanelGroup` in `resizable.tsx`).
@@ -366,8 +368,12 @@ impl RenderOnce for ResizableHandle {
             .items_center()
             .justify_center()
             .bg(tokens.border)
-            .cx_when(!is_vertical_split, |d| d.w(px(1.0)).h_full().cursor_col_resize())
-            .cx_when(is_vertical_split, |d| d.h(px(1.0)).w_full().cursor_row_resize())
+            .cx_when(!is_vertical_split, |d| {
+                d.w(px(1.0)).h_full().cursor_col_resize()
+            })
+            .cx_when(is_vertical_split, |d| {
+                d.h(px(1.0)).w_full().cursor_row_resize()
+            })
             .cx_when(is_focused, |d| d.shadow(focus_ring));
 
         if let Some(fh) = &self.focus_handle {

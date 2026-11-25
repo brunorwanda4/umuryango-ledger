@@ -485,9 +485,10 @@ impl RenderOnce for SidebarMenuAction {
             .rounded(PresetRadius::NONE)
             .text_color(tokens.card_foreground)
             .cursor_pointer()
-            .when(self.show_on_hover && !is_mobile(window) && !is_focused, |d| {
-                d.opacity(0.65)
-            })
+            .when(
+                self.show_on_hover && !is_mobile(window) && !is_focused,
+                |d| d.opacity(0.65),
+            )
             .hover(move |s| s.opacity(1.0).bg(hover_bg).text_color(hover_fg))
             .when(is_focused, |d| d.shadow(focus_ring_shadow(&theme)));
 

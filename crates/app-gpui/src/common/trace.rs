@@ -620,7 +620,12 @@ impl TraceCollapsibleTrigger {
             .hover(move |s| s.text_color(hover_color))
             .refine_style(&self.style)
             .children(self.children)
-            .child(TraceIcon::new().icon(chevron).tone(chevron_tone).theme(&theme));
+            .child(
+                TraceIcon::new()
+                    .icon(chevron)
+                    .tone(chevron_tone)
+                    .theme(&theme),
+            );
 
         trig.child(inner)
     }

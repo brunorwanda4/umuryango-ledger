@@ -7,8 +7,8 @@
 //! - Checked: `border-primary bg-primary`, thumb `bg-background` (`dark:bg-primary-foreground`)
 //! - Unchecked: `border-input/50 bg-input`, thumb `bg-background` (`dark:bg-foreground`).
 
-pub use gpui_kit::component::switch::Switch as KitSwitch;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::switch::Switch as KitSwitch;
 use gpui_kit::{
     App, ElementId, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent, ParentElement,
     RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,
@@ -112,10 +112,7 @@ impl Switch {
         self
     }
 
-    pub fn on_change(
-        mut self,
-        handler: impl Fn(&bool, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    pub fn on_change(mut self, handler: impl Fn(&bool, &mut Window, &mut App) + 'static) -> Self {
         self.on_change = Some(Box::new(handler));
         self
     }

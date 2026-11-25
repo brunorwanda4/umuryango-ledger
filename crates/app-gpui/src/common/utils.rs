@@ -174,7 +174,9 @@ pub fn invalid_ring_shadow(theme: &SemanticTheme) -> Vec<BoxShadow> {
 /// Builds the subtle `shadow-sm ring-1 ring-foreground/5` elevation used on `Card`.
 pub fn card_surface_shadow(theme: &SemanticTheme) -> Vec<BoxShadow> {
     let tokens = PresetTokens::from_theme(theme);
-    let ring_color = tokens.foreground.opacity(if tokens.is_dark { 0.08 } else { 0.05 });
+    let ring_color = tokens
+        .foreground
+        .opacity(if tokens.is_dark { 0.08 } else { 0.05 });
     let drop_color = hsla(0.0, 0.0, 0.0, if tokens.is_dark { 0.22 } else { 0.06 });
     vec![
         box_shadow(px(0.0), px(0.0), px(0.0), px(1.0), ring_color),

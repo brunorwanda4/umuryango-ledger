@@ -4,9 +4,9 @@
 //! `shrink-0 bg-border data-horizontal:h-px data-horizontal:w-full data-vertical:w-px data-vertical:self-stretch`
 //! Built on `gpui_kit::component::separator::Separator` per Rule 2.
 
-pub use gpui_kit::component::separator::SeparatorStyle;
-use gpui_kit::component::separator::Separator as KitSeparator;
 use gpui_kit::component::StyledExt as _;
+use gpui_kit::component::separator::Separator as KitSeparator;
+pub use gpui_kit::component::separator::SeparatorStyle;
 use gpui_kit::{
     App, Hsla, IntoElement, RenderOnce, SharedString, StyleRefinement, Styled, Window, px,
 };

@@ -10,13 +10,13 @@
 //! - `MessageHeader` & `MessageFooter`: `px-4 text-xs font-medium tracking-wide
 //!   text-muted-foreground uppercase` (`px-0` in ghost mode; footer right-aligned when `End`).
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::message::{
     Message as KitMessage, MessageAlignment as KitMessageAlignment,
     MessageAvatar as KitMessageAvatar, MessageContent as KitMessageContent,
     MessageFooter as KitMessageFooter, MessageGroup as KitMessageGroup,
     MessageHeader as KitMessageHeader,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     AnyElement, App, FontWeight, IntoElement, ParentElement, RenderOnce, SharedString,

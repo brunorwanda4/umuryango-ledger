@@ -5,8 +5,8 @@
 //! - Variants: `Default`, `Secondary`, `Destructive`, `Outline`, `Ghost`, `Link`
 //! - Leading/trailing vector icons rendered via `crate::components::icon::app_icon` (`IconSize::Xs` = `12px`).
 
-pub use gpui_kit::component::badge::Badge as OverlayCountBadge;
 use gpui_kit::component::StyledExt as _;
+pub use gpui_kit::component::badge::Badge as OverlayCountBadge;
 use gpui_kit::{
     AnyElement, App, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement,
     RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,
@@ -167,9 +167,11 @@ impl RenderOnce for Badge {
         let tokens = PresetTokens::from_theme(theme);
 
         let (fg, hover_fg, icon_tone) = match self.variant {
-            BadgeVariant::Default | BadgeVariant::Outline => {
-                (tokens.foreground, tokens.foreground.opacity(0.70), IconTone::Default)
-            }
+            BadgeVariant::Default | BadgeVariant::Outline => (
+                tokens.foreground,
+                tokens.foreground.opacity(0.70),
+                IconTone::Default,
+            ),
             BadgeVariant::Secondary | BadgeVariant::Ghost => {
                 (tokens.muted_foreground, tokens.foreground, IconTone::Muted)
             }

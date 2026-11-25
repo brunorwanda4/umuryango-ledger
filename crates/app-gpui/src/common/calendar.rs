@@ -12,6 +12,7 @@ use std::rc::Rc;
 
 use chrono::{Datelike, Duration as ChronoDuration, NaiveDate, Utc};
 
+use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::calendar::{
     Calendar as KitCalendar, CalendarEvent as KitCalendarEvent, CalendarState as KitCalendarState,
     Date as KitCalendarDate, Matcher as KitCalendarMatcher,
@@ -20,7 +21,6 @@ pub use gpui_kit::component::date_picker::{
     DatePicker as KitDatePicker, DatePickerEvent as KitDatePickerEvent,
     DatePickerState as KitDatePickerState,
 };
-use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     App, ClickEvent, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement,
     RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,
@@ -366,10 +366,12 @@ impl RenderOnce for Calendar {
         let tokens = PresetTokens::from_theme(&theme);
         let today = Utc::now().date_naive();
 
-        let (init_y, init_m) = self.initial_month.unwrap_or_else(|| match self.selection.or(Some(self.default_selection)) {
-            Some(CalendarSelection::Single(d)) => (d.year(), d.month()),
-            Some(CalendarSelection::Range { start, .. }) => (start.year(), start.month()),
-            _ => (today.year(), today.month()),
+        let (init_y, init_m) = self.initial_month.unwrap_or_else(|| {
+            match self.selection.or(Some(self.default_selection)) {
+                Some(CalendarSelection::Single(d)) => (d.year(), d.month()),
+                Some(CalendarSelection::Range { start, .. }) => (start.year(), start.month()),
+                _ => (today.year(), today.month()),
+            }
         });
 
         let is_controlled = self.selection.is_some();
@@ -467,8 +469,7 @@ impl RenderOnce for Calendar {
             );
         }
 
-        let first_of_month =
-            NaiveDate::from_ymd_opt(year, month, 1).unwrap_or_else(|| today);
+        let first_of_month = NaiveDate::from_ymd_opt(year, month, 1).unwrap_or_else(|| today);
         let leading_days = first_of_month.weekday().num_days_from_sunday() as i64;
         let grid_start = first_of_month - ChronoDuration::days(leading_days);
 
@@ -569,7 +570,14 @@ impl RenderOnce for Calendar {
             .p(px(12.0))
             .font_family(FONT_FAMILY)
             .child(header)
-            .child(div().flex().flex_col().gap(px(4.0)).child(weekday_row).child(grid))
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(4.0))
+                    .child(weekday_row)
+                    .child(grid),
+            )
             .refine_style(&self.style)
     }
 }
