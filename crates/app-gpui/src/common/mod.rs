@@ -15,6 +15,7 @@ pub mod card;
 pub mod carousel;
 pub mod chart;
 pub mod checkbox;
+pub mod code_block;
 pub mod collapsible;
 pub mod combobox;
 pub mod command;
@@ -103,6 +104,11 @@ pub use chart::{
     RadarLabel, SankeyChart, SankeyLabel, preset_chart_color,
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
+pub use code_block::{
+    CodeBlock, CodeBlockActions, CodeBlockContent, CodeBlockCopyButton, CodeBlockFooter,
+    CodeBlockHeader, CodeBlockLine, CodeBlockLineVariant, CodeBlockSize, CodeBlockTitle,
+    CodeBlockVariant,
+};
 pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger, KitCollapsible};
 pub use combobox::{
     Combobox, ComboboxChip, ComboboxChips, ComboboxClear, ComboboxCollection, ComboboxContent,
