@@ -87,6 +87,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `f50c999` | `feat(ui): port shadcn toggle to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `6dd2aa2` | `feat(ui): port shadcn toggle-group to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `2d1eccc` | `feat(ui): port shadcn collapsible to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `c7d731c` | `feat(branding): update multi-platform app icon and brand logos across GPUI and web` | `cargo check --workspace`, `cargo test --workspace` (47 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
 
 ---
 
@@ -161,4 +162,3 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [ ] 61. `trace.tsx` → `trace.rs`
 - [ ] 62. `questionnaire.tsx` → `questionnaire.rs`
 - [ ] 63. `sidebar.tsx` → `sidebar.rs`
-
