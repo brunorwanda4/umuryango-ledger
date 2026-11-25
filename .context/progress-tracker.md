@@ -88,6 +88,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `6dd2aa2` | `feat(ui): port shadcn toggle-group to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `2d1eccc` | `feat(ui): port shadcn collapsible to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `c7d731c` | `feat(branding): update multi-platform app icon and brand logos across GPUI and web` | `cargo check --workspace`, `cargo test --workspace` (47 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
+| **2026-11-25** | `054e011` | `fix(gpui): use self-contained BrandMark asset paths in icon.rs` | `cargo check --workspace`, `cargo test -p umuryango-app` (20 passed) |
 
 ---
 
