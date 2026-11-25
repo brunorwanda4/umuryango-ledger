@@ -52,6 +52,7 @@ pub mod scroll_area;
 pub mod select;
 pub mod separator;
 pub mod sheet;
+pub mod sidebar;
 pub mod skeleton;
 pub mod slider;
 pub mod spinner;
@@ -258,6 +259,18 @@ pub use separator::{
 pub use sheet::{
     KitSheet, Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader,
     SheetOverlay, SheetPortal, SheetSide, SheetTitle, SheetTrigger,
+};
+pub use sidebar::{
+    KitSidebar, KitSidebarCollapsible, KitSidebarFooter, KitSidebarGroup, KitSidebarHeader,
+    KitSidebarItem, KitSidebarMenu, KitSidebarMenuItem, KitSidebarToggleButton,
+    SIDEBAR_KEYBOARD_SHORTCUT, SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON, SIDEBAR_WIDTH_MOBILE, Sidebar,
+    SidebarCollapsible, SidebarContent, SidebarContextState, SidebarFooter, SidebarGroup,
+    SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInput,
+    SidebarInset, SidebarMenu, SidebarMenuAction, SidebarMenuBadge, SidebarMenuButton,
+    SidebarMenuButtonSize, SidebarMenuButtonVariant, SidebarMenuItem, SidebarMenuSkeleton,
+    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubButtonSize, SidebarMenuSubItem,
+    SidebarProvider, SidebarRail, SidebarSeparator, SidebarSide, SidebarState, SidebarTrigger,
+    SidebarVariant, use_sidebar,
 };
 pub use skeleton::{Skeleton, skeleton};
 pub use slider::{
