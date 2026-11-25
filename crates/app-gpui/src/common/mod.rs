@@ -2,6 +2,7 @@
 //! (inputs, radios, text areas, cards, etc.).
 
 pub mod aspect_ratio;
+pub mod avatar;
 pub mod badge;
 pub mod button;
 pub mod button_group;
@@ -27,6 +28,10 @@ pub mod textarea;
 pub mod utils;
 
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
+pub use avatar::{
+    Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage, AvatarSize,
+    KitAvatar, KitAvatarGroup, initials_from_name,
+};
 pub use badge::{Badge, BadgeVariant, OverlayCountBadge, badge};
 pub use button::{Button, ButtonSize, ButtonVariant, KitButton, button};
 pub use button_group::{
