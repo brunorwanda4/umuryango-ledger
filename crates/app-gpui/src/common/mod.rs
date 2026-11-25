@@ -5,6 +5,7 @@ pub mod accordion;
 pub mod alert;
 pub mod alert_dialog;
 pub mod aspect_ratio;
+pub mod attachment;
 pub mod avatar;
 pub mod badge;
 pub mod breadcrumb;
@@ -71,6 +72,13 @@ pub use alert_dialog::{
     AlertDialogSize, AlertDialogTitle, AlertDialogTrigger, KitAlertDialog,
 };
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
+pub use attachment::{
+    Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription,
+    AttachmentGroup, AttachmentMedia, AttachmentMediaVariant, AttachmentOrientation,
+    AttachmentSize, AttachmentState, AttachmentTitle, AttachmentTrigger, KitAttachment,
+    KitAttachmentActions, KitAttachmentContent, KitAttachmentDescription, KitAttachmentGroup,
+    KitAttachmentMedia, KitAttachmentStatus, KitAttachmentTitle,
+};
 pub use avatar::{
     Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage, AvatarSize,
     KitAvatar, KitAvatarGroup, initials_from_name,

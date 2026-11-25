@@ -113,6 +113,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `9193682` | `feat(ui): port shadcn carousel to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `e7f259c` | `feat(ui): port shadcn calendar to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `517fc31` | `feat(ui): port shadcn chart to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `28d6839` | `feat(ui): port shadcn code-block to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -180,7 +181,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 54. `calendar.tsx` → `calendar.rs`
 - [x] 55. `chart.tsx` → `chart.rs`
 - [x] 56. `code-block.tsx` → `code_block.rs`
-- [ ] 57. `attachment.tsx` → `attachment.rs`
+- [x] 57. `attachment.tsx` → `attachment.rs`
 - [ ] 58. `bubble.tsx` → `bubble.rs`
 - [ ] 59. `message.tsx` → `message.rs`
 - [ ] 60. `message-scroller.tsx` → `message_scroller.rs`
