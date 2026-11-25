@@ -3,6 +3,7 @@
 
 pub mod accordion;
 pub mod alert;
+pub mod alert_dialog;
 pub mod aspect_ratio;
 pub mod avatar;
 pub mod badge;
@@ -50,6 +51,11 @@ pub use accordion::{
     KitAccordionItem,
 };
 pub use alert::{Alert, AlertAction, AlertDescription, AlertTitle, AlertVariant, KitAlert};
+pub use alert_dialog::{
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+    AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogOverlay, AlertDialogPortal,
+    AlertDialogSize, AlertDialogTitle, AlertDialogTrigger, KitAlertDialog,
+};
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
 pub use avatar::{
     Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage, AvatarSize,
