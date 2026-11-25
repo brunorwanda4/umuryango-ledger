@@ -129,6 +129,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `ad4b9ed` | `refactor(i18n, gpui): remove unused common tagline from locales and screens` | `cargo fmt --check`, `cargo check --workspace`, `cargo test -p umuryango-i18n -p umuryango-core-domain -p umuryango-storage-local -p umuryango-wasm-bridge -p umuryango-app` (45 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
 | **2026-11-25** | `410bb16` | `feat(gpui): persist active screen and auth mode across app restarts` | `cargo check --workspace`, `cargo clippy --all --workspace` (0 warnings in modified files), `cargo test --workspace --lib` (38 passed; 26 in `umuryango-app` including 6 new persistence tests) |
 | **2026-11-25** | `4cd4309` | `style(gpui): format common UI component modules with rustfmt` | Pure formatting (`rustfmt`) |
+| **2026-11-25** | `bdabb7f` | `feat(gpui): move locale flags to assets/flags and render flags in LangToggle` | `cargo test -p umuryango-app --lib` (27 passed) |
 
 ---
 
