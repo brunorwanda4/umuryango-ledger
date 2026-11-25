@@ -13,6 +13,7 @@ pub mod button_group;
 pub mod card;
 pub mod checkbox;
 pub mod collapsible;
+pub mod command;
 pub mod context_menu;
 pub mod dialog;
 pub mod direction;
@@ -82,6 +83,11 @@ pub use card::{
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger, KitCollapsible};
+pub use command::{
+    Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+    CommandSeparator, CommandShortcut, KitCommand, KitCommandEntry, KitCommandGroup,
+    KitCommandItem, KitCommandState,
+};
 pub use context_menu::{
     ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuExt, ContextMenuGroup,
     ContextMenuItem, ContextMenuItemVariant, ContextMenuLabel, ContextMenuPortal,
