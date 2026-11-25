@@ -34,6 +34,7 @@ pub mod radio_group;
 pub mod resizable;
 pub mod scroll_area;
 pub mod separator;
+pub mod sheet;
 pub mod skeleton;
 pub mod slider;
 pub mod spinner;
@@ -138,6 +139,10 @@ pub use scroll_area::{
 };
 pub use separator::{
     Separator, SeparatorOrientation, SeparatorStyle, horizontal_separator, vertical_separator,
+};
+pub use sheet::{
+    KitSheet, Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader,
+    SheetOverlay, SheetPortal, SheetSide, SheetTitle, SheetTrigger,
 };
 pub use skeleton::{Skeleton, skeleton};
 pub use slider::{
