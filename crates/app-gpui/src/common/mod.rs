@@ -13,6 +13,7 @@ pub mod button_group;
 pub mod card;
 pub mod checkbox;
 pub mod collapsible;
+pub mod combobox;
 pub mod command;
 pub mod context_menu;
 pub mod dialog;
@@ -83,6 +84,12 @@ pub use card::{
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger, KitCollapsible};
+pub use combobox::{
+    Combobox, ComboboxChip, ComboboxChips, ComboboxClear, ComboboxCollection, ComboboxContent,
+    ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxLabel, ComboboxList,
+    ComboboxSeparator, ComboboxTrigger, ComboboxValue, KitCombobox, KitComboboxChange,
+    KitComboboxEvent, KitComboboxState, combobox_chips_input,
+};
 pub use command::{
     Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
     CommandSeparator, CommandShortcut, KitCommand, KitCommandEntry, KitCommandGroup,
