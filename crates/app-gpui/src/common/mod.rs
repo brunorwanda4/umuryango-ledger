@@ -13,6 +13,7 @@ pub mod input_group;
 pub mod input_otp;
 pub mod kbd;
 pub mod label;
+pub mod native_select;
 pub mod progress;
 pub mod radio;
 pub mod radio_group;
@@ -47,6 +48,9 @@ pub use input_otp::{
 };
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
+pub use native_select::{
+    NativeSelect, NativeSelectOptGroup, NativeSelectOption, NativeSelectSize,
+};
 pub use progress::{
     KitProgress, Progress, ProgressCircle, ProgressIndicator, ProgressLabel, ProgressTrack,
     ProgressValue,
