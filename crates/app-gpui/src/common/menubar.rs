@@ -12,7 +12,7 @@ pub use gpui_kit::component::menu::AppMenuBar as KitAppMenuBar;
 use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement,
-    RenderOnce, SharedString, StatefulInteractiveElement, StyleRefinement, Styled, Window, div, px,
+    RenderOnce, SharedString, StyleRefinement, Styled, Window, div, px,
 };
 
 use crate::common::dropdown_menu::{

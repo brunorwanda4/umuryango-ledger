@@ -105,6 +105,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `67c3cd3` | `refactor(ui): split select into focused submodules under 1000-line limit` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `345b5c1` | `feat(ui): port shadcn dropdown-menu to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `b5081f8` | `feat(ui): port shadcn context-menu to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `d47c73d` | `feat(ui): port shadcn menubar to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -164,7 +165,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 46. `dropdown-menu.tsx` → `dropdown_menu/mod.rs`
 - [x] 47. `context-menu.tsx` → `context_menu.rs`
 - [x] 48. `menubar.tsx` → `menubar.rs`
-- [ ] 49. `navigation-menu.tsx` → `navigation_menu.rs`
+- [x] 49. `navigation-menu.tsx` → `navigation_menu.rs`
 - [ ] 50. `command.tsx` → `command.rs`
 - [ ] 51. `combobox.tsx` → `combobox.rs`
 - [ ] 52. `toast.tsx` → `toast.rs`
