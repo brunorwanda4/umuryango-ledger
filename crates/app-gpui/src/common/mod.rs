@@ -23,6 +23,7 @@ pub mod kbd;
 pub mod label;
 pub mod marker;
 pub mod native_select;
+pub mod pagination;
 pub mod progress;
 pub mod radio;
 pub mod radio_group;
@@ -89,6 +90,10 @@ pub use label::{Label, LabelMode, field_label};
 pub use marker::{KitMarker, Marker, MarkerContent, MarkerIcon, MarkerVariant};
 pub use native_select::{
     NativeSelect, NativeSelectOptGroup, NativeSelectOption, NativeSelectSize,
+};
+pub use pagination::{
+    KitPagination, Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
+    PaginationLink, PaginationNext, PaginationPrevious,
 };
 pub use progress::{
     KitProgress, Progress, ProgressCircle, ProgressIndicator, ProgressLabel, ProgressTrack,
