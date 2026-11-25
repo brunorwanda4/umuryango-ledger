@@ -15,6 +15,7 @@ pub mod collapsible;
 pub mod direction;
 pub mod empty;
 pub mod field;
+pub mod hover_card;
 pub mod input;
 pub mod input_group;
 pub mod input_otp;
@@ -75,6 +76,9 @@ pub use empty::{
 pub use field::{
     Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLegend,
     FieldLegendVariant, FieldOrientation, FieldSeparator, FieldSet, FieldTitle, field_slot_label,
+};
+pub use hover_card::{
+    HoverCard, HoverCardContent, HoverCardTrigger, KitHoverCard, KitHoverCardState,
 };
 pub use input::{
     Input, InputContentType, InputState, KitInput, input_primitive, password_field, text_field,
