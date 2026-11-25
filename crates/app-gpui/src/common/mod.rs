@@ -13,6 +13,7 @@ pub mod button_group;
 pub mod calendar;
 pub mod card;
 pub mod carousel;
+pub mod chart;
 pub mod checkbox;
 pub mod collapsible;
 pub mod combobox;
@@ -94,6 +95,12 @@ pub use carousel::{
     Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselOrientation, CarouselPrevious,
     KitCarousel, KitCarouselContent, KitCarouselEvent, KitCarouselItem, KitCarouselNext,
     KitCarouselPagination, KitCarouselPrevious, KitCarouselState,
+};
+pub use chart::{
+    AreaChart, BarChart, CandlestickChart, ChartConfig, ChartContainer, ChartLegend,
+    ChartLegendAlign, ChartLegendContent, ChartSeriesConfig, ChartStyle, ChartTooltip,
+    ChartTooltipContent, ChartTooltipDatum, ChartTooltipIndicator, LineChart, PieChart, RadarChart,
+    RadarLabel, SankeyChart, SankeyLabel, preset_chart_color,
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger, KitCollapsible};
