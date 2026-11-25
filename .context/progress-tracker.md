@@ -109,6 +109,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `20179d4` | `feat(ui): port shadcn navigation-menu to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `b20f97c` | `feat(ui): port shadcn command to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `1aaeb30` | `feat(ui): port shadcn combobox to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `9c55f27` | `feat(ui): port shadcn toast to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -172,7 +173,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 50. `command.tsx` → `command.rs`
 - [x] 51. `combobox.tsx` → `combobox.rs`
 - [x] 52. `toast.tsx` → `toast.rs`
-- [ ] 53. `carousel.tsx` → `carousel.rs`
+- [x] 53. `carousel.tsx` → `carousel.rs`
 - [ ] 54. `calendar.tsx` → `calendar.rs`
 - [ ] 55. `chart.tsx` → `chart.rs`
 - [ ] 56. `code-block.tsx` → `code_block.rs`

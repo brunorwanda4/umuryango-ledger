@@ -11,6 +11,7 @@ pub mod breadcrumb;
 pub mod button;
 pub mod button_group;
 pub mod card;
+pub mod carousel;
 pub mod checkbox;
 pub mod collapsible;
 pub mod combobox;
@@ -82,6 +83,11 @@ pub use button_group::{
 };
 pub use card::{
     Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardSize, CardTitle,
+};
+pub use carousel::{
+    Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselOrientation, CarouselPrevious,
+    KitCarousel, KitCarouselContent, KitCarouselEvent, KitCarouselItem, KitCarouselNext,
+    KitCarouselPagination, KitCarouselPrevious, KitCarouselState,
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger, KitCollapsible};
