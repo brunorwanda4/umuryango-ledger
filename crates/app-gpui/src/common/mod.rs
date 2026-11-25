@@ -28,6 +28,7 @@ pub mod item;
 pub mod kbd;
 pub mod label;
 pub mod marker;
+pub mod menubar;
 pub mod native_select;
 pub mod pagination;
 pub mod popover;
@@ -131,6 +132,12 @@ pub use item::{
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
 pub use marker::{KitMarker, Marker, MarkerContent, MarkerIcon, MarkerVariant};
+pub use menubar::{
+    KitAppMenuBar, Menubar, MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarItem,
+    MenubarItemVariant, MenubarLabel, MenubarMenu, MenubarPortal, MenubarRadioGroup,
+    MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent,
+    MenubarSubTrigger, MenubarTrigger, menubar_checkbox_item, menubar_content, menubar_radio_item,
+};
 pub use native_select::{
     NativeSelect, NativeSelectOptGroup, NativeSelectOption, NativeSelectSize,
 };
