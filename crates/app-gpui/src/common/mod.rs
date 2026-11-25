@@ -44,6 +44,7 @@ pub mod navigation_menu;
 pub mod pagination;
 pub mod popover;
 pub mod progress;
+pub mod questionnaire;
 pub mod radio;
 pub mod radio_group;
 pub mod resizable;
@@ -225,6 +226,13 @@ pub use popover::{
 pub use progress::{
     KitProgress, Progress, ProgressCircle, ProgressIndicator, ProgressLabel, ProgressTrack,
     ProgressValue,
+};
+pub use questionnaire::{
+    KitQuestionnaireAnswer, KitQuestionnaireEvent, KitQuestionnaireState, Questionnaire,
+    QuestionnaireActions, QuestionnaireChoice, QuestionnaireChoiceDescription,
+    QuestionnaireChoiceType, QuestionnaireChoices, QuestionnaireDescription, QuestionnaireError,
+    QuestionnaireInput, QuestionnaireItem, QuestionnaireNext, QuestionnairePrevious,
+    QuestionnaireProgress, QuestionnaireSkip, QuestionnaireSubmit, QuestionnaireTitle,
 };
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
 pub use radio_group::{
