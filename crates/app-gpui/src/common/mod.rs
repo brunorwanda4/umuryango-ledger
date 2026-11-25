@@ -39,6 +39,7 @@ pub mod tabs;
 pub mod textarea;
 pub mod toggle;
 pub mod toggle_group;
+pub mod tooltip;
 pub mod utils;
 
 pub use accordion::{
@@ -135,6 +136,10 @@ pub use tabs::{
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use toggle::{KitToggle, Toggle, ToggleSize, ToggleVariant};
 pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};
+pub use tooltip::{
+    KitTooltip, Tooltip, TooltipAlign, TooltipContent, TooltipDefaults, TooltipProvider,
+    TooltipSide, TooltipTrigger,
+};
 pub use utils::{
     PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, card_surface_shadow,
     focus_ring_shadow, invalid_ring_shadow, overlay_surface_shadow, to_preset_uppercase,
