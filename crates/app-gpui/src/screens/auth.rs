@@ -6,8 +6,8 @@ use umuryango_i18n::{Translator, terms};
 use super::auth_inputs::AuthInputs;
 use crate::RootView;
 use crate::common::{
-    Button, ButtonSize, Card, CardContent, CardDescription, CardFooter, CardHeader, CardSize,
-    CardTitle, Field, Label, RadioGroupContainer, RadioGroupItem, password_field, text_field,
+    Button, ButtonSize, Card, CardContent, CardFooter, CardHeader, CardSize, CardTitle, Field,
+    Label, RadioGroupContainer, RadioGroupItem, password_field, text_field,
 };
 use crate::components::icon::{AppIcon, BrandMark, brand_mark};
 use crate::components::lang_toggle::LangToggle;
@@ -98,15 +98,6 @@ impl AuthScreen {
                                         })
                                         .text_center()
                                         .theme(theme),
-                                    )
-                                    .child(
-                                        CardDescription::new(Translator::t(
-                                            state.locale,
-                                            terms::TAGLINE,
-                                            None,
-                                        ))
-                                        .text_center()
-                                        .theme(theme),
                                     ),
                             ),
                     )
@@ -136,11 +127,7 @@ impl AuthScreen {
                                     })
                                     .theme(theme)
                                     .on_click(cx.listener(|this, _, _, cx| {
-                                        if !this.state.is_busy {
-                                            this.state.auth_mode_register =
-                                                !this.state.auth_mode_register;
-                                            cx.notify();
-                                        }
+                                        this.toggle_auth_mode(cx);
                                     })),
                             ),
                     ),

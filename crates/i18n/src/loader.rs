@@ -73,7 +73,6 @@ pub fn interpolate(template: &str, args: &[(&str, &str)]) -> String {
 pub fn canonicalize_key(key: &str) -> &str {
     match key {
         "app-name" => "common.app_name",
-        "tagline" => "common.tagline",
         "nav-dashboard" => "dashboard.title",
         "nav-transactions" => "transactions.title",
         "nav-wallets" => "wallets.title",

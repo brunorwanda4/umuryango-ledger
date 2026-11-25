@@ -5,8 +5,8 @@ use umuryango_i18n::{Translator, terms};
 use super::onboarding_inputs::OnboardingInputs;
 use crate::RootView;
 use crate::common::{
-    Alert, AlertTitle, Badge, Button, ButtonSize, Card, CardContent, CardDescription, CardHeader,
-    CardSize, CardTitle, Item, ItemActions, ItemContent, ItemSize, text_field,
+    Alert, AlertTitle, Badge, Button, ButtonSize, Card, CardContent, CardHeader, CardSize,
+    CardTitle, Item, ItemActions, ItemContent, ItemSize, text_field,
 };
 use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::components::lang_toggle::LangToggle;
@@ -97,15 +97,6 @@ impl OnboardingScreen {
                                             CardTitle::new(Translator::t(
                                                 state.locale,
                                                 terms::ONBOARDING_TITLE,
-                                                None,
-                                            ))
-                                            .text_center()
-                                            .theme(theme),
-                                        )
-                                        .child(
-                                            CardDescription::new(Translator::t(
-                                                state.locale,
-                                                terms::TAGLINE,
                                                 None,
                                             ))
                                             .text_center()

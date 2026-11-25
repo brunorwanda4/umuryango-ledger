@@ -90,7 +90,6 @@ impl FromStr for Locale {
 
 pub mod terms {
     pub const APP_NAME: &str = "app-name";
-    pub const TAGLINE: &str = "tagline";
 
     pub const NAV_DASHBOARD: &str = "nav-dashboard";
     pub const NAV_TRANSACTIONS: &str = "nav-transactions";
