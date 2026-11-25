@@ -10,6 +10,7 @@ pub mod badge;
 pub mod breadcrumb;
 pub mod button;
 pub mod button_group;
+pub mod calendar;
 pub mod card;
 pub mod carousel;
 pub mod checkbox;
@@ -80,6 +81,11 @@ pub use breadcrumb::{
 pub use button::{Button, ButtonSize, ButtonVariant, KitButton, button};
 pub use button_group::{
     ButtonGroup, ButtonGroupOrientation, ButtonGroupSeparator, ButtonGroupText, KitButtonGroup,
+};
+pub use calendar::{
+    Calendar, CalendarDayButton, CalendarSelection, KitCalendar, KitCalendarDate,
+    KitCalendarEvent, KitCalendarMatcher, KitCalendarState, KitDatePicker, KitDatePickerEvent,
+    KitDatePickerState,
 };
 pub use card::{
     Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardSize, CardTitle,
