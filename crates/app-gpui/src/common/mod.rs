@@ -1,6 +1,7 @@
 //! Reusable UI primitives shared across screens and feature components
 //! (inputs, radios, text areas, cards, etc.).
 
+pub mod accordion;
 pub mod alert;
 pub mod aspect_ratio;
 pub mod avatar;
@@ -34,6 +35,10 @@ pub mod toggle;
 pub mod toggle_group;
 pub mod utils;
 
+pub use accordion::{
+    Accordion, AccordionContent, AccordionItem, AccordionMode, AccordionTrigger, KitAccordion,
+    KitAccordionItem,
+};
 pub use alert::{Alert, AlertAction, AlertDescription, AlertTitle, AlertVariant, KitAlert};
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
 pub use avatar::{
