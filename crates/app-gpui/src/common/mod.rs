@@ -8,6 +8,7 @@ pub mod button_group;
 pub mod card;
 pub mod checkbox;
 pub mod direction;
+pub mod field;
 pub mod input;
 pub mod input_group;
 pub mod input_otp;
@@ -36,6 +37,10 @@ pub use card::{
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
+pub use field::{
+    Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLegend,
+    FieldLegendVariant, FieldOrientation, FieldSeparator, FieldSet, FieldTitle, field_slot_label,
+};
 pub use input::{
     Input, InputContentType, InputState, KitInput, input_primitive, password_field, text_field,
 };
