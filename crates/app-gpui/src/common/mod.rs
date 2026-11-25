@@ -13,6 +13,7 @@ pub mod input_group;
 pub mod input_otp;
 pub mod kbd;
 pub mod label;
+pub mod progress;
 pub mod radio;
 pub mod radio_group;
 pub mod separator;
@@ -46,6 +47,10 @@ pub use input_otp::{
 };
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
+pub use progress::{
+    KitProgress, Progress, ProgressCircle, ProgressIndicator, ProgressLabel, ProgressTrack,
+    ProgressValue,
+};
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
 pub use radio_group::{
     RadioGroup as RadioGroupContainer, RadioGroupItem, RadioGroupOrientation,
