@@ -24,6 +24,7 @@ pub mod label;
 pub mod marker;
 pub mod native_select;
 pub mod pagination;
+pub mod popover;
 pub mod progress;
 pub mod radio;
 pub mod radio_group;
@@ -98,6 +99,10 @@ pub use native_select::{
 pub use pagination::{
     KitPagination, Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
     PaginationLink, PaginationNext, PaginationPrevious,
+};
+pub use popover::{
+    KitPopover, KitPopoverState, Popover, PopoverAlign, PopoverContent, PopoverDescription,
+    PopoverHeader, PopoverSide, PopoverTitle, PopoverTrigger,
 };
 pub use progress::{
     KitProgress, Progress, ProgressCircle, ProgressIndicator, ProgressLabel, ProgressTrack,
