@@ -2,7 +2,6 @@ use gpui_kit::prelude::*;
 use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px, svg};
 use serde::{Deserialize, Serialize};
 
-use crate::assets::AppAssets;
 use crate::theme::SemanticTheme;
 
 /// Official Umuryango Ledger brand marks embedded in `AppAssets`.
@@ -21,10 +20,10 @@ pub enum BrandMark {
 impl BrandMark {
     pub const fn asset_path(self) -> &'static str {
         match self {
-            BrandMark::AppIcon => AppAssets::APP_ICON_PATH,
-            BrandMark::Logo => AppAssets::LOGO_PATH,
-            BrandMark::LogoBlack => AppAssets::LOGO_BLACK_PATH,
-            BrandMark::LogoWhite => AppAssets::LOGO_WHITE_PATH,
+            BrandMark::AppIcon => "crates/app-gpui/assets/icons/icon-256.png",
+            BrandMark::Logo => "crates/app-gpui/assets/icons/logo-256.png",
+            BrandMark::LogoBlack => "crates/app-gpui/assets/icons/logo-black-256.png",
+            BrandMark::LogoWhite => "crates/app-gpui/assets/icons/logo-white-256.png",
         }
     }
 }
