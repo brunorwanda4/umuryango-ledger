@@ -127,6 +127,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `054e011` | `fix(gpui): use self-contained BrandMark asset paths in icon.rs` | `cargo check --workspace`, `cargo test -p umuryango-app` (20 passed) |
 | **2026-11-25** | `146c3db` | `refactor(gpui): adopt common shadcn UI primitives across screens and components` | `cargo check --workspace`, `cargo clippy --all --workspace` (0 warnings in refactored files), `cargo test --workspace` (47 passed) |
 | **2026-11-25** | `ad4b9ed` | `refactor(i18n, gpui): remove unused common tagline from locales and screens` | `cargo fmt --check`, `cargo check --workspace`, `cargo test -p umuryango-i18n -p umuryango-core-domain -p umuryango-storage-local -p umuryango-wasm-bridge -p umuryango-app` (45 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
+| **2026-11-25** | `410bb16` | `feat(gpui): persist active screen and auth mode across app restarts` | `cargo check --workspace`, `cargo clippy --all --workspace` (0 warnings in modified files), `cargo test --workspace --lib` (38 passed; 26 in `umuryango-app` including 6 new persistence tests) |
 
 ---
 
