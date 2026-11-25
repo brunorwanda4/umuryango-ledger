@@ -2,7 +2,8 @@
 //! `web/src/components/ui/toast.tsx`.
 //!
 //! Matches `--preset b1oaDsAa` (`base-sera`):
-//! - `ToastViewport`: `bottom-4 inset-x-4` on mobile, `bottom-4 right-4 max-w-sm` on desktop (`is_mobile`)
+//! - `ToastViewport`: `top-4 inset-x-4 max-w-sm mx-auto` on small screens (`< 768px`),
+//!   `bottom-4 right-4 max-w-sm` on larger screens (`>= 768px`) via `is_mobile`
 //! - `Toast`: `w-full rounded-none border bg-popover text-popover-foreground shadow-lg`
 //! - `ToastContent`: `flex items-center gap-3 p-4`
 //! - `ToastIcon`: `Success` | `Info` | `Warning` | `Error` (`app_icon`) | `Loading` ([`Spinner`])
@@ -25,9 +26,10 @@ use gpui_kit::{
 use crate::common::button::{Button, ButtonSize, ButtonVariant};
 use crate::common::dialog::DialogPortal;
 use crate::common::spinner::Spinner;
-use crate::common::utils::{PresetRadius, PresetTokens, StyleComposeExt, overlay_surface_shadow};
+use crate::common::utils::{PresetRadius, PresetTokens, overlay_surface_shadow};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use crate::hooks::use_mobile::is_mobile;
+use crate::hooks::use_mobile::{Breakpoint, is_mobile};
+use crate::safe_area::SafeAreaInsets;
 use crate::theme::{FONT_FAMILY, SemanticTheme, ThemeConfig, ThemeMode};
 
 /// Semantic status variant matching `ToastIcon` in `toast.tsx`.
@@ -234,9 +236,43 @@ impl RenderOnce for ToastProvider {
     }
 }
 
+/// Responsive viewport placement for toasts: top on small screens (`< 768px`),
+/// bottom-right on larger screens (`>= 768px`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ToastPlacement {
+    Top,
+    BottomRight,
+}
+
+impl ToastPlacement {
+    #[inline]
+    pub const fn from_breakpoint(bp: Breakpoint) -> Self {
+        if bp.is_mobile() {
+            Self::Top
+        } else {
+            Self::BottomRight
+        }
+    }
+
+    #[inline]
+    pub fn from_width(width_px: f32) -> Self {
+        Self::from_breakpoint(Breakpoint::from_width(width_px))
+    }
+
+    #[inline]
+    pub fn from_window(window: &Window) -> Self {
+        if is_mobile(window) {
+            Self::Top
+        } else {
+            Self::BottomRight
+        }
+    }
+}
+
 /// Viewport stack container (`ToastViewport` in `toast.tsx`).
 #[derive(IntoElement)]
 pub struct ToastViewport {
+    safe_area: SafeAreaInsets,
     style: StyleRefinement,
     children: Vec<AnyElement>,
 }
@@ -244,9 +280,15 @@ pub struct ToastViewport {
 impl ToastViewport {
     pub fn new() -> Self {
         Self {
+            safe_area: SafeAreaInsets::zero(),
             style: StyleRefinement::default(),
             children: Vec::new(),
         }
+    }
+
+    pub fn safe_area(mut self, safe_area: SafeAreaInsets) -> Self {
+        self.safe_area = safe_area;
+        self
     }
 }
 
@@ -270,19 +312,36 @@ impl ParentElement for ToastViewport {
 
 impl RenderOnce for ToastViewport {
     fn render(self, window: &mut Window, _cx: &mut App) -> impl IntoElement {
-        let mobile = is_mobile(window);
-
-        div()
-            .absolute()
-            .bottom(px(16.0))
-            .right(px(16.0))
-            .cx_when(mobile, |d| d.left(px(16.0)))
-            .cx_when(!mobile, |d| d.w(px(384.0)))
-            .flex()
-            .flex_col()
-            .gap(px(12.0))
-            .refine_style(&self.style)
-            .children(self.children)
+        match ToastPlacement::from_window(window) {
+            ToastPlacement::Top => div()
+                .absolute()
+                .top(px(16.0) + self.safe_area.top_px())
+                .left(px(16.0) + self.safe_area.left_px())
+                .right(px(16.0) + self.safe_area.right_px())
+                .flex()
+                .flex_col()
+                .items_center()
+                .child(
+                    div()
+                        .w_full()
+                        .max_w(px(384.0))
+                        .flex()
+                        .flex_col()
+                        .gap(px(12.0))
+                        .refine_style(&self.style)
+                        .children(self.children),
+                ),
+            ToastPlacement::BottomRight => div()
+                .absolute()
+                .bottom(px(16.0) + self.safe_area.total_bottom_px())
+                .right(px(16.0) + self.safe_area.right_px())
+                .w(px(384.0))
+                .flex()
+                .flex_col()
+                .gap(px(12.0))
+                .refine_style(&self.style)
+                .children(self.children),
+        }
     }
 }
 
@@ -669,6 +728,7 @@ impl RenderOnce for ToastClose {
 #[derive(IntoElement)]
 pub struct Toaster {
     manager: Entity<ToastManager>,
+    safe_area: SafeAreaInsets,
     theme: Option<SemanticTheme>,
     children: Vec<AnyElement>,
 }
@@ -677,9 +737,15 @@ impl Toaster {
     pub fn new(manager: &Entity<ToastManager>) -> Self {
         Self {
             manager: manager.clone(),
+            safe_area: SafeAreaInsets::zero(),
             theme: None,
             children: Vec::new(),
         }
+    }
+
+    pub fn safe_area(mut self, safe_area: SafeAreaInsets) -> Self {
+        self.safe_area = safe_area;
+        self
     }
 
     pub fn theme(mut self, theme: &SemanticTheme) -> Self {
@@ -702,7 +768,7 @@ impl RenderOnce for Toaster {
         let mut provider = ToastProvider::new().children(self.children);
 
         if !records.is_empty() {
-            let mut viewport = ToastViewport::new();
+            let mut viewport = ToastViewport::new().safe_area(self.safe_area);
             for item in records {
                 let id = item.id;
                 let mgr_close = self.manager.clone();
@@ -768,5 +834,24 @@ impl RenderOnce for Toaster {
         }
 
         provider
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn toast_placement_is_top_on_small_screen_and_bottom_right_on_big_screen() {
+        assert_eq!(ToastPlacement::from_width(375.0), ToastPlacement::Top);
+        assert_eq!(ToastPlacement::from_width(767.9), ToastPlacement::Top);
+        assert_eq!(
+            ToastPlacement::from_width(768.0),
+            ToastPlacement::BottomRight
+        );
+        assert_eq!(
+            ToastPlacement::from_width(1440.0),
+            ToastPlacement::BottomRight
+        );
     }
 }

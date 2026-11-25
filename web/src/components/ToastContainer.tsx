@@ -10,7 +10,7 @@ export const ToastContainer: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-50 flex flex-col space-y-2 max-w-sm w-full pointer-events-none no-print">
+    <div className="fixed inset-x-4 top-4 z-50 mx-auto flex w-auto max-w-sm flex-col space-y-2 pointer-events-none pt-safe md:top-auto md:right-4 md:bottom-4 md:left-auto md:mx-0 md:w-full md:pt-0 pb-safe no-print">
       {toasts.map((toast) => {
         let borderClass = "border-slate-300";
         let icon = <Bell className="w-5 h-5 text-slate-500 shrink-0" />;

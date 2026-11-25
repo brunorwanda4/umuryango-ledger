@@ -19,12 +19,16 @@ pub use web::mount_gpui_app;
 use std::sync::{Arc, Mutex};
 
 use api_bridge::ApiBridge;
-use common::{Toast, ToastClose, ToastContent, ToastIcon, ToastTitle, ToastType};
+use common::{
+    Toast, ToastClose, ToastContent, ToastIcon, ToastPortal, ToastTitle, ToastType, ToastViewport,
+};
 use components::entity_modal_inputs::EntityModalInputs;
 use components::entity_modals::EntityModalDialog;
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
 use components::quick_entry_inputs::QuickEntryInputs;
-use gpui_kit::{Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
+use gpui_kit::{
+    Context, IntoElement, ParentElement, Render, Styled, Subscription, Window, div, px,
+};
 pub use safe_area::SafeAreaInsets;
 use screens::auth_inputs::AuthInputs;
 use screens::onboarding_inputs::OnboardingInputs;
@@ -50,6 +54,7 @@ pub struct RootView {
     pub onboarding_inputs: OnboardingInputs,
     pub quick_entry_inputs: QuickEntryInputs,
     pub entity_modal_inputs: EntityModalInputs,
+    _viewport_sub: Subscription,
 }
 
 impl RootView {
@@ -95,6 +100,7 @@ impl RootView {
         let onboarding_inputs = OnboardingInputs::new(locale, window, cx);
         let quick_entry_inputs = QuickEntryInputs::new(window, cx);
         let entity_modal_inputs = EntityModalInputs::new(window, cx);
+        let viewport_sub = hooks::use_mobile::notify_on_resize(window, cx);
 
         #[allow(unused_mut)]
         let mut view = Self {
@@ -106,6 +112,7 @@ impl RootView {
             onboarding_inputs,
             quick_entry_inputs,
             entity_modal_inputs,
+            _viewport_sub: viewport_sub,
         };
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -224,7 +231,6 @@ impl RootView {
     fn render_toast(
         &self,
         theme: &theme::SemanticTheme,
-        top_safe_area: gpui_kit::Pixels,
         cx: &Context<Self>,
     ) -> Option<impl IntoElement> {
         let (msg, is_error) = self.state.toast_message.as_ref()?;
@@ -235,12 +241,8 @@ impl RootView {
         };
 
         Some(
-            div()
-                .absolute()
-                .top(px(16.0) + top_safe_area)
-                .right(px(16.0))
-                .max_w(px(420.0))
-                .child(
+            ToastPortal::new().priority(20).child(
+                ToastViewport::new().safe_area(self.state.safe_area).child(
                     Toast::new("app-toast-container")
                         .border_color(border)
                         .theme(theme)
@@ -255,7 +257,13 @@ impl RootView {
                                     })
                                     .theme(theme),
                                 )
-                                .child(ToastTitle::new(msg.clone()).flex_1().text_xs().theme(theme))
+                                .child(
+                                    ToastTitle::new(msg.clone())
+                                        .min_w_0()
+                                        .flex_1()
+                                        .text_xs()
+                                        .theme(theme),
+                                )
                                 .child(ToastClose::new("app-toast-dismiss").theme(theme).on_click(
                                     cx.listener(|this, _, _, cx| {
                                         this.dismiss_toast(cx);
@@ -263,6 +271,7 @@ impl RootView {
                                 )),
                         ),
                 ),
+            ),
         )
     }
 }
@@ -319,8 +328,6 @@ impl Render for RootView {
             }
         };
 
-        let top_safe_area = self.state.safe_area.top_px();
-
         if matches!(self.state.current_screen, Screen::Auth | Screen::Onboarding) {
             return div()
                 .flex()
@@ -331,7 +338,7 @@ impl Render for RootView {
                 .font_family(theme.font_family)
                 .relative()
                 .child(screen_element)
-                .children(self.render_toast(&theme, top_safe_area, cx));
+                .children(self.render_toast(&theme, cx));
         }
 
         div()
@@ -349,7 +356,7 @@ impl Render for RootView {
                 &theme,
                 cx,
             ))
-            // Active Screen Content Area with Update Banner & Floating Toast
+            // Active Screen Content Area with Update Banner
             .child(
                 div()
                     .flex_1()
@@ -363,8 +370,7 @@ impl Render for RootView {
                         self.state.locale,
                         &theme,
                     ))
-                    .child(div().flex_1().w_full().h_full().child(screen_element))
-                    .children(self.render_toast(&theme, top_safe_area, cx)),
+                    .child(div().flex_1().w_full().h_full().child(screen_element)),
             )
             // Realtime Notifications Drawer (SheetOverlay + SheetContent)
             .children(if self.state.show_notifications_drawer {
@@ -406,6 +412,8 @@ impl Render for RootView {
                     cx,
                 )
             }))
+            // Floating Responsive Toast (Top on small screens, Bottom-Right on large screens)
+            .children(self.render_toast(&theme, cx))
     }
 }
 

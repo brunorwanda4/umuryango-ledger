@@ -284,9 +284,9 @@ pub use tabs::{
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use toast::{
     KitNotification, KitNotificationList, KitNotificationSettings, KitNotificationType, Toast,
-    ToastAction, ToastClose, ToastContent, ToastDescription, ToastIcon, ToastManager, ToastPortal,
-    ToastProvider, ToastRecord, ToastTitle, ToastType, ToastViewport, Toaster,
-    create_toast_manager,
+    ToastAction, ToastClose, ToastContent, ToastDescription, ToastIcon, ToastManager,
+    ToastPlacement, ToastPortal, ToastProvider, ToastRecord, ToastTitle, ToastType, ToastViewport,
+    Toaster, create_toast_manager,
 };
 pub use toggle::{KitToggle, Toggle, ToggleSize, ToggleVariant};
 pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};
