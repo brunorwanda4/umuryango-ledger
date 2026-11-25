@@ -12,6 +12,7 @@ pub mod button_group;
 pub mod card;
 pub mod checkbox;
 pub mod collapsible;
+pub mod dialog;
 pub mod direction;
 pub mod empty;
 pub mod field;
@@ -68,6 +69,10 @@ pub use card::{
 };
 pub use checkbox::{Checkbox, CheckedState, KitCheckbox, checkbox_field};
 pub use collapsible::{Collapsible, CollapsibleContent, CollapsibleTrigger, KitCollapsible};
+pub use dialog::{
+    Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader,
+    DialogOverlay, DialogPortal, DialogTitle, DialogTrigger, KitDialog,
+};
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
 pub use empty::{
     Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyMediaVariant, EmptyTitle,
