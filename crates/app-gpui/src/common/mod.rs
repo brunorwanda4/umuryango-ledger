@@ -62,6 +62,7 @@ pub mod toast;
 pub mod toggle;
 pub mod toggle_group;
 pub mod tooltip;
+pub mod trace;
 pub mod utils;
 
 pub use accordion::{
@@ -276,6 +277,10 @@ pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};
 pub use tooltip::{
     KitTooltip, Tooltip, TooltipAlign, TooltipContent, TooltipDefaults, TooltipProvider,
     TooltipSide, TooltipTrigger,
+};
+pub use trace::{
+    Trace, TraceCollapsible, TraceCollapsibleContent, TraceCollapsibleTrigger, TraceDescription,
+    TraceIcon, TraceLine, TraceStatus, TraceTitle,
 };
 pub use utils::{
     PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, card_surface_shadow,
