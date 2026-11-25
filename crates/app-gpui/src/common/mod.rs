@@ -17,6 +17,7 @@ pub mod radio;
 pub mod radio_group;
 pub mod separator;
 pub mod skeleton;
+pub mod slider;
 pub mod spinner;
 pub mod switch;
 pub mod textarea;
@@ -53,6 +54,10 @@ pub use separator::{
     Separator, SeparatorOrientation, SeparatorStyle, horizontal_separator, vertical_separator,
 };
 pub use skeleton::{Skeleton, skeleton};
+pub use slider::{
+    KitSlider, Slider, SliderEvent, SliderOrientation, SliderScale, SliderState, SliderValue,
+    slider_field,
+};
 pub use spinner::{Spinner, spinner, spinner_static};
 pub use switch::{KitSwitch, Switch, SwitchSize, switch_field};
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
