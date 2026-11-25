@@ -87,6 +87,40 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `f50c999` | `feat(ui): port shadcn toggle to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `6dd2aa2` | `feat(ui): port shadcn toggle-group to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `2d1eccc` | `feat(ui): port shadcn collapsible to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `6d4d80e` | `feat(ui): port shadcn accordion to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `d77a58a` | `feat(ui): port shadcn tabs to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `bd56b21` | `feat(ui): port shadcn breadcrumb to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `6645ac4` | `feat(ui): port shadcn pagination to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `4798089` | `feat(ui): port shadcn scroll-area to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `d816761` | `feat(ui): port shadcn resizable to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `65a27fe` | `feat(ui): port shadcn table to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `e2b8b48` | `feat(ui): port shadcn tooltip to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `2694309` | `feat(ui): port shadcn popover to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `f076a06` | `feat(ui): port shadcn hover-card to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `5bd8009` | `feat(ui): port shadcn dialog to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `8aafc90` | `feat(ui): port shadcn alert-dialog to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `99d93d9` | `feat(ui): port shadcn sheet to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `68b8c94` | `feat(ui): port shadcn drawer to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `7876e88` | `feat(ui): port shadcn select to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `67c3cd3` | `refactor(ui): split select into focused submodules under 1000-line limit` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `345b5c1` | `feat(ui): port shadcn dropdown-menu to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `b5081f8` | `feat(ui): port shadcn context-menu to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `d47c73d` | `feat(ui): port shadcn menubar to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `20179d4` | `feat(ui): port shadcn navigation-menu to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `b20f97c` | `feat(ui): port shadcn command to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `1aaeb30` | `feat(ui): port shadcn combobox to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `9c55f27` | `feat(ui): port shadcn toast to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `9193682` | `feat(ui): port shadcn carousel to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `e7f259c` | `feat(ui): port shadcn calendar to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `517fc31` | `feat(ui): port shadcn chart to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `28d6839` | `feat(ui): port shadcn code-block to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `f7f39e4` | `feat(ui): port shadcn attachment to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `de1e242` | `feat(ui): port shadcn bubble to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `1408392` | `feat(ui): port shadcn message to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `711a3ed` | `feat(ui): port shadcn message-scroller to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `c440e3a` | `feat(ui): port shadcn trace to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `d23283f` | `feat(ui): port shadcn questionnaire to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `44a19df` | `feat(ui): port shadcn sidebar to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `c7d731c` | `feat(branding): update multi-platform app icon and brand logos across GPUI and web` | `cargo check --workspace`, `cargo test --workspace` (47 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
 | **2026-11-25** | `054e011` | `fix(gpui): use self-contained BrandMark asset paths in icon.rs` | `cargo check --workspace`, `cargo test -p umuryango-app` (20 passed) |
 
@@ -131,35 +165,35 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 29. `toggle-group.tsx` → `toggle_group.rs`
 - [x] 30. `collapsible.tsx` → `collapsible.rs`
 - [x] 31. `accordion.tsx` → `accordion.rs`
-- [ ] 32. `tabs.tsx` → `tabs.rs`
-- [ ] 33. `breadcrumb.tsx` → `breadcrumb.rs`
-- [ ] 34. `pagination.tsx` → `pagination.rs`
-- [ ] 35. `scroll-area.tsx` → `scroll_area.rs`
-- [ ] 36. `resizable.tsx` → `resizable.rs`
-- [ ] 37. `table.tsx` → `table.rs`
-- [ ] 38. `tooltip.tsx` → `tooltip.rs`
-- [ ] 39. `popover.tsx` → `popover.rs`
-- [ ] 40. `hover-card.tsx` → `hover_card.rs`
-- [ ] 41. `dialog.tsx` → `dialog.rs`
-- [ ] 42. `alert-dialog.tsx` → `alert_dialog.rs`
-- [ ] 43. `sheet.tsx` → `sheet.rs`
-- [ ] 44. `drawer.tsx` → `drawer.rs`
-- [ ] 45. `select.tsx` → `select.rs`
-- [ ] 46. `dropdown-menu.tsx` → `dropdown_menu.rs`
-- [ ] 47. `context-menu.tsx` → `context_menu.rs`
-- [ ] 48. `menubar.tsx` → `menubar.rs`
-- [ ] 49. `navigation-menu.tsx` → `navigation_menu.rs`
-- [ ] 50. `command.tsx` → `command.rs`
-- [ ] 51. `combobox.tsx` → `combobox.rs`
-- [ ] 52. `toast.tsx` → `toast.rs`
-- [ ] 53. `carousel.tsx` → `carousel.rs`
-- [ ] 54. `calendar.tsx` → `calendar.rs`
-- [ ] 55. `chart.tsx` → `chart.rs`
-- [ ] 56. `code-block.tsx` → `code_block.rs`
-- [ ] 57. `attachment.tsx` → `attachment.rs`
-- [ ] 58. `bubble.tsx` → `bubble.rs`
-- [ ] 59. `message.tsx` → `message.rs`
-- [ ] 60. `message-scroller.tsx` → `message_scroller.rs`
-- [ ] 61. `trace.tsx` → `trace.rs`
-- [ ] 62. `questionnaire.tsx` → `questionnaire.rs`
-- [ ] 63. `sidebar.tsx` → `sidebar.rs`
+- [x] 32. `tabs.tsx` → `tabs.rs`
+- [x] 33. `breadcrumb.tsx` → `breadcrumb.rs`
+- [x] 34. `pagination.tsx` → `pagination.rs`
+- [x] 35. `scroll-area.tsx` → `scroll_area.rs`
+- [x] 36. `resizable.tsx` → `resizable.rs`
+- [x] 37. `table.tsx` → `table.rs`
+- [x] 38. `tooltip.tsx` → `tooltip.rs`
+- [x] 39. `popover.tsx` → `popover.rs`
+- [x] 40. `hover-card.tsx` → `hover_card.rs`
+- [x] 41. `dialog.tsx` → `dialog.rs`
+- [x] 42. `alert-dialog.tsx` → `alert_dialog.rs`
+- [x] 43. `sheet.tsx` → `sheet.rs`
+- [x] 44. `drawer.tsx` → `drawer.rs`
+- [x] 45. `select.tsx` → `select/mod.rs`
+- [x] 46. `dropdown-menu.tsx` → `dropdown_menu/mod.rs`
+- [x] 47. `context-menu.tsx` → `context_menu.rs`
+- [x] 48. `menubar.tsx` → `menubar.rs`
+- [x] 49. `navigation-menu.tsx` → `navigation_menu.rs`
+- [x] 50. `command.tsx` → `command.rs`
+- [x] 51. `combobox.tsx` → `combobox.rs`
+- [x] 52. `toast.tsx` → `toast.rs`
+- [x] 53. `carousel.tsx` → `carousel.rs`
+- [x] 54. `calendar.tsx` → `calendar.rs`
+- [x] 55. `chart.tsx` → `chart.rs`
+- [x] 56. `code-block.tsx` → `code_block.rs`
+- [x] 57. `attachment.tsx` → `attachment.rs`
+- [x] 58. `bubble.tsx` → `bubble.rs`
+- [x] 59. `message.tsx` → `message.rs`
+- [x] 60. `message-scroller.tsx` → `message_scroller.rs`
+- [x] 61. `trace.tsx` → `trace.rs`
+- [x] 62. `questionnaire.tsx` → `questionnaire/mod.rs`
+- [x] 63. `sidebar.tsx` → `sidebar/mod.rs`
