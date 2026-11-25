@@ -101,6 +101,8 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `8aafc90` | `feat(ui): port shadcn alert-dialog to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `99d93d9` | `feat(ui): port shadcn sheet to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `68b8c94` | `feat(ui): port shadcn drawer to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `7876e88` | `feat(ui): port shadcn select to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `67c3cd3` | `refactor(ui): split select into focused submodules under 1000-line limit` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -156,8 +158,8 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 42. `alert-dialog.tsx` → `alert_dialog.rs`
 - [x] 43. `sheet.tsx` → `sheet.rs`
 - [x] 44. `drawer.tsx` → `drawer.rs`
-- [x] 45. `select.tsx` → `select.rs`
-- [ ] 46. `dropdown-menu.tsx` → `dropdown_menu.rs`
+- [x] 45. `select.tsx` → `select/mod.rs`
+- [x] 46. `dropdown-menu.tsx` → `dropdown_menu/mod.rs`
 - [ ] 47. `context-menu.tsx` → `context_menu.rs`
 - [ ] 48. `menubar.tsx` → `menubar.rs`
 - [ ] 49. `navigation-menu.tsx` → `navigation_menu.rs`

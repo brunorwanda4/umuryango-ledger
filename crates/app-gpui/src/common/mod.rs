@@ -16,6 +16,7 @@ pub mod collapsible;
 pub mod dialog;
 pub mod direction;
 pub mod drawer;
+pub mod dropdown_menu;
 pub mod empty;
 pub mod field;
 pub mod hover_card;
@@ -86,6 +87,13 @@ pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_directio
 pub use drawer::{
     Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerDirection, DrawerFooter,
     DrawerHeader, DrawerOverlay, DrawerPortal, DrawerSwipeHandle, DrawerTitle, DrawerTrigger,
+};
+pub use dropdown_menu::{
+    DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup,
+    DropdownMenuItem, DropdownMenuItemVariant, DropdownMenuLabel, DropdownMenuPortal,
+    DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut,
+    DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
+    KitDropdownMenu, KitPopupMenu, KitPopupMenuItem,
 };
 pub use empty::{
     Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyMediaVariant, EmptyTitle,
