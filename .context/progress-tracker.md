@@ -120,6 +120,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `711a3ed` | `feat(ui): port shadcn message-scroller to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `c440e3a` | `feat(ui): port shadcn trace to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `d23283f` | `feat(ui): port shadcn questionnaire to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `44a19df` | `feat(ui): port shadcn sidebar to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -192,6 +193,6 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 59. `message.tsx` → `message.rs`
 - [x] 60. `message-scroller.tsx` → `message_scroller.rs`
 - [x] 61. `trace.tsx` → `trace.rs`
-- [x] 62. `questionnaire.tsx` → `questionnaire.rs`
+- [x] 62. `questionnaire.tsx` → `questionnaire/mod.rs`
 - [x] 63. `sidebar.tsx` → `sidebar/mod.rs`
 
