@@ -34,6 +34,7 @@ pub mod radio;
 pub mod radio_group;
 pub mod resizable;
 pub mod scroll_area;
+pub mod select;
 pub mod separator;
 pub mod sheet;
 pub mod skeleton;
@@ -141,6 +142,11 @@ pub use resizable::{
 pub use scroll_area::{
     KitScrollable, KitScrollbar, ScrollArea, ScrollBar, ScrollBarOrientation, ScrollableElement,
     ScrollbarAxis, ScrollbarHandle, ScrollbarMode,
+};
+pub use select::{
+    KitSelect, KitSelectDelegate, KitSelectEvent, KitSelectState, Select, SelectContent,
+    SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton,
+    SelectSeparator, SelectTrigger, SelectTriggerSize, SelectValue,
 };
 pub use separator::{
     Separator, SeparatorOrientation, SeparatorStyle, horizontal_separator, vertical_separator,
