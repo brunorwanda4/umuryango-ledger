@@ -99,6 +99,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `f076a06` | `feat(ui): port shadcn hover-card to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `5bd8009` | `feat(ui): port shadcn dialog to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `8aafc90` | `feat(ui): port shadcn alert-dialog to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `99d93d9` | `feat(ui): port shadcn sheet to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -153,7 +154,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 41. `dialog.tsx` → `dialog.rs`
 - [x] 42. `alert-dialog.tsx` → `alert_dialog.rs`
 - [x] 43. `sheet.tsx` → `sheet.rs`
-- [ ] 44. `drawer.tsx` → `drawer.rs`
+- [x] 44. `drawer.tsx` → `drawer.rs`
 - [ ] 45. `select.tsx` → `select.rs`
 - [ ] 46. `dropdown-menu.tsx` → `dropdown_menu.rs`
 - [ ] 47. `context-menu.tsx` → `context_menu.rs`

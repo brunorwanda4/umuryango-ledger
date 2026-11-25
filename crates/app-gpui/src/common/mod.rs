@@ -15,6 +15,7 @@ pub mod checkbox;
 pub mod collapsible;
 pub mod dialog;
 pub mod direction;
+pub mod drawer;
 pub mod empty;
 pub mod field;
 pub mod hover_card;
@@ -81,6 +82,10 @@ pub use dialog::{
     DialogOverlay, DialogPortal, DialogTitle, DialogTrigger, KitDialog,
 };
 pub use direction::{Direction, DirectionProvider, LogicalStyledExt, set_direction, use_direction};
+pub use drawer::{
+    Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerDirection, DrawerFooter,
+    DrawerHeader, DrawerOverlay, DrawerPortal, DrawerSwipeHandle, DrawerTitle, DrawerTrigger,
+};
 pub use empty::{
     Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyMediaVariant, EmptyTitle,
     KitEmpty,
