@@ -121,6 +121,8 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `c440e3a` | `feat(ui): port shadcn trace to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `d23283f` | `feat(ui): port shadcn questionnaire to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `44a19df` | `feat(ui): port shadcn sidebar to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `ad6a498` | `refactor(ui): split questionnaire and sidebar into submodules under 1000-line limit` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `5563161` | `fix(wasm): use cached Assets::new in AppAssets for wasm32 compatibility` | `cargo check -p umuryango-app` & `wasm32-unknown-unknown` |
 | **2026-11-25** | `c7d731c` | `feat(branding): update multi-platform app icon and brand logos across GPUI and web` | `cargo check --workspace`, `cargo test --workspace` (47 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
 | **2026-11-25** | `054e011` | `fix(gpui): use self-contained BrandMark asset paths in icon.rs` | `cargo check --workspace`, `cargo test -p umuryango-app` (20 passed) |
 | **2026-11-25** | `146c3db` | `refactor(gpui): adopt common shadcn UI primitives across screens and components` | `cargo check --workspace`, `cargo clippy --all --workspace` (0 warnings in refactored files), `cargo test --workspace` (47 passed) |
