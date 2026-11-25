@@ -5,16 +5,18 @@
 //! - Preserves `text_field` and `password_field` labeled compound helpers used across
 //!   auth, onboarding, quick-entry, and entity modal screens.
 
-pub use gpui_kit::component::input::{Input as KitInput, InputContentType, InputState};
 use gpui_kit::component::StyledExt as _;
-use gpui_kit::prelude::*;
+pub use gpui_kit::component::input::{Input as KitInput, InputContentType, InputState};
 use gpui_kit::{
-    AnyElement, App, ElementId, Entity, Focusable as _, FontWeight, IntoElement, ParentElement,
-    RenderOnce, SharedString, StyleRefinement, Styled, Window, div, px,
+    AnyElement, App, ElementId, Entity, Focusable as _, IntoElement, ParentElement, RenderOnce,
+    SharedString, StyleRefinement, Styled, Window, div, px,
 };
 
+use crate::common::button::{Button, ButtonSize};
+use crate::common::field::Field;
+use crate::common::label::Label;
 use crate::common::utils::{PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt};
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::AppIcon;
 use crate::theme::{FONT_FAMILY, SemanticTheme, ThemeConfig, ThemeMode};
 
 /// Underline text input matching `Input` in `web/src/components/ui/input.tsx`.
@@ -141,7 +143,9 @@ impl RenderOnce for Input {
             .w_full()
             .min_w_0()
             .rounded(PresetRadius::NONE)
-            .cx_when(!self.borderless, |d| d.border_b_1().border_color(border_bottom))
+            .cx_when(!self.borderless, |d| {
+                d.border_b_1().border_color(border_bottom)
+            })
             .preset_disabled(self.disabled)
             .refine_style(&self.style)
             .child(inner)
@@ -149,7 +153,11 @@ impl RenderOnce for Input {
 }
 
 /// Convenience constructor for a themed `--preset b1oaDsAa` [`Input`].
-pub fn input_primitive(id: impl Into<ElementId>, state: &Entity<InputState>, theme: &SemanticTheme) -> Input {
+pub fn input_primitive(
+    id: impl Into<ElementId>,
+    state: &Entity<InputState>,
+    theme: &SemanticTheme,
+) -> Input {
     Input::new(state).id(id).theme(theme)
 }
 
@@ -160,7 +168,7 @@ pub fn text_field(
     state: &Entity<InputState>,
     theme: &SemanticTheme,
 ) -> impl IntoElement {
-    labeled(label, base_input(id, state, theme), theme)
+    labeled(label, input_primitive(id, state, theme), theme)
 }
 
 /// Password input: masked by default, with an eye button to reveal or hide the text.
@@ -173,19 +181,8 @@ pub fn password_field(
     theme: &SemanticTheme,
     cx: &App,
 ) -> impl IntoElement {
-    let input = base_input(id, state, theme).suffix(mask_toggle(id, state, theme, cx));
+    let input = input_primitive(id, state, theme).suffix(mask_toggle(id, state, theme, cx));
     labeled(label, input, theme)
-}
-
-fn base_input(id: &'static str, state: &Entity<InputState>, theme: &SemanticTheme) -> KitInput {
-    KitInput::new(state)
-        .id(id)
-        .focus_bordered(true)
-        .w_full()
-        .bg(theme.bg_canvas)
-        .border_color(theme.border_subtle)
-        .text_color(theme.text_primary)
-        .text_sm()
 }
 
 /// Eye button that flips the password field between masked and plain text.
@@ -197,53 +194,30 @@ fn mask_toggle(
 ) -> impl IntoElement {
     let masked = state.read(cx).presentation().is_masked();
     let target = state.clone();
-    let hover_bg = theme.bg_elevated;
 
-    div()
-        .id(ElementId::Name(format!("{id}-mask-toggle").into()))
-        .flex()
-        .flex_none()
-        .items_center()
-        .justify_center()
-        .size(px(26.0))
-        .cursor_pointer()
-        .hover(move |s| s.bg(hover_bg))
+    Button::new(ElementId::Name(format!("{id}-mask-toggle").into()))
+        .ghost()
+        .size(ButtonSize::IconXs)
+        .icon(if masked {
+            AppIcon::Eye
+        } else {
+            AppIcon::EyeSlash
+        })
+        .theme(theme)
         .on_click(move |_, window, cx| {
             target.update(cx, |input, cx| input.toggle_masked(window, cx));
             window.refresh();
         })
-        .child(app_icon(
-            if masked {
-                AppIcon::Eye
-            } else {
-                AppIcon::EyeSlash
-            },
-            IconSize::Sm,
-            if masked {
-                IconTone::Muted
-            } else {
-                IconTone::Default
-            },
-            theme,
-        ))
 }
 
 fn labeled(
     label: impl Into<SharedString>,
-    input: KitInput,
+    input: Input,
     theme: &SemanticTheme,
 ) -> impl IntoElement {
-    div()
-        .w_full()
-        .flex()
-        .flex_col()
+    Field::new()
         .gap(px(4.0))
-        .child(
-            div()
-                .text_xs()
-                .font_weight(FontWeight::SEMIBOLD)
-                .text_color(theme.text_muted)
-                .child(label.into()),
-        )
+        .theme(theme)
+        .child(Label::new(label).theme(theme))
         .child(input)
 }

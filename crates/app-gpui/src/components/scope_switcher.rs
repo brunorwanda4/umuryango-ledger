@@ -1,11 +1,11 @@
-use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, InteractiveElement, IntoElement, ParentElement, Styled, div};
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
 use crate::RootView;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::common::{Button, ButtonGroup, ButtonSize, ButtonVariant};
+use crate::components::icon::AppIcon;
 use crate::theme::SemanticTheme;
 
 pub struct ScopeSwitcher;
@@ -22,99 +22,42 @@ impl ScopeSwitcher {
         let personal_label = Translator::t(locale, terms::PERSONAL_SCOPE, None);
         let family_label = Translator::t(locale, terms::FAMILY_SCOPE, None);
 
-        let active_bg = theme.accent_primary;
-        let inactive_bg = theme.bg_elevated;
-        let active_text = theme.bg_canvas;
-        let inactive_text = theme.text_muted;
-
-        div()
-            .id(id)
-            .flex()
-            .flex_row()
-            .items_center()
-            .p(px(3.0))
-            .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
-            .font_family(theme.font_family)
-            // Family scope button
-            .child(
-                div()
-                    .id("scope-family-btn")
-                    .flex_1()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(6.0))
-                    .py(px(6.0))
-                    .px(px(12.0))
-                    .text_sm()
-                    .font_weight(if is_family {
-                        gpui_kit::FontWeight::SEMIBOLD
-                    } else {
-                        gpui_kit::FontWeight::NORMAL
-                    })
-                    .bg(if is_family { active_bg } else { inactive_bg })
-                    .text_color(if is_family {
-                        active_text
-                    } else {
-                        inactive_text
-                    })
-                    .cursor_pointer()
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.switch_to_family_scope(cx);
-                    }))
-                    .child(app_icon(
-                        AppIcon::FamilyLedger,
-                        IconSize::Xs,
-                        if is_family {
-                            IconTone::OnPrimaryButton
+        div().id(id).w_full().child(
+            ButtonGroup::horizontal()
+                .w_full()
+                .child(
+                    Button::new("scope-family-btn")
+                        .variant(if is_family {
+                            ButtonVariant::Default
                         } else {
-                            IconTone::Muted
-                        },
-                        theme,
-                    ))
-                    .child(family_label),
-            )
-            // Personal scope button
-            .child(
-                div()
-                    .id("scope-personal-btn")
-                    .flex_1()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(6.0))
-                    .py(px(6.0))
-                    .px(px(12.0))
-                    .text_sm()
-                    .font_weight(if !is_family {
-                        gpui_kit::FontWeight::SEMIBOLD
-                    } else {
-                        gpui_kit::FontWeight::NORMAL
-                    })
-                    .bg(if !is_family { active_bg } else { inactive_bg })
-                    .text_color(if !is_family {
-                        active_text
-                    } else {
-                        inactive_text
-                    })
-                    .cursor_pointer()
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.switch_to_personal_scope(cx);
-                    }))
-                    .child(app_icon(
-                        AppIcon::PersonalWallet,
-                        IconSize::Xs,
-                        if !is_family {
-                            IconTone::OnPrimaryButton
+                            ButtonVariant::Outline
+                        })
+                        .size(ButtonSize::Xs)
+                        .icon_start(AppIcon::FamilyLedger)
+                        .label(family_label)
+                        .flex_1()
+                        .theme(theme)
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.switch_to_family_scope(cx);
+                        })),
+                )
+                .child(
+                    Button::new("scope-personal-btn")
+                        .variant(if !is_family {
+                            ButtonVariant::Default
                         } else {
-                            IconTone::Muted
-                        },
-                        theme,
-                    ))
-                    .child(personal_label),
-            )
+                            ButtonVariant::Outline
+                        })
+                        .size(ButtonSize::Xs)
+                        .icon_start(AppIcon::PersonalWallet)
+                        .label(personal_label)
+                        .flex_1()
+                        .theme(theme)
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.switch_to_personal_scope(cx);
+                        })),
+                ),
+        )
     }
 
     pub fn toggle(

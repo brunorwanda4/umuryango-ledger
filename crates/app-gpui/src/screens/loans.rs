@@ -1,10 +1,14 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use umuryango_core_domain::models::{Loan, LoanDirection};
 use umuryango_i18n::{Locale, Translator, terms};
 
 use crate::RootView;
+use crate::common::{
+    Badge, Button, ButtonSize, Empty, EmptyDescription, EmptyHeader, EmptyMedia, Item, ItemActions,
+    ItemContent, ItemMedia, ItemSize,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{ActiveModal, AppState};
 use crate::theme::SemanticTheme;
@@ -54,33 +58,19 @@ impl LoansScreen {
                     .child(
                         div()
                             .text_2xl()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .child(title),
                     )
                     .child(
-                        div()
-                            .id("loans-add-btn")
-                            .flex()
-                            .items_center()
-                            .gap(px(6.0))
-                            .px(px(12.0))
-                            .py(px(6.0))
-                            .bg(theme.accent_primary)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
+                        Button::new("loans-add-btn")
+                            .size(ButtonSize::Sm)
+                            .icon_start(AppIcon::Add)
+                            .label(umuryango_i18n::t(state.locale, "loans.record_loan_btn"))
+                            .theme(theme)
                             .on_click(cx.listener(|this, _, window, cx| {
                                 this.open_modal(ActiveModal::AddLoan, window, cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Add,
-                                IconSize::Xs,
-                                IconTone::OnPrimaryButton,
-                                theme,
-                            ))
-                            .child(umuryango_i18n::t(state.locale, "loans.record_loan_btn")),
+                            })),
                     ),
             )
             // Section 1: Lent Out
@@ -90,7 +80,7 @@ impl LoansScreen {
                     .child(
                         div()
                             .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
                             .child(umuryango_i18n::t(state.locale, "loans.lent_out_title")),
@@ -98,14 +88,24 @@ impl LoansScreen {
                     .child(div().flex().flex_col().gap(px(10.0)).children(
                         if lent_loans.is_empty() {
                             vec![
-                                div()
-                                    .p(px(16.0))
+                                Empty::new()
+                                    .bordered(true)
+                                    .p(px(24.0))
                                     .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(umuryango_i18n::t(state.locale, "loans.no_lent_out"))
+                                    .theme(theme)
+                                    .child(
+                                        EmptyHeader::new()
+                                            .child(
+                                                EmptyMedia::from_icon(AppIcon::Loans).theme(theme),
+                                            )
+                                            .child(
+                                                EmptyDescription::new(umuryango_i18n::t(
+                                                    state.locale,
+                                                    "loans.no_lent_out",
+                                                ))
+                                                .theme(theme),
+                                            ),
+                                    )
                                     .into_any_element(),
                             ]
                         } else {
@@ -125,7 +125,7 @@ impl LoansScreen {
                     .child(
                         div()
                             .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .mb(px(12.0))
                             .child(umuryango_i18n::t(state.locale, "loans.borrowed_title")),
@@ -133,14 +133,24 @@ impl LoansScreen {
                     .child(div().flex().flex_col().gap(px(10.0)).children(
                         if borrowed_loans.is_empty() {
                             vec![
-                                div()
-                                    .p(px(16.0))
+                                Empty::new()
+                                    .bordered(true)
+                                    .p(px(24.0))
                                     .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(umuryango_i18n::t(state.locale, "loans.no_borrowed"))
+                                    .theme(theme)
+                                    .child(
+                                        EmptyHeader::new()
+                                            .child(
+                                                EmptyMedia::from_icon(AppIcon::Loans).theme(theme),
+                                            )
+                                            .child(
+                                                EmptyDescription::new(umuryango_i18n::t(
+                                                    state.locale,
+                                                    "loans.no_borrowed",
+                                                ))
+                                                .theme(theme),
+                                            ),
+                                    )
                                     .into_any_element(),
                             ]
                         } else {
@@ -178,45 +188,37 @@ impl LoansScreen {
         let counterparty = loan.counterparty_name.clone();
         let remaining = loan.balance_remaining;
 
-        div()
-            .flex()
-            .flex_row()
-            .justify_between()
-            .items_center()
-            .p(px(14.0))
+        Item::new()
+            .outline()
+            .size(ItemSize::Sm)
             .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
+            .justify_between()
+            .theme(theme)
+            .child(ItemMedia::new().theme(theme).child(app_icon(
+                AppIcon::Loans,
+                IconSize::Sm,
+                tone,
+                theme,
+            )))
             .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(px(10.0))
-                    .child(app_icon(AppIcon::Loans, IconSize::Sm, tone, theme))
+                ItemContent::new()
+                    .gap(px(2.0))
                     .child(
                         div()
-                            .flex()
-                            .flex_col()
-                            .gap(px(2.0))
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(loan.counterparty_name.clone()),
-                            )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(loan.notes.clone().unwrap_or_default()),
-                            ),
+                            .text_sm()
+                            .font_weight(FontWeight::BOLD)
+                            .text_color(theme.text_primary)
+                            .child(loan.counterparty_name.clone()),
+                    )
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(theme.text_muted)
+                            .child(loan.notes.clone().unwrap_or_default()),
                     ),
             )
             .child(
-                div()
-                    .flex()
-                    .items_center()
+                ItemActions::new()
                     .gap(px(14.0))
                     .child(
                         div()
@@ -226,7 +228,7 @@ impl LoansScreen {
                             .child(
                                 div()
                                     .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .font_weight(FontWeight::BOLD)
                                     .text_color(color)
                                     .child(format!("{} RWF", loan.balance_remaining)),
                             )
@@ -237,27 +239,20 @@ impl LoansScreen {
                             ))),
                     )
                     .child(if is_repaid {
-                        div()
+                        Badge::new(umuryango_i18n::t(locale, "loans.status_repaid"))
+                            .outline()
                             .px(px(10.0))
                             .py(px(4.0))
                             .bg(theme.income_color.opacity(0.15))
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(theme.income_color)
-                            .child(umuryango_i18n::t(locale, "loans.status_repaid"))
+                            .theme(theme)
                             .into_any_element()
                     } else {
-                        div()
-                            .id(format!("loan-repay-btn-{}", loan_id))
-                            .px(px(10.0))
-                            .py(px(4.0))
-                            .bg(theme.bg_elevated)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.text_primary)
-                            .cursor_pointer()
+                        Button::new(format!("loan-repay-btn-{}", loan_id))
+                            .outline()
+                            .size(ButtonSize::Xs)
+                            .label(umuryango_i18n::t(locale, "loans.repay_btn"))
+                            .theme(theme)
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.open_modal(
                                     ActiveModal::RepayLoan {
@@ -269,7 +264,6 @@ impl LoansScreen {
                                     cx,
                                 );
                             }))
-                            .child(umuryango_i18n::t(locale, "loans.repay_btn"))
                             .into_any_element()
                     }),
             )

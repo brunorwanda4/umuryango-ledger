@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use umuryango_core_domain::models::{Transaction, TransactionType, Wallet};
 use umuryango_core_domain::scope::LedgerScope;
@@ -9,7 +9,11 @@ use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
 
 use crate::RootView;
-use crate::common::input::text_field;
+use crate::common::{
+    Button, ButtonGroup, ButtonSize, ButtonVariant, DialogContent, DialogFooter, DialogHeader,
+    DialogOverlay, DialogTitle, Empty, EmptyDescription, EmptyHeader, Field, Item, ItemActions,
+    ItemContent, ItemSize, Label, text_field,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::quick_entry_inputs::QuickEntryInputs;
 use crate::theme::SemanticTheme;
@@ -68,383 +72,295 @@ impl QuickEntryDialog {
         let income_label = Translator::t(locale, terms::INCOME, None);
         let expense_label = Translator::t(locale, terms::EXPENSE, None);
         let handover_label = Translator::t(locale, terms::HANDOVER, None);
+        let view_for_close = cx.entity().clone();
 
-        div()
-            .id(id)
-            .w(px(520.0))
-            .max_h(px(680.0))
-            .overflow_y_scroll()
-            .p(px(24.0))
-            .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
-            .font_family(theme.font_family)
-            // Header
+        DialogOverlay::new("quick-entry-overlay")
+            .on_click(cx.listener(|this, _, _, cx| {
+                this.close_quick_entry(cx);
+            }))
             .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .justify_between()
-                    .items_center()
-                    .mb(px(16.0))
+                DialogContent::new(id)
+                    .show_close_button(true)
+                    .on_close(move |_window, cx| {
+                        view_for_close.update(cx, |this, cx| {
+                            this.close_quick_entry(cx);
+                        });
+                    })
+                    .w(px(520.0))
+                    .max_h(px(680.0))
+                    .gap(px(16.0))
+                    .theme(theme)
+                    // Header
                     .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(8.0))
-                            .child(app_icon(
-                                AppIcon::Add,
-                                IconSize::Md,
-                                IconTone::AccentPrimary,
-                                theme,
-                            ))
-                            .child(
-                                div()
-                                    .text_lg()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(umuryango_i18n::t(
+                        DialogHeader::new().pr(px(40.0)).child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(8.0))
+                                .child(app_icon(
+                                    AppIcon::Add,
+                                    IconSize::Md,
+                                    IconTone::AccentPrimary,
+                                    theme,
+                                ))
+                                .child(
+                                    DialogTitle::new(umuryango_i18n::t(
                                         locale,
                                         "transactions.log_new_transaction",
-                                    )),
-                            ),
-                    )
-                    .child(
-                        div()
-                            .id("quick-entry-header-close")
-                            .p(px(4.0))
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.close_quick_entry(cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Close,
-                                IconSize::Sm,
-                                IconTone::Muted,
-                                theme,
-                            )),
-                    ),
-            )
-            // Mode selector tabs
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .gap(px(8.0))
-                    .mb(px(16.0))
-                    .child(Self::render_mode_tab(
-                        "quick-entry-tab-expense",
-                        QuickEntryMode::Expense,
-                        form.mode == QuickEntryMode::Expense,
-                        AppIcon::Expense,
-                        IconTone::Expense,
-                        theme.expense_color,
-                        expense_label,
-                        theme,
-                        cx,
-                    ))
-                    .child(Self::render_mode_tab(
-                        "quick-entry-tab-income",
-                        QuickEntryMode::Income,
-                        form.mode == QuickEntryMode::Income,
-                        AppIcon::Income,
-                        IconTone::Income,
-                        theme.income_color,
-                        income_label,
-                        theme,
-                        cx,
-                    ))
-                    .child(Self::render_mode_tab(
-                        "quick-entry-tab-handover",
-                        QuickEntryMode::Handover,
-                        form.mode == QuickEntryMode::Handover,
-                        AppIcon::Handover,
-                        IconTone::AccentSecondary,
-                        theme.accent_primary,
-                        handover_label,
-                        theme,
-                        cx,
-                    )),
-            )
-            // Form body
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(12.0))
-                    // Source wallet selector
-                    .child(Self::render_wallet_picker(
-                        "source",
-                        if form.mode == QuickEntryMode::Handover {
-                            umuryango_i18n::t(locale, "transactions.source_wallet")
-                        } else {
-                            umuryango_i18n::t(locale, "wallets.select_wallet")
-                        },
-                        form.source_wallet_id,
-                        wallets,
-                        locale,
-                        theme,
-                        cx,
-                        false,
-                    ))
-                    // Destination wallet selector (Handover only)
-                    .children(if form.mode == QuickEntryMode::Handover {
-                        Some(Self::render_wallet_picker(
-                            "dest",
-                            umuryango_i18n::t(locale, "transactions.destination_wallet"),
-                            form.destination_wallet_id,
-                            wallets,
-                            locale,
-                            theme,
-                            cx,
-                            true,
-                        ))
-                    } else {
-                        None
-                    })
-                    // Editable Amount input & quick chips
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap(px(6.0))
-                            .child(text_field(
-                                "quick-entry-amount-input",
-                                format!(
-                                    "{} (RWF)",
-                                    umuryango_i18n::t(locale, "transactions.amount")
+                                    ))
+                                    .theme(theme),
                                 ),
-                                &inputs.amount,
+                        ),
+                    )
+                    // Mode selector tabs
+                    .child(
+                        ButtonGroup::horizontal()
+                            .w_full()
+                            .child(Self::render_mode_tab(
+                                "quick-entry-tab-expense",
+                                QuickEntryMode::Expense,
+                                form.mode == QuickEntryMode::Expense,
+                                AppIcon::Expense,
+                                expense_label,
                                 theme,
+                                cx,
                             ))
-                            .child(div().flex().flex_row().gap(px(6.0)).children(
-                                ["1000", "5000", "10000", "25000", "50000"].into_iter().map(
-                                    |amt| {
-                                        let is_sel = form.amount_input == amt;
-                                        let amt_val = amt.to_string();
-                                        div()
-                                            .id(format!("amt-preset-{}", amt))
-                                            .px(px(8.0))
-                                            .py(px(4.0))
-                                            .bg(if is_sel {
-                                                theme.accent_primary
-                                            } else {
-                                                theme.bg_elevated
-                                            })
-                                            .border_1()
-                                            .border_color(theme.border_subtle)
-                                            .text_xs()
-                                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                            .text_color(if is_sel {
-                                                theme.bg_canvas
-                                            } else {
-                                                theme.text_primary
-                                            })
-                                            .cursor_pointer()
-                                            .on_click(cx.listener(move |this, _, window, cx| {
-                                                this.set_quick_entry_amount_preset(
-                                                    amt_val.clone(),
-                                                    window,
-                                                    cx,
-                                                );
-                                            }))
-                                            .child(format!("{} RWF", amt))
-                                    },
-                                ),
+                            .child(Self::render_mode_tab(
+                                "quick-entry-tab-income",
+                                QuickEntryMode::Income,
+                                form.mode == QuickEntryMode::Income,
+                                AppIcon::Income,
+                                income_label,
+                                theme,
+                                cx,
+                            ))
+                            .child(Self::render_mode_tab(
+                                "quick-entry-tab-handover",
+                                QuickEntryMode::Handover,
+                                form.mode == QuickEntryMode::Handover,
+                                AppIcon::Handover,
+                                handover_label,
+                                theme,
+                                cx,
                             )),
                     )
-                    // Category quick chips
+                    // Scrollable form body
                     .child(
                         div()
+                            .id("quick-entry-body-scroll")
+                            .w_full()
+                            .flex_1()
+                            .min_h(px(0.0))
+                            .overflow_y_scroll()
                             .flex()
                             .flex_col()
-                            .gap(px(4.0))
+                            .gap(px(12.0))
+                            // Source wallet selector
+                            .child(Self::render_wallet_picker(
+                                "source",
+                                if form.mode == QuickEntryMode::Handover {
+                                    umuryango_i18n::t(locale, "transactions.source_wallet")
+                                } else {
+                                    umuryango_i18n::t(locale, "wallets.select_wallet")
+                                },
+                                form.source_wallet_id,
+                                wallets,
+                                locale,
+                                theme,
+                                cx,
+                                false,
+                            ))
+                            // Destination wallet selector (Handover only)
+                            .children(if form.mode == QuickEntryMode::Handover {
+                                Some(Self::render_wallet_picker(
+                                    "dest",
+                                    umuryango_i18n::t(locale, "transactions.destination_wallet"),
+                                    form.destination_wallet_id,
+                                    wallets,
+                                    locale,
+                                    theme,
+                                    cx,
+                                    true,
+                                ))
+                            } else {
+                                None
+                            })
+                            // Editable Amount input & quick chips
                             .child(
                                 div()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_color(theme.text_muted)
-                                    .child(umuryango_i18n::t(locale, "transactions.category")),
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(8.0))
+                                    .child(text_field(
+                                        "quick-entry-amount-input",
+                                        format!(
+                                            "{} (RWF)",
+                                            umuryango_i18n::t(locale, "transactions.amount")
+                                        ),
+                                        &inputs.amount,
+                                        theme,
+                                    ))
+                                    .child(
+                                        div().flex().flex_row().flex_wrap().gap(px(6.0)).children(
+                                            ["1000", "5000", "10000", "25000", "50000"]
+                                                .into_iter()
+                                                .map(|amt| {
+                                                    let is_sel = form.amount_input == amt;
+                                                    let amt_val = amt.to_string();
+                                                    Button::new(format!("amt-preset-{}", amt))
+                                                        .variant(if is_sel {
+                                                            ButtonVariant::Default
+                                                        } else {
+                                                            ButtonVariant::Outline
+                                                        })
+                                                        .size(ButtonSize::Xs)
+                                                        .label(format!("{} RWF", amt))
+                                                        .theme(theme)
+                                                        .on_click(cx.listener(
+                                                            move |this, _, window, cx| {
+                                                                this.set_quick_entry_amount_preset(
+                                                                    amt_val.clone(),
+                                                                    window,
+                                                                    cx,
+                                                                );
+                                                            },
+                                                        ))
+                                                }),
+                                        ),
+                                    ),
                             )
+                            // Category quick chips
                             .child(
-                                div().flex().flex_wrap().gap(px(6.0)).children(
-                                    [
-                                        "Food",
-                                        "Utilities",
-                                        "Health",
-                                        "Education",
-                                        "Transport",
-                                        "Salary",
-                                        "Other",
-                                    ]
-                                    .into_iter()
-                                    .map(|cat| {
-                                        let is_sel = form.category == cat;
-                                        let cat_val = cat.to_string();
-                                        div()
-                                            .id(format!("cat-preset-{}", cat))
-                                            .px(px(8.0))
-                                            .py(px(4.0))
-                                            .bg(if is_sel {
-                                                theme.accent_primary
-                                            } else {
-                                                theme.bg_elevated
-                                            })
-                                            .border_1()
-                                            .border_color(theme.border_subtle)
-                                            .text_xs()
-                                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                            .text_color(if is_sel {
-                                                theme.bg_canvas
-                                            } else {
-                                                theme.text_primary
-                                            })
-                                            .cursor_pointer()
-                                            .on_click(cx.listener(move |this, _, _, cx| {
-                                                this.quick_entry_form.category = cat_val.clone();
-                                                cx.notify();
-                                            }))
-                                            .child(cat)
-                                    }),
+                                Field::new()
+                                    .gap(px(6.0))
+                                    .theme(theme)
+                                    .child(
+                                        Label::new(umuryango_i18n::t(
+                                            locale,
+                                            "transactions.category",
+                                        ))
+                                        .theme(theme),
+                                    )
+                                    .child(
+                                        div().flex().flex_wrap().gap(px(6.0)).children(
+                                            [
+                                                "Food",
+                                                "Utilities",
+                                                "Health",
+                                                "Education",
+                                                "Transport",
+                                                "Salary",
+                                                "Other",
+                                            ]
+                                            .into_iter()
+                                            .map(
+                                                |cat| {
+                                                    let is_sel = form.category == cat;
+                                                    let cat_val = cat.to_string();
+                                                    Button::new(format!("cat-preset-{}", cat))
+                                                        .variant(if is_sel {
+                                                            ButtonVariant::Default
+                                                        } else {
+                                                            ButtonVariant::Outline
+                                                        })
+                                                        .size(ButtonSize::Xs)
+                                                        .label(cat)
+                                                        .theme(theme)
+                                                        .on_click(cx.listener(
+                                                            move |this, _, _, cx| {
+                                                                this.quick_entry_form.category =
+                                                                    cat_val.clone();
+                                                                cx.notify();
+                                                            },
+                                                        ))
+                                                },
+                                            ),
+                                        ),
+                                    ),
+                            )
+                            // Editable Description & Paid To
+                            .child(text_field(
+                                "quick-entry-description-input",
+                                format!(
+                                    "{} ({})",
+                                    umuryango_i18n::t(locale, "transactions.description"),
+                                    umuryango_i18n::t(locale, "common.optional")
                                 ),
-                            ),
-                    )
-                    // Editable Description & Paid To
-                    .child(text_field(
-                        "quick-entry-description-input",
-                        format!(
-                            "{} ({})",
-                            umuryango_i18n::t(locale, "transactions.description"),
-                            umuryango_i18n::t(locale, "common.optional")
-                        ),
-                        &inputs.description,
-                        theme,
-                    ))
-                    .children(if form.mode == QuickEntryMode::Expense {
-                        Some(text_field(
-                            "quick-entry-paid-to-input",
-                            format!(
-                                "{} ({})",
-                                umuryango_i18n::t(locale, "transactions.paid_to"),
-                                umuryango_i18n::t(locale, "common.optional")
-                            ),
-                            &inputs.paid_to,
-                            theme,
-                        ))
-                    } else {
-                        None
-                    }),
-            )
-            // Action buttons row
-            .child(
-                div()
-                    .mt(px(20.0))
-                    .flex()
-                    .flex_row()
-                    .gap(px(12.0))
-                    .child(
-                        div()
-                            .id("quick-entry-cancel-btn")
-                            .flex_1()
-                            .py(px(10.0))
-                            .bg(theme.bg_elevated)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.text_primary)
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.close_quick_entry(cx);
-                            }))
-                            .child(umuryango_i18n::t(locale, "common.cancel")),
-                    )
-                    .child(
-                        div()
-                            .id("quick-entry-confirm-btn")
-                            .flex_1()
-                            .py(px(10.0))
-                            .bg(if is_busy {
-                                theme.accent_primary.opacity(0.6)
-                            } else {
-                                theme.accent_primary
-                            })
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .gap(px(8.0))
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.submit_quick_entry(cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Check,
-                                IconSize::Sm,
-                                IconTone::OnPrimaryButton,
+                                &inputs.description,
                                 theme,
                             ))
-                            .child(if is_busy {
-                                umuryango_i18n::t(locale, "common.loading")
+                            .children(if form.mode == QuickEntryMode::Expense {
+                                Some(text_field(
+                                    "quick-entry-paid-to-input",
+                                    format!(
+                                        "{} ({})",
+                                        umuryango_i18n::t(locale, "transactions.paid_to"),
+                                        umuryango_i18n::t(locale, "common.optional")
+                                    ),
+                                    &inputs.paid_to,
+                                    theme,
+                                ))
                             } else {
-                                umuryango_i18n::t(locale, "common.confirm")
+                                None
                             }),
+                    )
+                    // Action buttons row
+                    .child(
+                        DialogFooter::new()
+                            .mt(px(4.0))
+                            .theme(theme)
+                            .child(
+                                Button::new("quick-entry-cancel-btn")
+                                    .outline()
+                                    .label(umuryango_i18n::t(locale, "common.cancel"))
+                                    .flex_1()
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.close_quick_entry(cx);
+                                    })),
+                            )
+                            .child(
+                                Button::new("quick-entry-confirm-btn")
+                                    .icon_start(AppIcon::Check)
+                                    .loading(is_busy)
+                                    .label(if is_busy {
+                                        umuryango_i18n::t(locale, "common.loading")
+                                    } else {
+                                        umuryango_i18n::t(locale, "common.confirm")
+                                    })
+                                    .flex_1()
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.submit_quick_entry(cx);
+                                    })),
+                            ),
                     ),
             )
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn render_mode_tab(
         id: &'static str,
         mode: QuickEntryMode,
         is_active: bool,
         icon: AppIcon,
-        inactive_tone: IconTone,
-        active_bg: gpui_kit::Hsla,
         label: String,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        div()
-            .id(id)
+        Button::new(id)
+            .variant(if is_active {
+                ButtonVariant::Default
+            } else {
+                ButtonVariant::Outline
+            })
+            .size(ButtonSize::Sm)
+            .icon_start(icon)
+            .label(label)
             .flex_1()
-            .flex()
-            .items_center()
-            .justify_center()
-            .gap(px(6.0))
-            .py(px(6.0))
-            .text_xs()
-            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-            .bg(if is_active {
-                active_bg
-            } else {
-                theme.bg_elevated
-            })
-            .text_color(if is_active {
-                theme.bg_canvas
-            } else {
-                theme.text_primary
-            })
-            .cursor_pointer()
+            .theme(theme)
             .on_click(cx.listener(move |this, _, _, cx| {
                 this.set_quick_entry_mode(mode, cx);
             }))
-            .child(app_icon(
-                icon,
-                IconSize::Xs,
-                if is_active {
-                    IconTone::OnPrimaryButton
-                } else {
-                    inactive_tone
-                },
-                theme,
-            ))
-            .child(label)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -458,26 +374,21 @@ impl QuickEntryDialog {
         cx: &Context<RootView>,
         is_destination: bool,
     ) -> impl IntoElement {
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(4.0))
-            .child(
-                div()
-                    .text_xs()
-                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                    .text_color(theme.text_muted)
-                    .child(label),
-            )
+        Field::new()
+            .gap(px(6.0))
+            .theme(theme)
+            .child(Label::new(label).theme(theme))
             .child(if wallets.is_empty() {
-                div()
-                    .p(px(10.0))
-                    .bg(theme.bg_canvas)
-                    .border_1()
-                    .border_color(theme.border_subtle)
-                    .text_xs()
-                    .text_color(theme.text_muted)
-                    .child(umuryango_i18n::t(locale, "wallets.no_wallets"))
+                Empty::new()
+                    .bordered(true)
+                    .p(px(14.0))
+                    .theme(theme)
+                    .child(
+                        EmptyHeader::new().child(
+                            EmptyDescription::new(umuryango_i18n::t(locale, "wallets.no_wallets"))
+                                .theme(theme),
+                        ),
+                    )
                     .into_any_element()
             } else {
                 div()
@@ -487,21 +398,21 @@ impl QuickEntryDialog {
                     .children(wallets.iter().map(|w| {
                         let is_sel = Some(w.id) == selected_id;
                         let wid = w.id;
-                        div()
+                        Item::new()
                             .id(format!("wallet-pick-{}-{}", prefix, w.id))
-                            .p(px(7.0))
+                            .outline()
+                            .size(ItemSize::Xs)
                             .bg(if is_sel {
                                 theme.accent_primary.opacity(0.12)
                             } else {
                                 theme.bg_canvas
                             })
-                            .border_1()
                             .border_color(if is_sel {
                                 theme.accent_primary
                             } else {
                                 theme.border_subtle
                             })
-                            .cursor_pointer()
+                            .theme(theme)
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 if is_destination {
                                     this.quick_entry_form.destination_wallet_id = Some(wid);
@@ -511,24 +422,22 @@ impl QuickEntryDialog {
                                 cx.notify();
                             }))
                             .child(
-                                div()
-                                    .flex()
-                                    .justify_between()
-                                    .items_center()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                            .text_color(theme.text_primary)
-                                            .child(w.name.clone()),
-                                    )
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.income_color)
-                                            .child(format!("{} {}", w.balance, w.currency)),
-                                    ),
+                                ItemContent::new().child(
+                                    div()
+                                        .text_xs()
+                                        .font_weight(FontWeight::MEDIUM)
+                                        .text_color(theme.text_primary)
+                                        .child(w.name.clone()),
+                                ),
+                            )
+                            .child(
+                                ItemActions::new().child(
+                                    div()
+                                        .text_xs()
+                                        .font_weight(FontWeight::BOLD)
+                                        .text_color(theme.income_color)
+                                        .child(format!("{} {}", w.balance, w.currency)),
+                                ),
                             )
                     }))
                     .into_any_element()

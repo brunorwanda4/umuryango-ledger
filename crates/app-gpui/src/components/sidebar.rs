@@ -1,8 +1,13 @@
-use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{
+    Context, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement, Styled, div, px,
+};
 use umuryango_core_domain::SyncStatus;
 
 use crate::RootView;
+use crate::common::{
+    Badge, Button, ButtonSize, ButtonVariant, SidebarContent, SidebarFooter, SidebarHeader,
+    SidebarMenu, SidebarMenuButton, SidebarMenuButtonSize, SidebarMenuItem, SidebarSeparator,
+};
 use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::components::lang_toggle::LangToggle;
 use crate::components::scope_switcher::ScopeSwitcher;
@@ -29,11 +34,10 @@ impl Sidebar {
             (Screen::Settings, AppIcon::Settings, state.locale),
         ];
 
-        let (sync_icon, sync_label, sync_tone, sync_color) = match state.sync_status {
+        let (sync_icon, sync_label, sync_color) = match state.sync_status {
             SyncStatus::Synced => (
                 AppIcon::SyncOnline,
                 umuryango_i18n::t(state.locale, "common.synced"),
-                IconTone::Success,
                 theme.income_color,
             ),
             SyncStatus::PendingSync(n) => (
@@ -43,22 +47,20 @@ impl Sidebar {
                     "common.sync_pending",
                     &[("count", &n.to_string())],
                 ),
-                IconTone::Warning,
                 theme.accent_secondary,
             ),
             SyncStatus::Offline => (
                 AppIcon::SyncOffline,
                 umuryango_i18n::t(state.locale, "common.offline"),
-                IconTone::Error,
                 theme.expense_color,
             ),
         };
 
         div()
             .id(id)
-            .w(px(240.0))
+            .w(px(248.0))
             .h_full()
-            .p(px(16.0))
+            .p(px(12.0))
             .flex()
             .flex_col()
             .justify_between()
@@ -66,12 +68,11 @@ impl Sidebar {
             .border_r_1()
             .border_color(theme.border_subtle)
             .font_family(theme.font_family)
-            // Top Section: Brand + Scope Switcher + Clickable Sync Badge
+            // Top Section: Brand + Scope Switcher + Clickable Sync Status
             .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(14.0))
+                SidebarHeader::new()
+                    .gap(px(12.0))
+                    .p(px(4.0))
                     .child(
                         div()
                             .flex()
@@ -93,7 +94,7 @@ impl Sidebar {
                                             .child(
                                                 div()
                                                     .text_sm()
-                                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                                    .font_weight(FontWeight::BOLD)
                                                     .text_color(theme.text_primary)
                                                     .child("Umuryango"),
                                             )
@@ -105,51 +106,34 @@ impl Sidebar {
                                             ),
                                     ),
                             )
-                            // Notification Bell Icon with dynamic Badge
+                            // Notification Bell Button with Unread Count Badge
                             .child(
-                                div()
-                                    .id("sidebar-bell-btn")
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(4.0))
-                                    .p(px(6.0))
-                                    .bg(if state.unread_notifications_count > 0 {
-                                        theme.bg_surface
+                                Button::new("sidebar-bell-btn")
+                                    .variant(if state.unread_notifications_count > 0 {
+                                        ButtonVariant::Secondary
                                     } else {
-                                        theme.bg_canvas
+                                        ButtonVariant::Outline
                                     })
-                                    .border_1()
-                                    .border_color(if state.unread_notifications_count > 0 {
-                                        theme.accent_primary
+                                    .size(if state.unread_notifications_count > 0 {
+                                        ButtonSize::Xs
                                     } else {
-                                        theme.border_subtle
+                                        ButtonSize::IconXs
                                     })
-                                    .cursor_pointer()
+                                    .icon_start(AppIcon::Bell)
+                                    .theme(theme)
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.toggle_notifications(cx);
                                     }))
-                                    .child(app_icon(
-                                        AppIcon::Bell,
-                                        IconSize::Sm,
-                                        if state.unread_notifications_count > 0 {
-                                            IconTone::AccentPrimary
-                                        } else {
-                                            IconTone::Muted
-                                        },
-                                        theme,
-                                    ))
                                     .children(if state.unread_notifications_count > 0 {
                                         Some(
-                                            div()
-                                                .px(px(6.0))
-                                                .py(px(2.0))
-                                                .bg(theme.accent_primary)
-                                                .text_xs()
-                                                .font_weight(gpui_kit::FontWeight::BOLD)
-                                                .text_color(theme.bg_canvas)
-                                                .child(
-                                                    state.unread_notifications_count.to_string(),
-                                                ),
+                                            Badge::new(
+                                                state.unread_notifications_count.to_string(),
+                                            )
+                                            .px(px(5.0))
+                                            .py(px(1.0))
+                                            .bg(theme.accent_primary)
+                                            .text_color(theme.bg_canvas)
+                                            .theme(theme),
                                         )
                                     } else {
                                         None
@@ -166,157 +150,108 @@ impl Sidebar {
                     ))
                     // Clickable sync status badge (triggers real PostgreSQL refresh)
                     .child(
-                        div()
-                            .id("sidebar-sync-refresh-btn")
-                            .flex()
-                            .items_center()
-                            .gap(px(6.0))
-                            .px(px(8.0))
-                            .py(px(4.0))
-                            .bg(theme.bg_surface)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
+                        Button::new("sidebar-sync-refresh-btn")
+                            .outline()
+                            .size(ButtonSize::Xs)
+                            .icon_start(sync_icon)
+                            .label(sync_label)
+                            .w_full()
+                            .justify_start()
                             .text_color(sync_color)
-                            .cursor_pointer()
+                            .theme(theme)
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.refresh_active_scope(cx);
-                            }))
-                            .child(app_icon(sync_icon, IconSize::Xs, sync_tone, theme))
-                            .child(sync_label),
+                            })),
                     ),
             )
             // Center Section: Nav links
-            .child(div().my(px(16.0)).flex().flex_col().gap(px(4.0)).children(
-                screens.into_iter().map(|(screen, icon, loc)| {
-                    let is_active = state.current_screen == screen;
-                    let label = screen.label(loc);
-                    let bg = if is_active {
-                        theme.accent_primary
-                    } else {
-                        theme.bg_canvas
-                    };
-                    let text_color = if is_active {
-                        theme.bg_canvas
-                    } else {
-                        theme.text_primary
-                    };
-                    let icon_tone = if is_active {
-                        IconTone::OnPrimaryButton
-                    } else {
-                        IconTone::Default
-                    };
+            .child(
+                SidebarContent::new("sidebar-nav-scroll")
+                    .my(px(12.0))
+                    .child(
+                        SidebarMenu::new()
+                            .gap(px(4.0))
+                            .children(screens.into_iter().map(|(screen, icon, loc)| {
+                                let is_active = state.current_screen == screen;
+                                let label = screen.label(loc);
+                                let target_screen = screen;
 
-                    let target_screen = screen;
-                    div()
-                        .id(format!("sidebar-nav-{:?}", screen))
-                        .flex()
-                        .items_center()
-                        .gap(px(10.0))
-                        .py(px(8.0))
-                        .px(px(12.0))
-                        .bg(bg)
-                        .cursor_pointer()
-                        .on_click(cx.listener(move |this, _, _, cx| {
-                            this.select_screen(target_screen, cx);
-                        }))
-                        .child(app_icon(icon, IconSize::Md, icon_tone, theme))
-                        .child(
-                            div()
-                                .text_sm()
-                                .font_weight(if is_active {
-                                    gpui_kit::FontWeight::SEMIBOLD
-                                } else {
-                                    gpui_kit::FontWeight::NORMAL
-                                })
-                                .text_color(text_color)
-                                .child(label),
-                        )
-                }),
-            ))
-            // Bottom Section: Language, Theme, and Logout
+                                SidebarMenuItem::new().child(
+                                    SidebarMenuButton::new(format!("sidebar-nav-{:?}", screen))
+                                        .icon(icon)
+                                        .label(label)
+                                        .size(SidebarMenuButtonSize::Default)
+                                        .active(is_active)
+                                        .theme(theme)
+                                        .on_click(cx.listener(move |this, _, _, cx| {
+                                            this.select_screen(target_screen, cx);
+                                        })),
+                                )
+                            })),
+                    ),
+            )
+            // Bottom Section: Separator + Language, Theme, and Logout
             .child(
                 div()
                     .flex()
                     .flex_col()
                     .gap(px(8.0))
-                    .pt(px(12.0))
-                    .border_t_1()
-                    .border_color(theme.border_subtle)
+                    .child(SidebarSeparator::new().mx(px(0.0)).theme(theme))
                     .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .justify_between()
-                            .child(LangToggle::render(
-                                "sidebar-lang-toggle",
-                                state.locale,
-                                theme,
-                                cx,
-                            ))
+                        SidebarFooter::new()
+                            .p(px(4.0))
+                            .gap(px(8.0))
                             .child(
                                 div()
-                                    .id("sidebar-theme-toggle")
                                     .flex()
+                                    .flex_row()
                                     .items_center()
-                                    .gap(px(6.0))
-                                    .px(px(10.0))
-                                    .py(px(4.0))
-                                    .bg(theme.bg_elevated)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                    .text_color(theme.text_primary)
-                                    .cursor_pointer()
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.toggle_theme(cx);
-                                    }))
-                                    .child(app_icon(
-                                        if state.theme_mode.is_dark() {
-                                            AppIcon::Sun
-                                        } else {
-                                            AppIcon::Moon
-                                        },
-                                        IconSize::Xs,
-                                        IconTone::Default,
+                                    .justify_between()
+                                    .gap(px(8.0))
+                                    .child(LangToggle::render(
+                                        "sidebar-lang-toggle",
+                                        state.locale,
                                         theme,
+                                        cx,
                                     ))
-                                    .child(if state.theme_mode.is_dark() {
-                                        umuryango_i18n::t(state.locale, "settings.light_mode")
-                                    } else {
-                                        umuryango_i18n::t(state.locale, "settings.dark_mode")
-                                    }),
+                                    .child(
+                                        Button::new("sidebar-theme-toggle")
+                                            .outline()
+                                            .size(ButtonSize::Sm)
+                                            .icon_start(if state.theme_mode.is_dark() {
+                                                AppIcon::Sun
+                                            } else {
+                                                AppIcon::Moon
+                                            })
+                                            .label(if state.theme_mode.is_dark() {
+                                                umuryango_i18n::t(
+                                                    state.locale,
+                                                    "settings.light_mode",
+                                                )
+                                            } else {
+                                                umuryango_i18n::t(
+                                                    state.locale,
+                                                    "settings.dark_mode",
+                                                )
+                                            })
+                                            .theme(theme)
+                                            .on_click(cx.listener(|this, _, _, cx| {
+                                                this.toggle_theme(cx);
+                                            })),
+                                    ),
+                            )
+                            .child(
+                                Button::new("sidebar-logout-btn")
+                                    .destructive()
+                                    .size(ButtonSize::Sm)
+                                    .icon_start(AppIcon::Close)
+                                    .label(umuryango_i18n::t(state.locale, "auth.logout"))
+                                    .w_full()
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.handle_logout(window, cx);
+                                    })),
                             ),
-                    )
-                    .child(
-                        div()
-                            .id("sidebar-logout-btn")
-                            .w_full()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .gap(px(6.0))
-                            .py(px(6.0))
-                            .bg(theme.bg_surface)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.expense_color)
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.handle_logout(window, cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Close,
-                                IconSize::Xs,
-                                IconTone::Expense,
-                                theme,
-                            ))
-                            .child(umuryango_i18n::t(state.locale, "auth.logout")),
                     ),
             )
     }
@@ -361,27 +296,34 @@ impl Sidebar {
                     theme.text_muted
                 };
                 let target_screen = screen;
-                div()
-                    .id(format!("mobile-nav-{:?}", screen))
-                    .flex()
-                    .flex_col()
-                    .items_center()
-                    .gap(px(2.0))
-                    .cursor_pointer()
+                Button::new(format!("mobile-nav-{:?}", screen))
+                    .ghost()
+                    .size(ButtonSize::Xs)
+                    .h_auto()
+                    .px(px(6.0))
+                    .py(px(4.0))
+                    .theme(theme)
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.select_screen(target_screen, cx);
                     }))
-                    .child(app_icon(icon, IconSize::Lg, tone, theme))
                     .child(
                         div()
-                            .text_xs()
-                            .font_weight(if is_active {
-                                gpui_kit::FontWeight::BOLD
-                            } else {
-                                gpui_kit::FontWeight::NORMAL
-                            })
-                            .text_color(color)
-                            .child(screen.label(state.locale)),
+                            .flex()
+                            .flex_col()
+                            .items_center()
+                            .gap(px(2.0))
+                            .child(app_icon(icon, IconSize::Lg, tone, theme))
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .font_weight(if is_active {
+                                        FontWeight::BOLD
+                                    } else {
+                                        FontWeight::NORMAL
+                                    })
+                                    .text_color(color)
+                                    .child(screen.label(state.locale)),
+                            ),
                     )
             }))
     }

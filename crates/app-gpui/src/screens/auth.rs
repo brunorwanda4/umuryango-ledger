@@ -1,12 +1,15 @@
-use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{
+    Context, ElementId, InteractiveElement, IntoElement, ParentElement, Styled, div, px,
+};
 use umuryango_i18n::{Translator, terms};
 
 use super::auth_inputs::AuthInputs;
 use crate::RootView;
-use crate::common::input::{password_field, text_field};
-use crate::common::radio::{radio_field, radio_option};
-use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
+use crate::common::{
+    Button, ButtonSize, Card, CardContent, CardDescription, CardFooter, CardHeader, CardSize,
+    CardTitle, Field, Label, RadioGroupContainer, RadioGroupItem, password_field, text_field,
+};
+use crate::components::icon::{AppIcon, BrandMark, brand_mark};
 use crate::components::lang_toggle::LangToggle;
 use crate::state::AppState;
 use crate::theme::{SemanticTheme, ThemeMode};
@@ -56,86 +59,90 @@ impl AuthScreen {
                         cx,
                     ))
                     .child(
-                        div()
-                            .id("auth-theme-toggle")
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .w(px(32.0))
-                            .h(px(32.0))
-                            .bg(theme.bg_elevated)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .cursor_pointer()
+                        Button::new("auth-theme-toggle")
+                            .outline()
+                            .size(ButtonSize::IconSm)
+                            .icon(if is_dark { AppIcon::Sun } else { AppIcon::Moon })
+                            .theme(theme)
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.toggle_theme(cx);
-                            }))
-                            .child(app_icon(
-                                if is_dark { AppIcon::Sun } else { AppIcon::Moon },
-                                IconSize::Sm,
-                                IconTone::Default,
-                                theme,
-                            )),
+                            })),
                     ),
             )
             // Auth Modal Card
             .child(
-                div()
+                Card::new()
+                    .size(CardSize::Sm)
                     .w(px(460.0))
-                    .p(px(28.0))
-                    .bg(theme.bg_surface)
-                    .border_1()
-                    .border_color(theme.border_subtle)
-                    .flex()
-                    .flex_col()
-                    .items_center()
-                    .gap(px(16.0))
-                    // Official Brand Logo
-                    .child(brand_mark(BrandMark::Logo, 64.0))
-                    // Card Title & Tagline
+                    .gap(px(18.0))
+                    .py(px(24.0))
+                    .theme(theme)
                     .child(
-                        div()
-                            .text_xl()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(if is_register {
-                                Translator::t(state.locale, terms::REGISTER_TITLE, None)
-                            } else {
-                                Translator::t(state.locale, terms::LOGIN_TITLE, None)
-                            }),
+                        CardHeader::new()
+                            .size(CardSize::Sm)
+                            .items_center()
+                            .theme(theme)
+                            .child(
+                                div()
+                                    .w_full()
+                                    .flex()
+                                    .flex_col()
+                                    .items_center()
+                                    .gap(px(10.0))
+                                    .child(brand_mark(BrandMark::Logo, 64.0))
+                                    .child(
+                                        CardTitle::new(if is_register {
+                                            Translator::t(state.locale, terms::REGISTER_TITLE, None)
+                                        } else {
+                                            Translator::t(state.locale, terms::LOGIN_TITLE, None)
+                                        })
+                                        .text_center()
+                                        .theme(theme),
+                                    )
+                                    .child(
+                                        CardDescription::new(Translator::t(
+                                            state.locale,
+                                            terms::TAGLINE,
+                                            None,
+                                        ))
+                                        .text_center()
+                                        .theme(theme),
+                                    ),
+                            ),
                     )
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_center()
-                            .text_color(theme.text_muted)
-                            .child(Translator::t(state.locale, terms::TAGLINE, None)),
-                    )
-                    // Form Fields
-                    .child(if is_register {
+                    .child(CardContent::new().size(CardSize::Sm).child(if is_register {
                         Self::render_register_form(state, inputs, theme, cx).into_any_element()
                     } else {
                         Self::render_login_form(state, inputs, theme, cx).into_any_element()
-                    })
-                    // Toggle Between Login and Register
+                    }))
                     .child(
-                        div()
-                            .id("auth-switch-mode-btn")
-                            .cursor_pointer()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.accent_primary)
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                if !this.state.is_busy {
-                                    this.state.auth_mode_register = !this.state.auth_mode_register;
-                                    cx.notify();
-                                }
-                            }))
-                            .child(if is_register {
-                                Translator::t(state.locale, terms::ALREADY_HAVE_ACCOUNT, None)
-                            } else {
-                                Translator::t(state.locale, terms::CREATE_ACCOUNT, None)
-                            }),
+                        CardFooter::new()
+                            .size(CardSize::Sm)
+                            .justify_center()
+                            .theme(theme)
+                            .child(
+                                Button::new("auth-switch-mode-btn")
+                                    .link()
+                                    .size(ButtonSize::Sm)
+                                    .disabled(state.is_busy)
+                                    .label(if is_register {
+                                        Translator::t(
+                                            state.locale,
+                                            terms::ALREADY_HAVE_ACCOUNT,
+                                            None,
+                                        )
+                                    } else {
+                                        Translator::t(state.locale, terms::CREATE_ACCOUNT, None)
+                                    })
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        if !this.state.is_busy {
+                                            this.state.auth_mode_register =
+                                                !this.state.auth_mode_register;
+                                            cx.notify();
+                                        }
+                                    })),
+                            ),
                     ),
             )
     }
@@ -157,7 +164,7 @@ impl AuthScreen {
             .w_full()
             .flex()
             .flex_col()
-            .gap(px(12.0))
+            .gap(px(14.0))
             .child(text_field(
                 "auth-login-phone",
                 t(terms::PHONE_NUMBER),
@@ -198,7 +205,7 @@ impl AuthScreen {
             .w_full()
             .flex()
             .flex_col()
-            .gap(px(10.0))
+            .gap(px(12.0))
             .child(text_field(
                 "auth-register-name",
                 t(terms::FULL_NAME),
@@ -247,29 +254,32 @@ impl AuthScreen {
             _ => None,
         };
 
-        radio_field(
-            "auth-register-gender",
-            Translator::t(state.locale, terms::GENDER, None),
-            [
-                radio_option(
-                    "gender-male",
-                    Translator::t(state.locale, terms::GENDER_MALE, None),
-                ),
-                radio_option(
-                    "gender-female",
-                    Translator::t(state.locale, terms::GENDER_FEMALE, None),
-                ),
-            ],
-            selected,
-            cx.listener(|this, index: &usize, _, cx| {
-                this.state.auth_gender = match *index {
-                    0 => "MALE".to_string(),
-                    _ => "FEMALE".to_string(),
-                };
-                cx.notify();
-            }),
-            theme,
-        )
+        Field::new()
+            .gap(px(8.0))
+            .theme(theme)
+            .child(Label::new(Translator::t(state.locale, terms::GENDER, None)).theme(theme))
+            .child(
+                RadioGroupContainer::horizontal("auth-register-gender")
+                    .selected_index(selected)
+                    .item(
+                        RadioGroupItem::new("gender-male")
+                            .label(Translator::t(state.locale, terms::GENDER_MALE, None))
+                            .primary_accent(true),
+                    )
+                    .item(
+                        RadioGroupItem::new("gender-female")
+                            .label(Translator::t(state.locale, terms::GENDER_FEMALE, None))
+                            .primary_accent(true),
+                    )
+                    .theme(theme)
+                    .on_change(cx.listener(|this, index: &usize, _, cx| {
+                        this.state.auth_gender = match *index {
+                            0 => "MALE".to_string(),
+                            _ => "FEMALE".to_string(),
+                        };
+                        cx.notify();
+                    })),
+            )
     }
 
     fn submit_button(
@@ -280,30 +290,12 @@ impl AuthScreen {
         cx: &Context<RootView>,
         on_submit: fn(&mut RootView, &mut Context<RootView>),
     ) -> impl IntoElement {
-        div()
-            .id(id)
+        Button::new(id)
+            .label(label)
+            .icon_start(AppIcon::Check)
+            .loading(is_busy)
             .w_full()
-            .flex()
-            .items_center()
-            .justify_center()
-            .gap(px(8.0))
-            .py(px(10.0))
-            .bg(if is_busy {
-                theme.accent_primary.opacity(0.6)
-            } else {
-                theme.accent_primary
-            })
-            .text_sm()
-            .font_weight(gpui_kit::FontWeight::BOLD)
-            .text_color(theme.bg_canvas)
-            .cursor_pointer()
+            .theme(theme)
             .on_click(cx.listener(move |this, _, _, cx| on_submit(this, cx)))
-            .child(app_icon(
-                AppIcon::Check,
-                IconSize::Sm,
-                IconTone::OnPrimaryButton,
-                theme,
-            ))
-            .child(label)
     }
 }

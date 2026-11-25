@@ -7,7 +7,10 @@ use umuryango_core_domain::models::{FamilyRole, LoanDirection, WalletChannel};
 use umuryango_i18n::{Locale, Translator, terms};
 
 use crate::RootView;
-use crate::common::input::text_field;
+use crate::common::{
+    Alert, AlertDescription, Button, ButtonGroup, ButtonSize, ButtonVariant, DialogContent,
+    DialogFooter, DialogHeader, DialogOverlay, DialogTitle, Field, Label, text_field,
+};
 use crate::components::entity_modal_inputs::EntityModalInputs;
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{ActiveModal, AppState};
@@ -64,113 +67,75 @@ impl EntityModalDialog {
             ),
         };
 
-        div()
-            .id(id)
-            .w(px(460.0))
-            .max_h(px(620.0))
-            .overflow_y_scroll()
-            .p(px(24.0))
-            .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
-            .font_family(theme.font_family)
-            .flex()
-            .flex_col()
-            .gap(px(14.0))
-            // Header
+        let view_for_close = cx.entity().clone();
+
+        DialogOverlay::new("entity-modal-overlay")
+            .on_click(cx.listener(|this, _, _, cx| {
+                this.close_modal(cx);
+            }))
             .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .justify_between()
-                    .items_center()
+                DialogContent::new(id)
+                    .show_close_button(true)
+                    .on_close(move |_window, cx| {
+                        view_for_close.update(cx, |this, cx| {
+                            this.close_modal(cx);
+                        });
+                    })
+                    .w(px(460.0))
+                    .max_h(px(620.0))
+                    .gap(px(16.0))
+                    .theme(theme)
+                    // Header
+                    .child(
+                        DialogHeader::new().pr(px(40.0)).child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(8.0))
+                                .child(app_icon(icon, IconSize::Md, IconTone::AccentPrimary, theme))
+                                .child(DialogTitle::new(title).text_base().theme(theme)),
+                        ),
+                    )
+                    // Scrollable Body
                     .child(
                         div()
-                            .flex()
-                            .items_center()
-                            .gap(px(8.0))
-                            .child(app_icon(icon, IconSize::Md, IconTone::AccentPrimary, theme))
+                            .id("entity-modal-body-scroll")
+                            .w_full()
+                            .flex_1()
+                            .min_h(px(0.0))
+                            .overflow_y_scroll()
+                            .child(Self::render_body(modal, state, inputs, locale, theme, cx)),
+                    )
+                    // Footer buttons
+                    .child(
+                        DialogFooter::new()
+                            .mt(px(4.0))
+                            .theme(theme)
                             .child(
-                                div()
-                                    .text_base()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(title),
+                                Button::new("entity-modal-cancel-btn")
+                                    .outline()
+                                    .label(umuryango_i18n::t(locale, "common.cancel"))
+                                    .flex_1()
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.close_modal(cx);
+                                    })),
+                            )
+                            .child(
+                                Button::new("entity-modal-submit-btn")
+                                    .icon_start(AppIcon::Check)
+                                    .loading(state.is_busy)
+                                    .label(if state.is_busy {
+                                        umuryango_i18n::t(locale, "common.loading")
+                                    } else {
+                                        umuryango_i18n::t(locale, "common.save")
+                                    })
+                                    .flex_1()
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.submit_entity_modal(cx);
+                                    })),
                             ),
-                    )
-                    .child(
-                        div()
-                            .id("entity-modal-close-btn")
-                            .p(px(4.0))
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.close_modal(cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Close,
-                                IconSize::Sm,
-                                IconTone::Muted,
-                                theme,
-                            )),
-                    ),
-            )
-            // Body
-            .child(Self::render_body(modal, state, inputs, locale, theme, cx))
-            // Footer buttons
-            .child(
-                div()
-                    .mt(px(6.0))
-                    .flex()
-                    .flex_row()
-                    .gap(px(10.0))
-                    .child(
-                        div()
-                            .id("entity-modal-cancel-btn")
-                            .flex_1()
-                            .py(px(10.0))
-                            .bg(theme.bg_elevated)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.text_primary)
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.close_modal(cx);
-                            }))
-                            .child(umuryango_i18n::t(locale, "common.cancel")),
-                    )
-                    .child(
-                        div()
-                            .id("entity-modal-submit-btn")
-                            .flex_1()
-                            .py(px(10.0))
-                            .bg(theme.accent_primary)
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .gap(px(6.0))
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.submit_entity_modal(cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Check,
-                                IconSize::Sm,
-                                IconTone::OnPrimaryButton,
-                                theme,
-                            ))
-                            .child(if state.is_busy {
-                                umuryango_i18n::t(locale, "common.loading")
-                            } else {
-                                umuryango_i18n::t(locale, "common.save")
-                            }),
                     ),
             )
     }
@@ -273,18 +238,14 @@ impl EntityModalDialog {
             ActiveModal::RepayLoan { remaining, .. } => {
                 container = container
                     .child(
-                        div()
-                            .p(px(10.0))
-                            .bg(theme.bg_canvas)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(format!(
+                        Alert::new().icon(AppIcon::Loans).theme(theme).child(
+                            AlertDescription::new(format!(
                                 "{}: {} RWF",
                                 umuryango_i18n::t(locale, "loans.remaining"),
                                 remaining
-                            )),
+                            ))
+                            .theme(theme),
+                        ),
                     )
                     .child(text_field(
                         "modal-repay-amount",
@@ -376,50 +337,29 @@ impl EntityModalDialog {
             ),
         ];
 
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(4.0))
+        Field::new()
+            .gap(px(6.0))
+            .theme(theme)
+            .child(Label::new(umuryango_i18n::t(locale, "wallets.channel")).theme(theme))
             .child(
-                div()
-                    .text_xs()
-                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                    .text_color(theme.text_muted)
-                    .child(umuryango_i18n::t(locale, "wallets.channel")),
-            )
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .gap(px(6.0))
+                ButtonGroup::horizontal()
+                    .w_full()
                     .children(channels.into_iter().map(|(slug, ch, label)| {
                         let is_sel = selected == ch;
-                        div()
-                            .id(format!("modal-wallet-ch-{}", slug))
+                        Button::new(format!("modal-wallet-ch-{}", slug))
+                            .variant(if is_sel {
+                                ButtonVariant::Default
+                            } else {
+                                ButtonVariant::Outline
+                            })
+                            .size(ButtonSize::Sm)
+                            .label(label)
                             .flex_1()
-                            .py(px(7.0))
-                            .px(px(8.0))
-                            .bg(if is_sel {
-                                theme.accent_primary
-                            } else {
-                                theme.bg_elevated
-                            })
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .text_center()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(if is_sel {
-                                theme.bg_canvas
-                            } else {
-                                theme.text_primary
-                            })
-                            .cursor_pointer()
+                            .theme(theme)
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.state.entity_form.wallet_channel = ch;
                                 cx.notify();
                             }))
-                            .child(label)
                     })),
             )
     }
@@ -443,50 +383,29 @@ impl EntityModalDialog {
             ),
         ];
 
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(4.0))
+        Field::new()
+            .gap(px(6.0))
+            .theme(theme)
+            .child(Label::new(umuryango_i18n::t(locale, "loans.direction")).theme(theme))
             .child(
-                div()
-                    .text_xs()
-                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                    .text_color(theme.text_muted)
-                    .child(umuryango_i18n::t(locale, "loans.direction")),
-            )
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .gap(px(6.0))
+                ButtonGroup::horizontal()
+                    .w_full()
                     .children(options.into_iter().map(|(slug, dir, label)| {
                         let is_sel = selected == dir;
-                        div()
-                            .id(format!("modal-loan-dir-{}", slug))
+                        Button::new(format!("modal-loan-dir-{}", slug))
+                            .variant(if is_sel {
+                                ButtonVariant::Default
+                            } else {
+                                ButtonVariant::Outline
+                            })
+                            .size(ButtonSize::Sm)
+                            .label(label)
                             .flex_1()
-                            .py(px(7.0))
-                            .px(px(8.0))
-                            .bg(if is_sel {
-                                theme.accent_primary
-                            } else {
-                                theme.bg_elevated
-                            })
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .text_center()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(if is_sel {
-                                theme.bg_canvas
-                            } else {
-                                theme.text_primary
-                            })
-                            .cursor_pointer()
+                            .theme(theme)
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.state.entity_form.loan_direction = dir;
                                 cx.notify();
                             }))
-                            .child(label)
                     })),
             )
     }
@@ -515,43 +434,28 @@ impl EntityModalDialog {
             ),
         ];
 
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(4.0))
+        Field::new()
+            .gap(px(6.0))
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .gap(px(6.0))
+                ButtonGroup::horizontal()
+                    .w_full()
                     .children(roles.into_iter().map(|(slug, role, label)| {
                         let is_sel = selected == role;
-                        div()
-                            .id(format!("modal-invite-role-{}", slug))
+                        Button::new(format!("modal-invite-role-{}", slug))
+                            .variant(if is_sel {
+                                ButtonVariant::Default
+                            } else {
+                                ButtonVariant::Outline
+                            })
+                            .size(ButtonSize::Sm)
+                            .label(label)
                             .flex_1()
-                            .py(px(7.0))
-                            .px(px(8.0))
-                            .bg(if is_sel {
-                                theme.accent_primary
-                            } else {
-                                theme.bg_elevated
-                            })
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .text_center()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(if is_sel {
-                                theme.bg_canvas
-                            } else {
-                                theme.text_primary
-                            })
-                            .cursor_pointer()
+                            .theme(theme)
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.state.entity_form.invite_role = role;
                                 cx.notify();
                             }))
-                            .child(label)
                     })),
             )
     }

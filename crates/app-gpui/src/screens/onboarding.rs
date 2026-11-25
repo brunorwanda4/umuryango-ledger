@@ -1,10 +1,13 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Translator, terms};
 
 use super::onboarding_inputs::OnboardingInputs;
 use crate::RootView;
-use crate::common::input::text_field;
+use crate::common::{
+    Alert, AlertTitle, Badge, Button, ButtonSize, Card, CardContent, CardDescription, CardHeader,
+    CardSize, CardTitle, Item, ItemActions, ItemContent, ItemSize, text_field,
+};
 use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::components::lang_toggle::LangToggle;
 use crate::state::AppState;
@@ -55,26 +58,14 @@ impl OnboardingScreen {
                         cx,
                     ))
                     .child(
-                        div()
-                            .id("onboarding-theme-toggle")
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .w(px(32.0))
-                            .h(px(32.0))
-                            .bg(theme.bg_elevated)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .cursor_pointer()
+                        Button::new("onboarding-theme-toggle")
+                            .outline()
+                            .size(ButtonSize::IconSm)
+                            .icon(if is_dark { AppIcon::Sun } else { AppIcon::Moon })
+                            .theme(theme)
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.toggle_theme(cx);
-                            }))
-                            .child(app_icon(
-                                if is_dark { AppIcon::Sun } else { AppIcon::Moon },
-                                IconSize::Sm,
-                                IconTone::Default,
-                                theme,
-                            )),
+                            })),
                     ),
             )
             // Main Onboarding Container
@@ -87,33 +78,40 @@ impl OnboardingScreen {
                     .gap(px(16.0))
                     // Header Card
                     .child(
-                        div()
-                            .p(px(20.0))
-                            .bg(theme.bg_surface)
+                        Card::new()
+                            .size(CardSize::Sm)
+                            .py(px(20.0))
                             .border_1()
                             .border_color(theme.border_subtle)
-                            .flex()
-                            .flex_col()
-                            .items_center()
-                            .gap(px(10.0))
-                            .child(brand_mark(BrandMark::Logo, 56.0))
+                            .theme(theme)
                             .child(
-                                div()
-                                    .text_xl()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(Translator::t(
-                                        state.locale,
-                                        terms::ONBOARDING_TITLE,
-                                        None,
-                                    )),
-                            )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_center()
-                                    .text_color(theme.text_muted)
-                                    .child(Translator::t(state.locale, terms::TAGLINE, None)),
+                                CardHeader::new().size(CardSize::Sm).theme(theme).child(
+                                    div()
+                                        .w_full()
+                                        .flex()
+                                        .flex_col()
+                                        .items_center()
+                                        .gap(px(10.0))
+                                        .child(brand_mark(BrandMark::Logo, 56.0))
+                                        .child(
+                                            CardTitle::new(Translator::t(
+                                                state.locale,
+                                                terms::ONBOARDING_TITLE,
+                                                None,
+                                            ))
+                                            .text_center()
+                                            .theme(theme),
+                                        )
+                                        .child(
+                                            CardDescription::new(Translator::t(
+                                                state.locale,
+                                                terms::TAGLINE,
+                                                None,
+                                            ))
+                                            .text_center()
+                                            .theme(theme),
+                                        ),
+                                ),
                             ),
                     )
                     // Pending Invites Banner (from real PostgreSQL)
@@ -133,18 +131,17 @@ impl OnboardingScreen {
                             .flex()
                             .items_center()
                             .justify_center()
-                            .py(px(8.0))
+                            .py(px(4.0))
                             .child(
-                                div()
-                                    .id("onboarding-skip-btn")
-                                    .cursor_pointer()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
+                                Button::new("onboarding-skip-btn")
+                                    .ghost()
+                                    .size(ButtonSize::Sm)
+                                    .label(Translator::t(state.locale, terms::SKIP_FOR_NOW, None))
                                     .text_color(theme.text_muted)
+                                    .theme(theme)
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.handle_skip_onboarding(cx);
-                                    }))
-                                    .child(Translator::t(state.locale, terms::SKIP_FOR_NOW, None)),
+                                    })),
                             ),
                     ),
             )
@@ -155,105 +152,83 @@ impl OnboardingScreen {
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        div()
-            .w_full()
-            .p(px(16.0))
-            .bg(theme.accent_primary.opacity(0.12))
-            .border_1()
+        Alert::new()
+            .icon(AppIcon::FamilyLedger)
+            .bg(theme.accent_primary.opacity(0.08))
             .border_color(theme.accent_primary.opacity(0.4))
-            .flex()
-            .flex_col()
-            .gap(px(10.0))
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(8.0))
-                    .child(app_icon(
-                        AppIcon::FamilyLedger,
-                        IconSize::Sm,
-                        IconTone::AccentPrimary,
-                        theme,
-                    ))
-                    .child(
-                        div()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.accent_primary)
-                            .child(Translator::t(
-                                state.locale,
-                                terms::PENDING_FAMILY_INVITES,
-                                None,
-                            )),
-                    ),
+                AlertTitle::new(Translator::t(
+                    state.locale,
+                    terms::PENDING_FAMILY_INVITES,
+                    None,
+                ))
+                .text_color(theme.accent_primary),
             )
-            .children(
-                state
-                    .pending_invites
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, invite)| {
-                        let invite_id = invite.id;
-                        let family_name = invite.family_name.clone();
-                        let invited_by = umuryango_i18n::t_args(
-                            state.locale,
-                            "onboarding.invited_by",
-                            &[("name", &invite.invited_by_name)],
-                        );
+            .child(
+                div().flex().flex_col().gap(px(8.0)).mt(px(4.0)).children(
+                    state
+                        .pending_invites
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, invite)| {
+                            let invite_id = invite.id;
+                            let family_name = invite.family_name.clone();
+                            let invited_by = umuryango_i18n::t_args(
+                                state.locale,
+                                "onboarding.invited_by",
+                                &[("name", &invite.invited_by_name)],
+                            );
 
-                        div()
-                            .id(format!("invite-{}", idx))
-                            .p(px(12.0))
-                            .bg(theme.bg_surface)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .justify_between()
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.text_primary)
-                                            .child(format!(
-                                                "{}: {}",
-                                                Translator::t(
-                                                    state.locale,
-                                                    terms::YOU_WERE_ADDED_TO,
-                                                    None
-                                                ),
-                                                family_name
-                                            )),
-                                    )
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(theme.text_muted)
-                                            .child(invited_by),
+                            Item::new()
+                                .id(format!("invite-{}", idx))
+                                .outline()
+                                .size(ItemSize::Xs)
+                                .bg(theme.bg_surface)
+                                .theme(theme)
+                                .child(
+                                    ItemContent::new()
+                                        .gap(px(2.0))
+                                        .child(
+                                            div()
+                                                .text_xs()
+                                                .font_weight(FontWeight::BOLD)
+                                                .text_color(theme.text_primary)
+                                                .child(format!(
+                                                    "{}: {}",
+                                                    Translator::t(
+                                                        state.locale,
+                                                        terms::YOU_WERE_ADDED_TO,
+                                                        None
+                                                    ),
+                                                    family_name
+                                                )),
+                                        )
+                                        .child(
+                                            div()
+                                                .text_xs()
+                                                .text_color(theme.text_muted)
+                                                .child(invited_by),
+                                        ),
+                                )
+                                .child(
+                                    ItemActions::new().child(
+                                        Button::new(format!("accept-invite-btn-{}", idx))
+                                            .size(ButtonSize::Xs)
+                                            .label(Translator::t(
+                                                state.locale,
+                                                terms::JOIN_BTN,
+                                                None,
+                                            ))
+                                            .bg(theme.income_color)
+                                            .theme(theme)
+                                            .on_click(cx.listener(move |this, _, _, cx| {
+                                                this.handle_accept_invite(invite_id, cx);
+                                            })),
                                     ),
-                            )
-                            .child(
-                                div()
-                                    .id(format!("accept-invite-btn-{}", idx))
-                                    .px(px(12.0))
-                                    .py(px(6.0))
-                                    .bg(theme.income_color)
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.bg_canvas)
-                                    .cursor_pointer()
-                                    .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.handle_accept_invite(invite_id, cx);
-                                    }))
-                                    .child(Translator::t(state.locale, terms::JOIN_BTN, None)),
-                            )
-                    }),
+                                )
+                        }),
+                ),
             )
     }
 
@@ -269,145 +244,113 @@ impl OnboardingScreen {
             Translator::t(state.locale, terms::CONTINUE_TO_DASHBOARD, None)
         };
 
-        div()
-            .w_full()
-            .p(px(18.0))
-            .bg(theme.bg_surface)
+        Card::new()
+            .size(CardSize::Sm)
+            .gap(px(14.0))
+            .py(px(18.0))
             .border_1()
             .border_color(theme.border_subtle)
-            .flex()
-            .flex_col()
-            .gap(px(12.0))
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(8.0))
-                    .child(app_icon(
-                        AppIcon::Add,
-                        IconSize::Sm,
-                        IconTone::AccentPrimary,
-                        theme,
-                    ))
-                    .child(
-                        div()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(Translator::t(state.locale, terms::CREATE_FAMILY, None)),
-                    ),
+                CardHeader::new().size(CardSize::Sm).theme(theme).child(
+                    div()
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap(px(8.0))
+                        .child(app_icon(
+                            AppIcon::Add,
+                            IconSize::Sm,
+                            IconTone::AccentPrimary,
+                            theme,
+                        ))
+                        .child(
+                            CardTitle::new(Translator::t(state.locale, terms::CREATE_FAMILY, None))
+                                .text_sm()
+                                .theme(theme),
+                        ),
+                ),
             )
-            // Editable Family Name Input
-            .child(text_field(
-                "onboarding-family-name-input",
-                Translator::t(state.locale, terms::FAMILY_NAME, None),
-                &inputs.family_name,
-                theme,
-            ))
-            // Editable Member Phone Input + Add Button + Chips
             .child(
-                div()
+                CardContent::new()
+                    .size(CardSize::Sm)
                     .flex()
                     .flex_col()
-                    .gap(px(8.0))
+                    .gap(px(12.0))
+                    // Editable Family Name Input
+                    .child(text_field(
+                        "onboarding-family-name-input",
+                        Translator::t(state.locale, terms::FAMILY_NAME, None),
+                        &inputs.family_name,
+                        theme,
+                    ))
+                    // Editable Member Phone Input + Add Button + Chips
                     .child(
                         div()
                             .flex()
-                            .flex_row()
-                            .items_end()
+                            .flex_col()
                             .gap(px(8.0))
-                            .child(div().flex_1().child(text_field(
-                                "onboarding-member-phone-input",
-                                Translator::t(state.locale, terms::ADD_MEMBER_PHONE, None),
-                                &inputs.member_phone,
-                                theme,
-                            )))
                             .child(
                                 div()
-                                    .id("add-member-phone-btn")
-                                    .px(px(12.0))
-                                    .py(px(8.0))
-                                    .bg(theme.bg_elevated)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .cursor_pointer()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.accent_primary)
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.add_onboarding_phone_with_window(window, cx);
-                                    }))
-                                    .child(Translator::t(state.locale, terms::ADD_PHONE_BTN, None)),
-                            ),
-                    )
-                    .children(if !state.onboarding_member_phones.is_empty() {
-                        Some(div().flex().flex_wrap().gap(px(6.0)).children(
-                            state.onboarding_member_phones.iter().enumerate().map(
-                                |(idx, phone)| {
-                                    div()
-                                        .id(format!("phone-chip-{}", idx))
-                                        .flex()
-                                        .items_center()
-                                        .gap(px(6.0))
-                                        .px(px(10.0))
-                                        .py(px(4.0))
-                                        .bg(theme.bg_canvas)
-                                        .border_1()
-                                        .border_color(theme.border_subtle)
-                                        .text_xs()
-                                        .text_color(theme.text_primary)
-                                        .child(phone.clone())
-                                        .child(
-                                            div()
+                                    .flex()
+                                    .flex_row()
+                                    .items_end()
+                                    .gap(px(8.0))
+                                    .child(div().flex_1().child(text_field(
+                                        "onboarding-member-phone-input",
+                                        Translator::t(state.locale, terms::ADD_MEMBER_PHONE, None),
+                                        &inputs.member_phone,
+                                        theme,
+                                    )))
+                                    .child(
+                                        Button::new("add-member-phone-btn")
+                                            .outline()
+                                            .size(ButtonSize::Sm)
+                                            .label(Translator::t(
+                                                state.locale,
+                                                terms::ADD_PHONE_BTN,
+                                                None,
+                                            ))
+                                            .theme(theme)
+                                            .on_click(cx.listener(|this, _, window, cx| {
+                                                this.add_onboarding_phone_with_window(window, cx);
+                                            })),
+                                    ),
+                            )
+                            .children(if !state.onboarding_member_phones.is_empty() {
+                                Some(div().flex().flex_wrap().gap(px(6.0)).children(
+                                    state.onboarding_member_phones.iter().enumerate().map(
+                                        |(idx, phone)| {
+                                            Badge::new(phone.clone())
                                                 .id(format!("phone-chip-rm-{}", idx))
-                                                .cursor_pointer()
+                                                .outline()
+                                                .icon_end(AppIcon::Close)
+                                                .px(px(10.0))
+                                                .py(px(4.0))
+                                                .bg(theme.bg_canvas)
+                                                .theme(theme)
                                                 .on_click(cx.listener(move |this, _, _, cx| {
                                                     this.remove_onboarding_phone(idx, cx);
                                                 }))
-                                                .child(app_icon(
-                                                    AppIcon::Close,
-                                                    IconSize::Xs,
-                                                    IconTone::Muted,
-                                                    theme,
-                                                )),
-                                        )
-                                },
-                            ),
-                        ))
-                    } else {
-                        None
-                    }),
-            )
-            // Create Family Submit Button
-            .child(
-                div()
-                    .id("create-family-submit-btn")
-                    .w_full()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.0))
-                    .py(px(10.0))
-                    .bg(if state.is_busy {
-                        theme.accent_primary.opacity(0.6)
-                    } else {
-                        theme.accent_primary
-                    })
-                    .text_sm()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(theme.bg_canvas)
-                    .cursor_pointer()
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.handle_create_family_submit(cx);
-                    }))
-                    .child(app_icon(
-                        AppIcon::Check,
-                        IconSize::Sm,
-                        IconTone::OnPrimaryButton,
-                        theme,
-                    ))
-                    .child(submit_label),
+                                        },
+                                    ),
+                                ))
+                            } else {
+                                None
+                            }),
+                    )
+                    // Create Family Submit Button
+                    .child(
+                        Button::new("create-family-submit-btn")
+                            .icon_start(AppIcon::Check)
+                            .loading(state.is_busy)
+                            .label(submit_label)
+                            .w_full()
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.handle_create_family_submit(cx);
+                            })),
+                    ),
             )
     }
 
@@ -423,71 +366,58 @@ impl OnboardingScreen {
             Translator::t(state.locale, terms::JOIN_BTN, None)
         };
 
-        div()
-            .w_full()
-            .p(px(18.0))
-            .bg(theme.bg_surface)
+        Card::new()
+            .size(CardSize::Sm)
+            .gap(px(14.0))
+            .py(px(18.0))
             .border_1()
             .border_color(theme.border_subtle)
-            .flex()
-            .flex_col()
-            .gap(px(12.0))
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(8.0))
-                    .child(app_icon(
-                        AppIcon::FamilyLedger,
-                        IconSize::Sm,
-                        IconTone::AccentPrimary,
-                        theme,
-                    ))
-                    .child(
-                        div()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(Translator::t(state.locale, terms::JOIN_FAMILY, None)),
-                    ),
+                CardHeader::new().size(CardSize::Sm).theme(theme).child(
+                    div()
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap(px(8.0))
+                        .child(app_icon(
+                            AppIcon::FamilyLedger,
+                            IconSize::Sm,
+                            IconTone::AccentPrimary,
+                            theme,
+                        ))
+                        .child(
+                            CardTitle::new(Translator::t(state.locale, terms::JOIN_FAMILY, None))
+                                .text_sm()
+                                .theme(theme),
+                        ),
+                ),
             )
-            // Editable 4-Character Code Input
-            .child(text_field(
-                "onboarding-join-code-input",
-                Translator::t(state.locale, terms::ENTER_4_CHAR_CODE, None),
-                &inputs.join_code,
-                theme,
-            ))
-            // Join Family Submit Button
             .child(
-                div()
-                    .id("join-family-submit-btn")
-                    .w_full()
+                CardContent::new()
+                    .size(CardSize::Sm)
                     .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.0))
-                    .py(px(10.0))
-                    .bg(if state.is_busy {
-                        theme.accent_primary.opacity(0.6)
-                    } else {
-                        theme.accent_primary
-                    })
-                    .text_sm()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(theme.bg_canvas)
-                    .cursor_pointer()
-                    .on_click(cx.listener(|this, _, _, cx| {
-                        this.handle_join_family_submit(cx);
-                    }))
-                    .child(app_icon(
-                        AppIcon::ChevronRight,
-                        IconSize::Sm,
-                        IconTone::OnPrimaryButton,
+                    .flex_col()
+                    .gap(px(12.0))
+                    // Editable 4-Character Code Input
+                    .child(text_field(
+                        "onboarding-join-code-input",
+                        Translator::t(state.locale, terms::ENTER_4_CHAR_CODE, None),
+                        &inputs.join_code,
                         theme,
                     ))
-                    .child(submit_label),
+                    // Join Family Submit Button
+                    .child(
+                        Button::new("join-family-submit-btn")
+                            .icon_start(AppIcon::ChevronRight)
+                            .loading(state.is_busy)
+                            .label(submit_label)
+                            .w_full()
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.handle_join_family_submit(cx);
+                            })),
+                    ),
             )
     }
 }

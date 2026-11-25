@@ -18,15 +18,12 @@ pub use web::mount_gpui_app;
 use std::sync::{Arc, Mutex};
 
 use api_bridge::ApiBridge;
+use common::{Toast, ToastClose, ToastContent, ToastIcon, ToastTitle, ToastType};
 use components::entity_modal_inputs::EntityModalInputs;
 use components::entity_modals::EntityModalDialog;
-use components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
 use components::quick_entry_inputs::QuickEntryInputs;
-use gpui_kit::{
-    Context, InteractiveElement, IntoElement, ParentElement, Render, StatefulInteractiveElement,
-    Styled, Window, div, hsla, px,
-};
+use gpui_kit::{Context, IntoElement, ParentElement, Render, Styled, Window, div, px};
 pub use safe_area::SafeAreaInsets;
 use screens::auth_inputs::AuthInputs;
 use screens::onboarding_inputs::OnboardingInputs;
@@ -184,11 +181,6 @@ impl RootView {
         cx: &Context<Self>,
     ) -> Option<impl IntoElement> {
         let (msg, is_error) = self.state.toast_message.as_ref()?;
-        let bg = if *is_error {
-            theme.expense_color.opacity(0.15)
-        } else {
-            theme.bg_elevated
-        };
         let border = if *is_error {
             theme.expense_color
         } else {
@@ -197,40 +189,33 @@ impl RootView {
 
         Some(
             div()
-                .id("app-toast-dismiss")
-                .cursor_pointer()
-                .on_click(cx.listener(|this, _, _, cx| {
-                    this.dismiss_toast(cx);
-                }))
                 .absolute()
                 .top(px(16.0) + top_safe_area)
                 .right(px(16.0))
                 .max_w(px(420.0))
-                .flex()
-                .items_center()
-                .gap(px(8.0))
-                .p(px(12.0))
-                .bg(bg)
-                .border_1()
-                .border_color(border)
-                .text_xs()
-                .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                .text_color(theme.text_primary)
-                .child(app_icon(
-                    if *is_error {
-                        AppIcon::Error
-                    } else {
-                        AppIcon::Success
-                    },
-                    IconSize::Sm,
-                    if *is_error {
-                        IconTone::Expense
-                    } else {
-                        IconTone::Income
-                    },
-                    theme,
-                ))
-                .child(msg.clone()),
+                .child(
+                    Toast::new("app-toast-container")
+                        .border_color(border)
+                        .theme(theme)
+                        .child(
+                            ToastContent::new()
+                                .p(px(12.0))
+                                .child(
+                                    ToastIcon::new(if *is_error {
+                                        ToastType::Error
+                                    } else {
+                                        ToastType::Success
+                                    })
+                                    .theme(theme),
+                                )
+                                .child(ToastTitle::new(msg.clone()).flex_1().text_xs().theme(theme))
+                                .child(ToastClose::new("app-toast-dismiss").theme(theme).on_click(
+                                    cx.listener(|this, _, _, cx| {
+                                        this.dismiss_toast(cx);
+                                    }),
+                                )),
+                        ),
+                ),
         )
     }
 }
@@ -334,7 +319,7 @@ impl Render for RootView {
                     .child(div().flex_1().w_full().h_full().child(screen_element))
                     .children(self.render_toast(&theme, top_safe_area, cx)),
             )
-            // Realtime Notifications Drawer
+            // Realtime Notifications Drawer (SheetOverlay + SheetContent)
             .children(if self.state.show_notifications_drawer {
                 Some(components::NotificationsDrawer::render(
                     "app-notifications-drawer",
@@ -345,50 +330,34 @@ impl Render for RootView {
             } else {
                 None
             })
-            // Quick Entry Modal Dialog Overlay
+            // Quick Entry Modal Dialog Overlay (DialogOverlay + DialogContent)
             .children(if self.state.show_quick_entry {
                 let wallets = self.state.active_wallets();
                 let is_family = self.state.active_scope.is_family();
-                Some(
-                    div()
-                        .absolute()
-                        .inset_0()
-                        .bg(hsla(0.0, 0.0, 0.0, 0.5))
-                        .flex()
-                        .items_center()
-                        .justify_center()
-                        .child(QuickEntryDialog::render(
-                            "app-quick-entry-dialog",
-                            &self.quick_entry_form,
-                            &self.quick_entry_inputs,
-                            wallets,
-                            is_family,
-                            self.state.is_busy,
-                            self.state.locale,
-                            &theme,
-                            cx,
-                        )),
-                )
+                Some(QuickEntryDialog::render(
+                    "app-quick-entry-dialog",
+                    &self.quick_entry_form,
+                    &self.quick_entry_inputs,
+                    wallets,
+                    is_family,
+                    self.state.is_busy,
+                    self.state.locale,
+                    &theme,
+                    cx,
+                ))
             } else {
                 None
             })
-            // Entity Creation / Update Modal Overlay
+            // Entity Creation / Update Modal Overlay (DialogOverlay + DialogContent)
             .children(self.state.active_modal.as_ref().map(|modal| {
-                div()
-                    .absolute()
-                    .inset_0()
-                    .bg(hsla(0.0, 0.0, 0.0, 0.5))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .child(EntityModalDialog::render(
-                        "app-entity-modal-dialog",
-                        modal,
-                        &self.state,
-                        &self.entity_modal_inputs,
-                        &theme,
-                        cx,
-                    ))
+                EntityModalDialog::render(
+                    "app-entity-modal-dialog",
+                    modal,
+                    &self.state,
+                    &self.entity_modal_inputs,
+                    &theme,
+                    cx,
+                )
             }))
     }
 }

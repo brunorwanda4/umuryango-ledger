@@ -1,9 +1,10 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::common::{Button, ButtonSize, Empty, EmptyDescription, EmptyHeader, EmptyMedia};
+use crate::components::icon::AppIcon;
 use crate::components::tx_row::TxRow;
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -41,7 +42,7 @@ impl TransactionsScreen {
                     .child(
                         div()
                             .text_2xl()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .child(title),
                     )
@@ -52,57 +53,28 @@ impl TransactionsScreen {
                             .items_center()
                             .gap(px(8.0))
                             .child(
-                                div()
-                                    .id("transactions-refresh-btn")
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(6.0))
-                                    .px(px(12.0))
-                                    .py(px(8.0))
-                                    .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_color(theme.text_primary)
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                    .cursor_pointer()
+                                Button::new("transactions-refresh-btn")
+                                    .outline()
+                                    .size(ButtonSize::Sm)
+                                    .icon_start(AppIcon::SyncPending)
+                                    .label(umuryango_i18n::t(state.locale, "common.refresh"))
+                                    .theme(theme)
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.refresh_active_scope(cx);
-                                    }))
-                                    .child(app_icon(
-                                        AppIcon::SyncPending,
-                                        IconSize::Xs,
-                                        IconTone::Muted,
-                                        theme,
-                                    ))
-                                    .child(umuryango_i18n::t(state.locale, "common.refresh")),
+                                    })),
                             )
                             .child(
-                                div()
-                                    .id("transactions-quick-entry-btn")
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(6.0))
-                                    .px(px(14.0))
-                                    .py(px(8.0))
-                                    .bg(theme.accent_primary)
-                                    .text_color(theme.bg_canvas)
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .cursor_pointer()
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.open_quick_entry(window, cx);
-                                    }))
-                                    .child(app_icon(
-                                        AppIcon::Add,
-                                        IconSize::Xs,
-                                        IconTone::OnPrimaryButton,
-                                        theme,
-                                    ))
-                                    .child(umuryango_i18n::t(
+                                Button::new("transactions-quick-entry-btn")
+                                    .size(ButtonSize::Sm)
+                                    .icon_start(AppIcon::Add)
+                                    .label(umuryango_i18n::t(
                                         state.locale,
                                         "dashboard.quick_log_btn",
-                                    )),
+                                    ))
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.open_quick_entry(window, cx);
+                                    })),
                             ),
                     ),
             )
@@ -110,18 +82,24 @@ impl TransactionsScreen {
             .child(div().flex().flex_col().gap(px(8.0)).children(
                 if state.transactions.is_empty() {
                     vec![
-                        div()
-                            .p(px(24.0))
+                        Empty::new()
+                            .bordered(true)
+                            .p(px(32.0))
                             .bg(theme.bg_surface)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_center()
-                            .text_color(theme.text_muted)
-                            .child(umuryango_i18n::t(
-                                state.locale,
-                                "transactions.no_transactions",
-                            ))
+                            .theme(theme)
+                            .child(
+                                EmptyHeader::new()
+                                    .child(
+                                        EmptyMedia::from_icon(AppIcon::Transactions).theme(theme),
+                                    )
+                                    .child(
+                                        EmptyDescription::new(umuryango_i18n::t(
+                                            state.locale,
+                                            "transactions.no_transactions",
+                                        ))
+                                        .theme(theme),
+                                    ),
+                            )
                             .into_any_element(),
                     ]
                 } else {

@@ -1,10 +1,15 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::{FamilyMemberView, FamilyRole};
 use umuryango_i18n::{Locale, Translator, terms};
 
 use crate::RootView;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::common::{
+    Avatar, AvatarSize, Badge, Button, ButtonGroup, ButtonGroupText, ButtonSize, Empty,
+    EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, Item, ItemActions, ItemContent,
+    ItemMedia, ItemSize,
+};
+use crate::components::icon::AppIcon;
 use crate::state::{ActiveModal, AppState, Screen};
 use crate::theme::SemanticTheme;
 
@@ -49,7 +54,7 @@ impl MembersScreen {
                             .child(
                                 div()
                                     .text_2xl()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .font_weight(FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .child(title),
                             )
@@ -68,83 +73,46 @@ impl MembersScreen {
                             .gap(px(8.0))
                             .children(invite_code.map(|code| {
                                 let code_for_copy = code.clone();
-                                div()
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(8.0))
-                                    .px(px(12.0))
-                                    .py(px(6.0))
-                                    .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .child(div().text_xs().text_color(theme.text_muted).child(
-                                        format!(
-                                            "{}:",
-                                            umuryango_i18n::t(state.locale, "members.invite_code")
-                                        ),
-                                    ))
+                                ButtonGroup::horizontal()
                                     .child(
-                                        div()
-                                            .text_xs()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.accent_primary)
-                                            .child(code),
+                                        ButtonGroupText::new(format!(
+                                            "{}: {}",
+                                            umuryango_i18n::t(state.locale, "members.invite_code"),
+                                            code
+                                        ))
+                                        .outlined(true)
+                                        .bg(theme.bg_surface)
+                                        .text_color(theme.accent_primary)
+                                        .theme(theme),
                                     )
                                     .child(
-                                        div()
-                                            .id("members-copy-code-btn")
-                                            .flex()
-                                            .items_center()
-                                            .gap(px(4.0))
-                                            .px(px(8.0))
-                                            .py(px(3.0))
-                                            .bg(theme.accent_primary)
-                                            .text_xs()
-                                            .text_color(theme.bg_canvas)
-                                            .cursor_pointer()
+                                        Button::new("members-copy-code-btn")
+                                            .size(ButtonSize::Sm)
+                                            .icon_start(AppIcon::Copy)
+                                            .label(umuryango_i18n::t(state.locale, "common.copy"))
+                                            .theme(theme)
                                             .on_click(cx.listener(move |this, _, _, cx| {
                                                 this.copy_to_clipboard(
                                                     code_for_copy.clone(),
                                                     copy_code_msg.clone(),
                                                     cx,
                                                 );
-                                            }))
-                                            .child(app_icon(
-                                                AppIcon::Copy,
-                                                IconSize::Xs,
-                                                IconTone::OnPrimaryButton,
-                                                theme,
-                                            ))
-                                            .child(umuryango_i18n::t(state.locale, "common.copy")),
+                                            })),
                                     )
                             }))
                             .children(if is_family_scope && is_head {
                                 Some(
-                                    div()
-                                        .id("members-invite-btn")
-                                        .flex()
-                                        .items_center()
-                                        .gap(px(6.0))
-                                        .px(px(12.0))
-                                        .py(px(6.0))
-                                        .bg(theme.accent_primary)
-                                        .text_xs()
-                                        .font_weight(gpui_kit::FontWeight::BOLD)
-                                        .text_color(theme.bg_canvas)
-                                        .cursor_pointer()
-                                        .on_click(cx.listener(|this, _, window, cx| {
-                                            this.open_modal(ActiveModal::InviteMember, window, cx);
-                                        }))
-                                        .child(app_icon(
-                                            AppIcon::Add,
-                                            IconSize::Xs,
-                                            IconTone::OnPrimaryButton,
-                                            theme,
-                                        ))
-                                        .child(umuryango_i18n::t(
+                                    Button::new("members-invite-btn")
+                                        .size(ButtonSize::Sm)
+                                        .icon_start(AppIcon::Add)
+                                        .label(umuryango_i18n::t(
                                             state.locale,
                                             "members.invite_member",
-                                        )),
+                                        ))
+                                        .theme(theme)
+                                        .on_click(cx.listener(|this, _, window, cx| {
+                                            this.open_modal(ActiveModal::InviteMember, window, cx);
+                                        })),
                                 )
                             } else {
                                 None
@@ -153,50 +121,51 @@ impl MembersScreen {
             )
             // Body: No Family Prompt or Real Members List from PostgreSQL
             .child(if !is_family_scope {
-                div()
-                    .p(px(24.0))
+                Empty::new()
+                    .bordered(true)
+                    .p(px(32.0))
                     .bg(theme.bg_surface)
-                    .border_1()
-                    .border_color(theme.border_subtle)
-                    .flex()
-                    .flex_col()
-                    .items_center()
-                    .gap(px(12.0))
+                    .theme(theme)
                     .child(
-                        div()
-                            .text_sm()
-                            .text_color(theme.text_muted)
-                            .child(umuryango_i18n::t(
-                                state.locale,
-                                "members.no_family_selected",
-                            )),
+                        EmptyHeader::new()
+                            .child(EmptyMedia::from_icon(AppIcon::FamilyLedger).theme(theme))
+                            .child(
+                                EmptyDescription::new(umuryango_i18n::t(
+                                    state.locale,
+                                    "members.no_family_selected",
+                                ))
+                                .theme(theme),
+                            ),
                     )
                     .child(
-                        div()
-                            .id("members-setup-family-btn")
-                            .px(px(14.0))
-                            .py(px(8.0))
-                            .bg(theme.accent_primary)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.select_screen(Screen::Onboarding, cx);
-                            }))
-                            .child(umuryango_i18n::t(state.locale, "members.setup_family_btn")),
+                        EmptyContent::new().child(
+                            Button::new("members-setup-family-btn")
+                                .size(ButtonSize::Sm)
+                                .label(umuryango_i18n::t(state.locale, "members.setup_family_btn"))
+                                .theme(theme)
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    this.select_screen(Screen::Onboarding, cx);
+                                })),
+                        ),
                     )
                     .into_any_element()
             } else if state.family_members.is_empty() {
-                div()
-                    .p(px(24.0))
+                Empty::new()
+                    .bordered(true)
+                    .p(px(32.0))
                     .bg(theme.bg_surface)
-                    .border_1()
-                    .border_color(theme.border_subtle)
-                    .text_sm()
-                    .text_center()
-                    .text_color(theme.text_muted)
-                    .child(umuryango_i18n::t(state.locale, "members.no_members"))
+                    .theme(theme)
+                    .child(
+                        EmptyHeader::new()
+                            .child(EmptyMedia::from_icon(AppIcon::Members).theme(theme))
+                            .child(
+                                EmptyDescription::new(umuryango_i18n::t(
+                                    state.locale,
+                                    "members.no_members",
+                                ))
+                                .theme(theme),
+                            ),
+                    )
                     .into_any_element()
             } else {
                 div()
@@ -241,7 +210,6 @@ impl MembersScreen {
             ),
         };
 
-        let initial = name.chars().next().unwrap_or('?').to_string();
         let next_role = match member.role {
             FamilyRole::Member => FamilyRole::Custodian,
             FamilyRole::Custodian => FamilyRole::Head,
@@ -250,108 +218,67 @@ impl MembersScreen {
         let member_id = member.id;
         let can_change_role = viewer_is_head && !is_you;
 
-        let role_badge = div()
+        let mut role_badge = Badge::new(role_label)
             .id(format!("member-role-{}", member_id))
-            .flex()
-            .items_center()
-            .gap(px(6.0))
+            .outline()
+            .icon_start(AppIcon::Members)
             .px(px(10.0))
             .py(px(4.0))
             .bg(role_color.opacity(0.15))
-            .text_xs()
-            .font_weight(gpui_kit::FontWeight::BOLD)
             .text_color(role_color)
-            .child(app_icon(
-                AppIcon::Members,
-                IconSize::Xs,
-                match member.role {
-                    FamilyRole::Head => IconTone::AccentPrimary,
-                    FamilyRole::Custodian => IconTone::Income,
-                    FamilyRole::Member => IconTone::Muted,
-                },
-                theme,
-            ))
-            .child(role_label);
+            .theme(theme);
 
-        let role_control = if can_change_role {
-            role_badge
-                .cursor_pointer()
-                .on_click(cx.listener(move |this, _, _, cx| {
-                    this.handle_update_member_role(member_id, next_role, cx);
-                }))
-                .into_any_element()
-        } else {
-            role_badge.into_any_element()
-        };
+        if can_change_role {
+            role_badge = role_badge.on_click(cx.listener(move |this, _, _, cx| {
+                this.handle_update_member_role(member_id, next_role, cx);
+            }));
+        }
 
-        div()
-            .flex()
-            .flex_row()
-            .justify_between()
-            .items_center()
-            .p(px(14.0))
+        Item::new()
+            .outline()
+            .size(ItemSize::Sm)
             .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
+            .justify_between()
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(px(12.0))
+                ItemMedia::new()
+                    .theme(theme)
+                    .child(Avatar::from_name(name, theme).size(AvatarSize::Lg)),
+            )
+            .child(
+                ItemContent::new()
+                    .gap(px(2.0))
                     .child(
                         div()
-                            .w(px(36.0))
-                            .h(px(36.0))
-                            .bg(theme.bg_elevated)
                             .flex()
                             .items_center()
-                            .justify_center()
-                            .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.accent_primary)
-                            .child(initial),
+                            .gap(px(6.0))
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(FontWeight::BOLD)
+                                    .text_color(theme.text_primary)
+                                    .child(name.to_string()),
+                            )
+                            .children(if is_you {
+                                Some(
+                                    Badge::new(umuryango_i18n::t(locale, "common.you_badge"))
+                                        .secondary()
+                                        .px(px(6.0))
+                                        .py(px(1.0))
+                                        .theme(theme),
+                                )
+                            } else {
+                                None
+                            }),
                     )
                     .child(
                         div()
-                            .flex()
-                            .flex_col()
-                            .child(
-                                div()
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(6.0))
-                                    .child(
-                                        div()
-                                            .text_sm()
-                                            .font_weight(gpui_kit::FontWeight::BOLD)
-                                            .text_color(theme.text_primary)
-                                            .child(name.to_string()),
-                                    )
-                                    .children(if is_you {
-                                        Some(
-                                            div()
-                                                .px(px(6.0))
-                                                .py(px(1.0))
-                                                .bg(theme.bg_elevated)
-                                                .text_xs()
-                                                .text_color(theme.text_muted)
-                                                .child(umuryango_i18n::t(
-                                                    locale,
-                                                    "common.you_badge",
-                                                )),
-                                        )
-                                    } else {
-                                        None
-                                    }),
-                            )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(detail.to_string()),
-                            ),
+                            .text_xs()
+                            .text_color(theme.text_muted)
+                            .child(detail.to_string()),
                     ),
             )
-            .child(role_control)
+            .child(ItemActions::new().child(role_badge))
     }
 }

@@ -1,8 +1,8 @@
-use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::{Transaction, TransactionType};
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::common::{Badge, BadgeVariant, Item, ItemActions, ItemContent, ItemSize};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
@@ -49,97 +49,82 @@ impl TxRow {
             TransactionType::Expense => theme.expense_color,
             TransactionType::Handover => theme.handover_color,
         };
-
-        let (type_bg, icon_tone) = match tx.tx_type {
-            TransactionType::Income => (theme.income_color.opacity(0.15), IconTone::Income),
-            TransactionType::Expense => (theme.expense_color.opacity(0.15), IconTone::Expense),
-            TransactionType::Handover => (
-                theme.accent_primary.opacity(0.15),
-                IconTone::AccentSecondary,
-            ),
+        let badge_variant = match tx.tx_type {
+            TransactionType::Income => BadgeVariant::Outline,
+            TransactionType::Expense => BadgeVariant::Destructive,
+            TransactionType::Handover => BadgeVariant::Secondary,
+        };
+        let type_bg = match tx.tx_type {
+            TransactionType::Income => theme.income_color.opacity(0.15),
+            TransactionType::Expense => theme.expense_color.opacity(0.15),
+            TransactionType::Handover => theme.accent_primary.opacity(0.15),
         };
 
-        div()
+        Item::new()
             .id(id)
-            .flex()
-            .flex_row()
-            .justify_between()
-            .items_center()
-            .py(px(10.0))
-            .px(px(14.0))
+            .outline()
+            .size(ItemSize::Sm)
             .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
-            .font_family(theme.font_family)
-            // Left: Type badge with vector icon + category + description + date
+            .justify_between()
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(px(10.0))
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(5.0))
-                            .px(px(8.0))
-                            .py(px(3.0))
-                            .bg(type_bg)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                            .text_color(amount_color)
-                            .child(app_icon(type_ico, IconSize::Xs, icon_tone, theme))
-                            .child(type_str),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                    .text_color(theme.text_primary)
-                                    .child(tx.category.clone()),
-                            )
-                            .child(
-                                div().text_xs().text_color(theme.text_muted).child(
-                                    tx.description.clone().unwrap_or_else(|| {
-                                        tx.tx_date.format("%Y-%m-%d").to_string()
-                                    }),
-                                ),
-                            ),
-                    ),
+                Badge::new(type_str)
+                    .variant(badge_variant)
+                    .icon_start(type_ico)
+                    .px(px(8.0))
+                    .py(px(3.0))
+                    .bg(type_bg)
+                    .text_color(amount_color)
+                    .theme(theme),
             )
-            // Right: Amount + Authorized By with Check Icon
             .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .items_end()
+                ItemContent::new()
                     .gap(px(2.0))
                     .child(
                         div()
                             .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(amount_color)
-                            .child(amount_str),
+                            .font_weight(FontWeight::MEDIUM)
+                            .text_color(theme.text_primary)
+                            .child(tx.category.clone()),
                     )
                     .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(4.0))
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(app_icon(
-                                AppIcon::Check,
-                                IconSize::Xs,
-                                IconTone::Success,
-                                theme,
-                            ))
-                            .child(authorizer_name.unwrap_or("Authorized").to_string()),
+                        div().text_xs().text_color(theme.text_muted).child(
+                            tx.description
+                                .clone()
+                                .unwrap_or_else(|| tx.tx_date.format("%Y-%m-%d").to_string()),
+                        ),
                     ),
+            )
+            .child(
+                ItemActions::new().child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .items_end()
+                        .gap(px(2.0))
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::BOLD)
+                                .text_color(amount_color)
+                                .child(amount_str),
+                        )
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(4.0))
+                                .text_xs()
+                                .text_color(theme.text_muted)
+                                .child(app_icon(
+                                    AppIcon::Check,
+                                    IconSize::Xs,
+                                    IconTone::Success,
+                                    theme,
+                                ))
+                                .child(authorizer_name.unwrap_or("Authorized").to_string()),
+                        ),
+                ),
             )
     }
 }

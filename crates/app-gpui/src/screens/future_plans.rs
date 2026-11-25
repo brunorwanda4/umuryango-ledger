@@ -1,9 +1,13 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::models::FuturePlan;
 use umuryango_i18n::{Locale, Translator, terms};
 
 use crate::RootView;
+use crate::common::{
+    Badge, Button, ButtonSize, Card, CardAction, CardDescription, CardFooter, CardHeader, CardSize,
+    CardTitle, Empty, EmptyDescription, EmptyHeader, EmptyMedia,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{ActiveModal, AppState};
 use crate::theme::SemanticTheme;
@@ -41,48 +45,41 @@ impl FuturePlansScreen {
                     .child(
                         div()
                             .text_2xl()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .child(title),
                     )
                     .child(
-                        div()
-                            .id("future-plans-add-btn")
-                            .flex()
-                            .items_center()
-                            .gap(px(6.0))
-                            .px(px(12.0))
-                            .py(px(6.0))
-                            .bg(theme.accent_primary)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
+                        Button::new("future-plans-add-btn")
+                            .size(ButtonSize::Sm)
+                            .icon_start(AppIcon::Add)
+                            .label(umuryango_i18n::t(state.locale, "future_plans.new_plan"))
+                            .theme(theme)
                             .on_click(cx.listener(|this, _, window, cx| {
                                 this.open_modal(ActiveModal::AddPlan, window, cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Add,
-                                IconSize::Xs,
-                                IconTone::OnPrimaryButton,
-                                theme,
-                            ))
-                            .child(umuryango_i18n::t(state.locale, "future_plans.new_plan")),
+                            })),
                     ),
             )
             // Plans list or empty state
             .child(div().flex().flex_col().gap(px(12.0)).children(
                 if state.future_plans.is_empty() {
                     vec![
-                        div()
-                            .p(px(24.0))
+                        Empty::new()
+                            .bordered(true)
+                            .p(px(32.0))
                             .bg(theme.bg_surface)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_sm()
-                            .text_center()
-                            .text_color(theme.text_muted)
-                            .child(umuryango_i18n::t(state.locale, "future_plans.no_plans"))
+                            .theme(theme)
+                            .child(
+                                EmptyHeader::new()
+                                    .child(EmptyMedia::from_icon(AppIcon::FuturePlans).theme(theme))
+                                    .child(
+                                        EmptyDescription::new(umuryango_i18n::t(
+                                            state.locale,
+                                            "future_plans.no_plans",
+                                        ))
+                                        .theme(theme),
+                                    ),
+                            )
                             .into_any_element(),
                     ]
                 } else {
@@ -117,17 +114,28 @@ impl FuturePlansScreen {
         let plan_id = plan.id;
         let plan_title = plan.title.clone();
 
-        div()
-            .p(px(16.0))
-            .bg(theme.bg_surface)
+        Card::new()
+            .size(CardSize::Sm)
+            .gap(px(12.0))
+            .py(px(16.0))
             .border_1()
             .border_color(theme.border_subtle)
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .justify_between()
-                    .items_center()
-                    .mb(px(6.0))
+                CardHeader::new()
+                    .size(CardSize::Sm)
+                    .px(px(16.0))
+                    .action(
+                        CardAction::new().child(
+                            Badge::new(status_label)
+                                .secondary()
+                                .px(px(8.0))
+                                .py(px(2.0))
+                                .text_color(status_color)
+                                .theme(theme),
+                        ),
+                    )
+                    .theme(theme)
                     .child(
                         div()
                             .flex()
@@ -139,41 +147,25 @@ impl FuturePlansScreen {
                                 IconTone::AccentPrimary,
                                 theme,
                             ))
-                            .child(
-                                div()
-                                    .text_base()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(plan.title.clone()),
-                            ),
+                            .child(CardTitle::new(plan.title.clone()).text_base().theme(theme)),
                     )
-                    .child(
-                        div()
-                            .px(px(8.0))
-                            .py(px(2.0))
-                            .bg(theme.bg_elevated)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(status_color)
-                            .child(status_label),
+                    .children(
+                        plan.description
+                            .as_ref()
+                            .filter(|d| !d.is_empty())
+                            .map(|desc| CardDescription::new(desc.clone()).text_xs().theme(theme)),
                     ),
             )
             .child(
-                div()
-                    .text_xs()
-                    .text_color(theme.text_muted)
-                    .mb(px(10.0))
-                    .child(plan.description.clone().unwrap_or_default()),
-            )
-            .child(
-                div()
-                    .flex()
+                CardFooter::new()
+                    .size(CardSize::Sm)
+                    .px(px(16.0))
                     .justify_between()
-                    .items_center()
+                    .theme(theme)
                     .child(
                         div()
                             .text_sm()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.income_color)
                             .child(format!(
                                 "{}: {} RWF",
@@ -182,15 +174,10 @@ impl FuturePlansScreen {
                             )),
                     )
                     .child(
-                        div()
-                            .id(format!("plan-alloc-{}", plan_id))
-                            .px(px(10.0))
-                            .py(px(4.0))
-                            .bg(theme.accent_primary)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
+                        Button::new(format!("plan-alloc-{}", plan_id))
+                            .size(ButtonSize::Xs)
+                            .label(umuryango_i18n::t(locale, "future_plans.allocate_funds"))
+                            .theme(theme)
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.open_modal(
                                     ActiveModal::AllocatePlan {
@@ -200,8 +187,7 @@ impl FuturePlansScreen {
                                     window,
                                     cx,
                                 );
-                            }))
-                            .child(umuryango_i18n::t(locale, "future_plans.allocate_funds")),
+                            })),
                     ),
             )
     }

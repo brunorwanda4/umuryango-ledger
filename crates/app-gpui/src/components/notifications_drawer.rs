@@ -1,8 +1,13 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::realtime::RealtimeEvent;
 
 use crate::RootView;
+use crate::common::{
+    Badge, Button, ButtonSize, Empty, EmptyDescription, EmptyHeader, EmptyMedia, Item, ItemContent,
+    ItemMedia, ItemSize, Separator, SheetContent, SheetFooter, SheetHeader, SheetOverlay,
+    SheetSide, SheetTitle,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{AppState, NotificationItem};
 use crate::theme::SemanticTheme;
@@ -20,148 +25,129 @@ impl NotificationsDrawer {
         let mark_all_label = umuryango_i18n::t(state.locale, "notifications.mark_all_read");
         let empty_text = umuryango_i18n::t(state.locale, "notifications.empty");
 
-        div()
-            .id(id)
-            .w(px(380.0))
-            .h_full()
-            .bg(theme.bg_surface)
-            .border_l_1()
-            .border_color(theme.border_subtle)
-            .font_family(theme.font_family)
-            .flex()
-            .flex_col()
-            .justify_between()
-            // Drawer Header
+        let view_for_close = cx.entity().clone();
+
+        SheetOverlay::new("notifications-sheet-overlay")
+            .side(SheetSide::Right)
+            .on_click(cx.listener(|this, _, _, cx| {
+                this.close_notifications(cx);
+            }))
             .child(
-                div()
-                    .p(px(16.0))
-                    .border_b_1()
-                    .border_color(theme.border_subtle)
-                    .flex()
-                    .flex_row()
-                    .justify_between()
-                    .items_center()
+                SheetContent::new(id)
+                    .side(SheetSide::Right)
+                    .show_close_button(true)
+                    .on_close(move |_window, cx| {
+                        view_for_close.update(cx, |this, cx| {
+                            this.close_notifications(cx);
+                        });
+                    })
+                    .w(px(380.0))
+                    .theme(theme)
+                    // Drawer Header
                     .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .gap(px(8.0))
-                            .child(app_icon(
-                                AppIcon::Bell,
-                                IconSize::Sm,
-                                IconTone::AccentPrimary,
-                                theme,
-                            ))
-                            .child(
-                                div()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_base()
-                                    .text_color(theme.text_primary)
-                                    .child(title),
-                            )
-                            .children(if state.unread_notifications_count > 0 {
-                                Some(
-                                    div()
-                                        .px(px(6.0))
-                                        .py(px(2.0))
-                                        .bg(theme.accent_primary)
-                                        .text_xs()
-                                        .font_weight(gpui_kit::FontWeight::BOLD)
-                                        .text_color(theme.bg_canvas)
-                                        .child(state.unread_notifications_count.to_string()),
-                                )
-                            } else {
-                                None
-                            }),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
+                        SheetHeader::new()
+                            .p(px(16.0))
+                            .pr(px(56.0))
                             .gap(px(10.0))
                             .child(
                                 div()
-                                    .id("drawer-mark-all-read")
-                                    .cursor_pointer()
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                    .text_color(theme.income_color)
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.mark_all_notifications_read(cx);
-                                    }))
-                                    .child(mark_all_label),
+                                    .flex()
+                                    .flex_row()
+                                    .items_center()
+                                    .gap(px(8.0))
+                                    .child(app_icon(
+                                        AppIcon::Bell,
+                                        IconSize::Sm,
+                                        IconTone::AccentPrimary,
+                                        theme,
+                                    ))
+                                    .child(SheetTitle::new(title).text_base().theme(theme))
+                                    .children(if state.unread_notifications_count > 0 {
+                                        Some(
+                                            Badge::new(
+                                                state.unread_notifications_count.to_string(),
+                                            )
+                                            .px(px(6.0))
+                                            .py(px(2.0))
+                                            .bg(theme.accent_primary)
+                                            .text_color(theme.bg_canvas)
+                                            .theme(theme),
+                                        )
+                                    } else {
+                                        None
+                                    }),
                             )
                             .child(
-                                div()
-                                    .id("drawer-close-btn")
-                                    .p(px(4.0))
-                                    .cursor_pointer()
+                                Button::new("drawer-mark-all-read")
+                                    .ghost()
+                                    .size(ButtonSize::Xs)
+                                    .label(mark_all_label)
+                                    .text_color(theme.income_color)
+                                    .theme(theme)
                                     .on_click(cx.listener(|this, _, _, cx| {
-                                        this.close_notifications(cx);
-                                    }))
-                                    .child(app_icon(
-                                        AppIcon::Close,
-                                        IconSize::Xs,
-                                        IconTone::Default,
-                                        theme,
-                                    )),
+                                        this.mark_all_notifications_read(cx);
+                                    })),
                             ),
-                    ),
-            )
-            // Notifications List
-            .child(
-                div()
-                    .id("notifications-scroll-area")
-                    .flex_1()
-                    .overflow_y_scroll()
-                    .p(px(16.0))
-                    .flex()
-                    .flex_col()
-                    .gap(px(12.0))
-                    .children(if state.notifications.is_empty() {
-                        vec![
-                            div()
-                                .py(px(40.0))
-                                .text_center()
-                                .text_sm()
-                                .text_color(theme.text_muted)
-                                .child(empty_text)
-                                .into_any_element(),
-                        ]
-                    } else {
-                        state
-                            .notifications
-                            .iter()
-                            .map(|item| {
-                                Self::render_notification_item(item, theme).into_any_element()
-                            })
-                            .collect()
-                    }),
-            )
-            // Drawer Footer
-            .child(
-                div()
-                    .p(px(12.0))
-                    .border_t_1()
-                    .border_color(theme.border_subtle)
-                    .flex()
-                    .flex_row()
-                    .justify_between()
-                    .items_center()
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child("Umuryango Real-Time Hub"),
                     )
+                    .child(Separator::horizontal().theme(theme))
+                    // Notifications List
                     .child(
                         div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.income_color)
-                            .child("Live"),
+                            .id("notifications-scroll-area")
+                            .flex_1()
+                            .overflow_y_scroll()
+                            .p(px(16.0))
+                            .flex()
+                            .flex_col()
+                            .gap(px(10.0))
+                            .children(if state.notifications.is_empty() {
+                                vec![
+                                    Empty::new()
+                                        .p(px(28.0))
+                                        .theme(theme)
+                                        .child(
+                                            EmptyHeader::new()
+                                                .child(
+                                                    EmptyMedia::from_icon(AppIcon::Bell)
+                                                        .theme(theme),
+                                                )
+                                                .child(
+                                                    EmptyDescription::new(empty_text).theme(theme),
+                                                ),
+                                        )
+                                        .into_any_element(),
+                                ]
+                            } else {
+                                state
+                                    .notifications
+                                    .iter()
+                                    .map(|item| {
+                                        Self::render_notification_item(item, theme)
+                                            .into_any_element()
+                                    })
+                                    .collect()
+                            }),
+                    )
+                    .child(Separator::horizontal().theme(theme))
+                    // Drawer Footer
+                    .child(
+                        SheetFooter::new()
+                            .p(px(12.0))
+                            .flex_row()
+                            .justify_between()
+                            .items_center()
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.text_muted)
+                                    .child("Umuryango Real-Time Hub"),
+                            )
+                            .child(
+                                Badge::new("Live")
+                                    .outline()
+                                    .text_color(theme.income_color)
+                                    .theme(theme),
+                            ),
                     ),
             )
     }
@@ -189,52 +175,41 @@ impl NotificationsDrawer {
             ),
         };
 
-        let card_bg = if item.is_read {
-            theme.bg_canvas
-        } else {
-            theme.bg_elevated
-        };
-
         let formatted_time = item.timestamp.format("%H:%M").to_string();
 
-        div()
-            .flex()
-            .flex_row()
+        Item::new()
+            .outline()
+            .size(ItemSize::Xs)
             .items_start()
-            .gap(px(12.0))
-            .p(px(10.0))
-            .bg(card_bg)
-            .border_1()
+            .bg(if item.is_read {
+                theme.bg_canvas
+            } else {
+                theme.bg_elevated
+            })
             .border_color(if !item.is_read {
                 theme.accent_primary
             } else {
                 theme.border_subtle
             })
-            // Vector Icon badge
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .justify_center()
+                ItemMedia::new()
                     .w(px(32.0))
                     .h(px(32.0))
                     .bg(theme.bg_surface)
+                    .theme(theme)
                     .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
             )
-            // Content
             .child(
-                div()
-                    .flex_1()
-                    .flex()
-                    .flex_col()
+                ItemContent::new()
                     .gap(px(4.0))
                     .child(
                         div()
                             .text_xs()
                             .font_weight(if !item.is_read {
-                                gpui_kit::FontWeight::SEMIBOLD
+                                FontWeight::SEMIBOLD
                             } else {
-                                gpui_kit::FontWeight::NORMAL
+                                FontWeight::NORMAL
                             })
                             .text_color(theme.text_primary)
                             .child(item.message.clone()),

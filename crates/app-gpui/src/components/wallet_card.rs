@@ -1,8 +1,10 @@
-use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{
+    ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement, Styled, div, px,
+};
 use umuryango_core_domain::models::{Wallet, WalletChannel};
 use umuryango_i18n::{Locale, Translator, terms};
 
+use crate::common::{Badge, Card, CardAction, CardContent, CardFooter, CardHeader, CardSize};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::theme::SemanticTheme;
 
@@ -41,87 +43,84 @@ impl WalletCard {
         let balance_str = Self::format_balance(wallet);
         let is_family = wallet.scope.is_family();
 
-        div()
-            .id(id)
-            .flex()
-            .flex_col()
-            .justify_between()
-            .p(px(16.0))
-            .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
-            .font_family(theme.font_family)
-            // Header: channel badge & icon
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .justify_between()
-                    .items_center()
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(8.0))
-                            .child(app_icon(
-                                channel_ico,
-                                IconSize::Md,
-                                IconTone::AccentPrimary,
-                                theme,
-                            ))
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(wallet.name.clone()),
+        div().id(id).child(
+            Card::new()
+                .size(CardSize::Sm)
+                .gap(px(12.0))
+                .py(px(16.0))
+                .border_1()
+                .border_color(theme.border_subtle)
+                .theme(theme)
+                .child(
+                    CardHeader::new()
+                        .size(CardSize::Sm)
+                        .px(px(16.0))
+                        .action(
+                            CardAction::new().child(
+                                Badge::new(channel_str)
+                                    .secondary()
+                                    .px(px(6.0))
+                                    .py(px(2.0))
+                                    .theme(theme),
                             ),
-                    )
-                    .child(
+                        )
+                        .theme(theme)
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(8.0))
+                                .child(app_icon(
+                                    channel_ico,
+                                    IconSize::Md,
+                                    IconTone::AccentPrimary,
+                                    theme,
+                                ))
+                                .child(
+                                    div()
+                                        .text_sm()
+                                        .font_weight(FontWeight::SEMIBOLD)
+                                        .text_color(theme.text_primary)
+                                        .child(wallet.name.clone()),
+                                ),
+                        ),
+                )
+                .child(
+                    CardContent::new().size(CardSize::Sm).px(px(16.0)).child(
                         div()
-                            .px(px(8.0))
-                            .py(px(2.0))
-                            .bg(theme.bg_elevated)
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(channel_str),
+                            .text_xl()
+                            .font_weight(FontWeight::BOLD)
+                            .text_color(theme.income_color)
+                            .child(balance_str),
                     ),
-            )
-            // Balance row
-            .child(
-                div()
-                    .my(px(12.0))
-                    .text_xl()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(theme.income_color)
-                    .child(balance_str),
-            )
-            // Footer: Custodian (in Family mode)
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(px(6.0))
-                    .text_xs()
-                    .text_color(theme.text_muted)
-                    .children(if is_family {
-                        let custodian_label = Translator::t(locale, terms::HELD_BY, None);
-                        let fallback = umuryango_i18n::t(locale, "wallets.unassigned_custodian");
-                        let name = custodian_name.unwrap_or(&fallback);
-                        vec![
-                            app_icon(AppIcon::Members, IconSize::Xs, IconTone::Muted, theme)
-                                .into_any_element(),
-                            div()
-                                .child(format!("{}: {}", custodian_label, name))
-                                .into_any_element(),
-                        ]
-                    } else {
-                        vec![
-                            div()
-                                .child(Translator::t(locale, terms::PERSONAL_SCOPE, None))
-                                .into_any_element(),
-                        ]
-                    }),
-            )
+                )
+                .child(
+                    CardFooter::new()
+                        .size(CardSize::Sm)
+                        .px(px(16.0))
+                        .text_xs()
+                        .text_color(theme.text_muted)
+                        .theme(theme)
+                        .children(if is_family {
+                            let custodian_label = Translator::t(locale, terms::HELD_BY, None);
+                            let fallback =
+                                umuryango_i18n::t(locale, "wallets.unassigned_custodian");
+                            let name = custodian_name.unwrap_or(&fallback);
+                            vec![
+                                app_icon(AppIcon::Members, IconSize::Xs, IconTone::Muted, theme)
+                                    .into_any_element(),
+                                div()
+                                    .child(format!("{}: {}", custodian_label, name))
+                                    .into_any_element(),
+                            ]
+                        } else {
+                            vec![
+                                div()
+                                    .child(Translator::t(locale, terms::PERSONAL_SCOPE, None))
+                                    .into_any_element(),
+                            ]
+                        }),
+                ),
+        )
     }
 }

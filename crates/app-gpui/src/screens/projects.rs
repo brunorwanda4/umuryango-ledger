@@ -1,11 +1,16 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px, relative};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::ToPrimitive;
 use umuryango_core_domain::models::Project;
 use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
+use crate::common::{
+    Badge, Button, ButtonSize, Card, CardAction, CardContent, CardDescription, CardHeader,
+    CardSize, CardTitle, Empty, EmptyDescription, EmptyHeader, EmptyMedia, Progress, ProgressLabel,
+    ProgressValue,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{ActiveModal, AppState};
 use crate::theme::SemanticTheme;
@@ -43,50 +48,43 @@ impl ProjectsScreen {
                     .child(
                         div()
                             .text_2xl()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .child(title),
                     )
                     .child(
-                        div()
-                            .id("projects-add-btn")
-                            .flex()
-                            .items_center()
-                            .gap(px(6.0))
-                            .px(px(12.0))
-                            .py(px(6.0))
-                            .bg(theme.accent_primary)
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
-                            .text_color(theme.bg_canvas)
-                            .cursor_pointer()
+                        Button::new("projects-add-btn")
+                            .size(ButtonSize::Sm)
+                            .icon_start(AppIcon::Add)
+                            .label(umuryango_i18n::t(state.locale, "projects.new_project"))
+                            .theme(theme)
                             .on_click(cx.listener(|this, _, window, cx| {
                                 this.open_modal(ActiveModal::AddProject, window, cx);
-                            }))
-                            .child(app_icon(
-                                AppIcon::Add,
-                                IconSize::Xs,
-                                IconTone::OnPrimaryButton,
-                                theme,
-                            ))
-                            .child(umuryango_i18n::t(state.locale, "projects.new_project")),
+                            })),
                     ),
             )
             // Projects Grid or Empty State
             .child(if state.projects.is_empty() {
-                div()
-                    .p(px(24.0))
+                Empty::new()
+                    .bordered(true)
+                    .p(px(32.0))
                     .bg(theme.bg_surface)
-                    .border_1()
-                    .border_color(theme.border_subtle)
-                    .text_sm()
-                    .text_center()
-                    .text_color(theme.text_muted)
-                    .child(if state.active_scope.is_family() {
-                        umuryango_i18n::t(state.locale, "projects.no_projects")
-                    } else {
-                        umuryango_i18n::t(state.locale, "projects.family_scope_required")
-                    })
+                    .theme(theme)
+                    .child(
+                        EmptyHeader::new()
+                            .child(EmptyMedia::from_icon(AppIcon::Projects).theme(theme))
+                            .child(
+                                EmptyDescription::new(if state.active_scope.is_family() {
+                                    umuryango_i18n::t(state.locale, "projects.no_projects")
+                                } else {
+                                    umuryango_i18n::t(
+                                        state.locale,
+                                        "projects.family_scope_required",
+                                    )
+                                })
+                                .theme(theme),
+                            ),
+                    )
                     .into_any_element()
             } else {
                 div()
@@ -104,27 +102,38 @@ impl ProjectsScreen {
     }
 
     fn render_project_card(project: &Project, theme: &SemanticTheme) -> impl IntoElement {
-        let ratio = if project.target_amount > Decimal::ZERO {
-            (project.allocated_amount / project.target_amount)
+        let pct_f32 = if project.target_amount > Decimal::ZERO {
+            ((project.allocated_amount / project.target_amount)
                 .to_f32()
                 .unwrap_or(0.0)
-                .clamp(0.0, 1.0)
+                .clamp(0.0, 1.0))
+                * 100.0
         } else {
             0.0
         };
-        let pct = (ratio * 100.0).round() as i32;
+        let pct = pct_f32.round() as i32;
 
-        div()
-            .p(px(16.0))
-            .bg(theme.bg_surface)
+        Card::new()
+            .size(CardSize::Sm)
+            .gap(px(12.0))
+            .py(px(16.0))
             .border_1()
             .border_color(theme.border_subtle)
+            .theme(theme)
             .child(
-                div()
-                    .flex()
-                    .justify_between()
-                    .items_center()
-                    .mb(px(8.0))
+                CardHeader::new()
+                    .size(CardSize::Sm)
+                    .px(px(16.0))
+                    .action(
+                        CardAction::new().child(
+                            Badge::new(project.status.as_str())
+                                .secondary()
+                                .px(px(6.0))
+                                .py(px(2.0))
+                                .theme(theme),
+                        ),
+                    )
+                    .theme(theme)
                     .child(
                         div()
                             .flex()
@@ -137,50 +146,34 @@ impl ProjectsScreen {
                                 theme,
                             ))
                             .child(
-                                div()
+                                CardTitle::new(project.name.clone())
                                     .text_base()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(project.name.clone()),
+                                    .theme(theme),
                             ),
                     )
-                    .child(
-                        div()
-                            .px(px(8.0))
-                            .py(px(2.0))
-                            .bg(theme.bg_elevated)
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(project.status.as_str()),
+                    .children(
+                        project
+                            .description
+                            .as_ref()
+                            .filter(|d| !d.is_empty())
+                            .map(|desc| CardDescription::new(desc.clone()).text_xs().theme(theme)),
                     ),
             )
             .child(
-                div()
-                    .text_xs()
-                    .text_color(theme.text_muted)
-                    .mb(px(12.0))
-                    .child(project.description.clone().unwrap_or_default()),
-            )
-            // Progress row
-            .child(
-                div()
-                    .flex()
-                    .justify_between()
-                    .text_xs()
-                    .text_color(theme.text_primary)
-                    .mb(px(4.0))
-                    .child(format!(
-                        "{} / {} RWF",
-                        project.allocated_amount, project.target_amount
-                    ))
-                    .child(format!("{}%", pct)),
-            )
-            .child(
-                div()
-                    .w_full()
-                    .h(px(8.0))
-                    .bg(theme.bg_elevated)
-                    .child(div().h_full().bg(theme.income_color).w(relative(ratio))),
+                CardContent::new().size(CardSize::Sm).px(px(16.0)).child(
+                    Progress::new(pct_f32)
+                        .indicator_color(theme.income_color)
+                        .gap(px(6.0))
+                        .theme(theme)
+                        .child(
+                            ProgressLabel::new(format!(
+                                "{} / {} RWF",
+                                project.allocated_amount, project.target_amount
+                            ))
+                            .theme(theme),
+                        )
+                        .child(ProgressValue::new(format!("{}%", pct)).theme(theme)),
+                ),
             )
     }
 }

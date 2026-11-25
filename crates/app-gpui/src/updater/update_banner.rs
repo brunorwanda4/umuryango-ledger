@@ -1,9 +1,11 @@
-use gpui_kit::prelude::*;
-use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px};
+use gpui_kit::{ElementId, InteractiveElement, IntoElement, ParentElement, Styled, div, px};
 use umuryango_i18n::{Locale, Translator, terms};
 
 use super::UpdateStatus;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::common::{
+    Alert, AlertAction, AlertDescription, AlertTitle, AlertVariant, Badge, Progress, ProgressValue,
+};
+use crate::components::icon::AppIcon;
 use crate::theme::SemanticTheme;
 
 pub struct UpdateBanner;
@@ -27,94 +29,48 @@ impl UpdateBanner {
                 } else {
                     Translator::t(locale, terms::UPDATE_READY_BANNER, None)
                 };
-
-                let download_btn_text = umuryango_i18n::t(locale, "updater.download_now");
-
-                let banner_bg = if *is_mandatory {
-                    theme.expense_color
-                } else {
-                    theme.income_color
-                };
+                let download_badge = umuryango_i18n::t(locale, "updater.download_now");
 
                 Some(
-                    div()
-                        .id(id)
-                        .w_full()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .px(px(16.0))
-                        .py(px(10.0))
-                        .bg(banner_bg)
-                        .text_color(theme.bg_canvas)
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap(px(8.0))
-                                .child(app_icon(
-                                    AppIcon::UpdateAvailable,
-                                    IconSize::Sm,
-                                    IconTone::OnPrimaryButton,
-                                    theme,
-                                ))
-                                .child(
-                                    div()
-                                        .font_weight(gpui_kit::FontWeight::BOLD)
-                                        .text_sm()
-                                        .child(format!("v{}", version)),
-                                )
-                                .child(div().text_sm().child(title)),
-                        )
-                        .child(
-                            div().flex().items_center().gap(px(8.0)).child(
-                                div()
-                                    .px(px(12.0))
-                                    .py(px(4.0))
-                                    .bg(theme.bg_surface)
-                                    .text_color(theme.text_primary)
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_xs()
-                                    .cursor_pointer()
-                                    .child(download_btn_text),
-                            ),
-                        ),
+                    div().id(id).w_full().child(
+                        Alert::new()
+                            .variant(if *is_mandatory {
+                                AlertVariant::Destructive
+                            } else {
+                                AlertVariant::Default
+                            })
+                            .icon(AppIcon::UpdateAvailable)
+                            .action(
+                                AlertAction::new().child(
+                                    Badge::new(download_badge)
+                                        .outline()
+                                        .px(px(8.0))
+                                        .py(px(3.0))
+                                        .theme(theme),
+                                ),
+                            )
+                            .theme(theme)
+                            .child(AlertTitle::new(format!("v{} — {}", version, title))),
+                    ),
                 )
             }
             UpdateStatus::Downloading { progress } => {
-                let progress_pct = (progress * 100.0) as u32;
+                let progress_pct = (progress * 100.0).clamp(0.0, 100.0);
                 let downloading_text = Translator::t(locale, terms::UPDATE_DOWNLOADING, None);
 
                 Some(
-                    div()
-                        .id(id)
-                        .w_full()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .px(px(16.0))
-                        .py(px(10.0))
-                        .bg(theme.bg_elevated)
-                        .text_color(theme.text_primary)
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap(px(8.0))
-                                .child(app_icon(
-                                    AppIcon::SyncPending,
-                                    IconSize::Sm,
-                                    IconTone::Default,
-                                    theme,
-                                ))
-                                .child(div().text_sm().child(downloading_text))
-                                .child(
-                                    div()
-                                        .text_xs()
-                                        .font_weight(gpui_kit::FontWeight::BOLD)
-                                        .child(format!("{}%", progress_pct)),
+                    div().id(id).w_full().child(
+                        Alert::new()
+                            .icon(AppIcon::SyncPending)
+                            .theme(theme)
+                            .child(AlertTitle::new(downloading_text))
+                            .child(
+                                Progress::new(progress_pct).theme(theme).child(
+                                    ProgressValue::new(format!("{}%", progress_pct as u32))
+                                        .theme(theme),
                                 ),
-                        ),
+                            ),
+                    ),
                 )
             }
             UpdateStatus::ReadyToRestart { version, .. } => {
@@ -126,40 +82,21 @@ impl UpdateBanner {
                 );
 
                 Some(
-                    div()
-                        .id(id)
-                        .w_full()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .px(px(16.0))
-                        .py(px(10.0))
-                        .bg(theme.accent_secondary)
-                        .text_color(theme.bg_canvas)
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap(px(8.0))
-                                .child(app_icon(
-                                    AppIcon::Check,
-                                    IconSize::Sm,
-                                    IconTone::OnPrimaryButton,
-                                    theme,
-                                ))
-                                .child(div().text_sm().child(ready_msg)),
-                        )
-                        .child(
-                            div()
-                                .px(px(12.0))
-                                .py(px(4.0))
-                                .bg(theme.bg_surface)
-                                .text_color(theme.text_primary)
-                                .font_weight(gpui_kit::FontWeight::BOLD)
-                                .text_xs()
-                                .cursor_pointer()
-                                .child(restart_text),
-                        ),
+                    div().id(id).w_full().child(
+                        Alert::new()
+                            .icon(AppIcon::Check)
+                            .action(
+                                AlertAction::new().child(
+                                    Badge::new(restart_text)
+                                        .secondary()
+                                        .px(px(8.0))
+                                        .py(px(3.0))
+                                        .theme(theme),
+                                ),
+                            )
+                            .theme(theme)
+                            .child(AlertTitle::new(ready_msg)),
+                    ),
                 )
             }
             UpdateStatus::Failed { error } => {
@@ -167,29 +104,17 @@ impl UpdateBanner {
                     umuryango_i18n::t_args(locale, "updater.failed", &[("error", error.as_str())]);
 
                 Some(
-                    div()
-                        .id(id)
-                        .w_full()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .px(px(16.0))
-                        .py(px(10.0))
-                        .bg(theme.expense_color)
-                        .text_color(theme.bg_canvas)
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap(px(8.0))
-                                .child(app_icon(
-                                    AppIcon::Error,
-                                    IconSize::Sm,
-                                    IconTone::OnPrimaryButton,
-                                    theme,
-                                ))
-                                .child(div().text_xs().child(err_label)),
-                        ),
+                    div().id(id).w_full().child(
+                        Alert::new()
+                            .destructive()
+                            .icon(AppIcon::Error)
+                            .theme(theme)
+                            .child(
+                                AlertDescription::new(err_label)
+                                    .destructive(true)
+                                    .theme(theme),
+                            ),
+                    ),
                 )
             }
         }

@@ -1,10 +1,14 @@
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px, relative};
+use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::ToPrimitive;
 use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
+use crate::common::{
+    Button, ButtonSize, Card, CardAction, CardContent, CardHeader, CardSize, CardTitle, Empty,
+    EmptyDescription, EmptyHeader, EmptyMedia, Progress, ProgressLabel, ProgressValue,
+};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::components::tx_row::TxRow;
 use crate::components::wallet_card::WalletCard;
@@ -65,7 +69,7 @@ impl DashboardScreen {
                             .child(
                                 div()
                                     .text_2xl()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .font_weight(FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .child(if state.active_scope.is_family() {
                                         state.active_family_name.clone().unwrap_or_else(|| {
@@ -86,57 +90,28 @@ impl DashboardScreen {
                             .items_center()
                             .gap(px(8.0))
                             .child(
-                                div()
-                                    .id("dashboard-refresh-btn")
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(6.0))
-                                    .px(px(12.0))
-                                    .py(px(8.0))
-                                    .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_color(theme.text_primary)
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::MEDIUM)
-                                    .cursor_pointer()
+                                Button::new("dashboard-refresh-btn")
+                                    .outline()
+                                    .size(ButtonSize::Sm)
+                                    .icon_start(AppIcon::SyncPending)
+                                    .label(umuryango_i18n::t(state.locale, "common.refresh"))
+                                    .theme(theme)
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.refresh_active_scope(cx);
-                                    }))
-                                    .child(app_icon(
-                                        AppIcon::SyncPending,
-                                        IconSize::Xs,
-                                        IconTone::Muted,
-                                        theme,
-                                    ))
-                                    .child(umuryango_i18n::t(state.locale, "common.refresh")),
+                                    })),
                             )
                             .child(
-                                div()
-                                    .id("dashboard-quick-entry-btn")
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(6.0))
-                                    .px(px(14.0))
-                                    .py(px(8.0))
-                                    .bg(theme.accent_primary)
-                                    .text_color(theme.bg_canvas)
-                                    .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .cursor_pointer()
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.open_quick_entry(window, cx);
-                                    }))
-                                    .child(app_icon(
-                                        AppIcon::Add,
-                                        IconSize::Sm,
-                                        IconTone::OnPrimaryButton,
-                                        theme,
-                                    ))
-                                    .child(umuryango_i18n::t(
+                                Button::new("dashboard-quick-entry-btn")
+                                    .size(ButtonSize::Sm)
+                                    .icon_start(AppIcon::Add)
+                                    .label(umuryango_i18n::t(
                                         state.locale,
                                         "dashboard.quick_log_btn",
-                                    )),
+                                    ))
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.open_quick_entry(window, cx);
+                                    })),
                             ),
                     ),
             )
@@ -198,7 +173,7 @@ impl DashboardScreen {
                             .child(
                                 div()
                                     .text_base()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
+                                    .font_weight(FontWeight::BOLD)
                                     .text_color(theme.text_primary)
                                     .child(Translator::t(
                                         state.locale,
@@ -207,41 +182,36 @@ impl DashboardScreen {
                                     )),
                             )
                             .child(
-                                div()
-                                    .id("dashboard-add-wallet-btn")
-                                    .flex()
-                                    .items_center()
-                                    .gap(px(6.0))
-                                    .px(px(10.0))
-                                    .py(px(5.0))
-                                    .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_xs()
-                                    .font_weight(gpui_kit::FontWeight::SEMIBOLD)
-                                    .text_color(theme.accent_primary)
-                                    .cursor_pointer()
+                                Button::new("dashboard-add-wallet-btn")
+                                    .outline()
+                                    .size(ButtonSize::Xs)
+                                    .icon_start(AppIcon::Add)
+                                    .label(umuryango_i18n::t(state.locale, "wallets.add_wallet"))
+                                    .theme(theme)
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         this.open_modal(ActiveModal::AddWallet, window, cx);
-                                    }))
-                                    .child(app_icon(
-                                        AppIcon::Add,
-                                        IconSize::Xs,
-                                        IconTone::AccentPrimary,
-                                        theme,
-                                    ))
-                                    .child(umuryango_i18n::t(state.locale, "wallets.add_wallet")),
+                                    })),
                             ),
                     )
                     .child(if state.wallets.is_empty() {
-                        div()
-                            .p(px(20.0))
+                        Empty::new()
+                            .bordered(true)
+                            .p(px(24.0))
                             .bg(theme.bg_surface)
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .text_xs()
-                            .text_color(theme.text_muted)
-                            .child(umuryango_i18n::t(state.locale, "wallets.no_wallets"))
+                            .theme(theme)
+                            .child(
+                                EmptyHeader::new()
+                                    .child(
+                                        EmptyMedia::from_icon(AppIcon::PersonalWallet).theme(theme),
+                                    )
+                                    .child(
+                                        EmptyDescription::new(umuryango_i18n::t(
+                                            state.locale,
+                                            "wallets.no_wallets",
+                                        ))
+                                        .theme(theme),
+                                    ),
+                            )
                             .into_any_element()
                     } else {
                         div()
@@ -269,28 +239,30 @@ impl DashboardScreen {
                     .gap(px(16.0))
                     .mb(px(24.0))
                     .child(
-                        div()
+                        Card::new()
+                            .size(CardSize::Sm)
                             .flex_1()
-                            .p(px(18.0))
-                            .bg(theme.bg_surface)
+                            .gap(px(14.0))
+                            .py(px(18.0))
                             .border_1()
                             .border_color(theme.border_subtle)
+                            .theme(theme)
                             .child(
-                                div()
-                                    .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .mb(px(12.0))
-                                    .child(umuryango_i18n::t(
+                                CardHeader::new().size(CardSize::Sm).theme(theme).child(
+                                    CardTitle::new(umuryango_i18n::t(
                                         state.locale,
                                         "dashboard.inflow_outflow_chart",
-                                    )),
+                                    ))
+                                    .text_sm()
+                                    .theme(theme),
+                                ),
                             )
                             .child(
-                                div()
+                                CardContent::new()
+                                    .size(CardSize::Sm)
                                     .flex()
                                     .flex_col()
-                                    .gap(px(12.0))
+                                    .gap(px(14.0))
                                     .child(Self::render_chart_bar(
                                         &Translator::t(state.locale, terms::INCOME, None),
                                         state.total_income(),
@@ -308,51 +280,59 @@ impl DashboardScreen {
                             ),
                     )
                     .child(
-                        div()
+                        Card::new()
+                            .size(CardSize::Sm)
                             .flex_1()
-                            .p(px(18.0))
-                            .bg(theme.bg_surface)
+                            .gap(px(14.0))
+                            .py(px(18.0))
                             .border_1()
                             .border_color(theme.border_subtle)
+                            .theme(theme)
                             .child(
-                                div()
-                                    .text_sm()
-                                    .font_weight(gpui_kit::FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .mb(px(12.0))
-                                    .child(umuryango_i18n::t(
+                                CardHeader::new().size(CardSize::Sm).theme(theme).child(
+                                    CardTitle::new(umuryango_i18n::t(
                                         state.locale,
                                         "dashboard.categories_chart",
-                                    )),
+                                    ))
+                                    .text_sm()
+                                    .theme(theme),
+                                ),
                             )
-                            .child(if category_breakdown.is_empty() {
-                                div()
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(umuryango_i18n::t(
-                                        state.locale,
-                                        "dashboard.no_expenses_yet",
-                                    ))
-                                    .into_any_element()
-                            } else {
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .gap(px(8.0))
-                                    .children(category_breakdown.into_iter().enumerate().map(
-                                        |(idx, (cat, amt, pct))| {
-                                            let color =
-                                                category_colors[idx % category_colors.len()];
-                                            Self::render_donut_row(
-                                                &cat,
-                                                &format!("{}% ({} RWF)", pct, amt),
-                                                color,
-                                                theme,
-                                            )
-                                        },
-                                    ))
-                                    .into_any_element()
-                            }),
+                            .child(CardContent::new().size(CardSize::Sm).child(
+                                if category_breakdown.is_empty() {
+                                    Empty::new()
+                                        .p(px(16.0))
+                                        .theme(theme)
+                                        .child(
+                                            EmptyHeader::new().child(
+                                                EmptyDescription::new(umuryango_i18n::t(
+                                                    state.locale,
+                                                    "dashboard.no_expenses_yet",
+                                                ))
+                                                .theme(theme),
+                                            ),
+                                        )
+                                        .into_any_element()
+                                } else {
+                                    div()
+                                        .flex()
+                                        .flex_col()
+                                        .gap(px(8.0))
+                                        .children(category_breakdown.into_iter().enumerate().map(
+                                            |(idx, (cat, amt, pct))| {
+                                                let color =
+                                                    category_colors[idx % category_colors.len()];
+                                                Self::render_donut_row(
+                                                    &cat,
+                                                    &format!("{}% ({} RWF)", pct, amt),
+                                                    color,
+                                                    theme,
+                                                )
+                                            },
+                                        ))
+                                        .into_any_element()
+                                },
+                            )),
                     ),
             )
             // Row 4: Recent Activity List
@@ -364,24 +344,32 @@ impl DashboardScreen {
                     .child(
                         div()
                             .text_base()
-                            .font_weight(gpui_kit::FontWeight::BOLD)
+                            .font_weight(FontWeight::BOLD)
                             .text_color(theme.text_primary)
                             .child(umuryango_i18n::t(state.locale, "dashboard.recent_activity")),
                     )
                     .child(div().flex().flex_col().gap(px(8.0)).children(
                         if state.transactions.is_empty() {
                             vec![
-                                div()
-                                    .p(px(16.0))
+                                Empty::new()
+                                    .bordered(true)
+                                    .p(px(24.0))
                                     .bg(theme.bg_surface)
-                                    .border_1()
-                                    .border_color(theme.border_subtle)
-                                    .text_xs()
-                                    .text_color(theme.text_muted)
-                                    .child(umuryango_i18n::t(
-                                        state.locale,
-                                        "dashboard.no_recent_activity",
-                                    ))
+                                    .theme(theme)
+                                    .child(
+                                        EmptyHeader::new()
+                                            .child(
+                                                EmptyMedia::from_icon(AppIcon::Transactions)
+                                                    .theme(theme),
+                                            )
+                                            .child(
+                                                EmptyDescription::new(umuryango_i18n::t(
+                                                    state.locale,
+                                                    "dashboard.no_recent_activity",
+                                                ))
+                                                .theme(theme),
+                                            ),
+                                    )
                                     .into_any_element(),
                             ]
                         } else {
@@ -416,34 +404,43 @@ impl DashboardScreen {
         value_color: gpui_kit::Hsla,
         theme: &SemanticTheme,
     ) -> impl IntoElement {
-        div()
-            .id(id)
-            .p(px(16.0))
-            .bg(theme.bg_surface)
-            .border_1()
-            .border_color(theme.border_subtle)
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .justify_between()
-                    .child(
+        div().id(id).child(
+            Card::new()
+                .size(CardSize::Sm)
+                .gap(px(8.0))
+                .py(px(16.0))
+                .border_1()
+                .border_color(theme.border_subtle)
+                .theme(theme)
+                .child(
+                    CardHeader::new()
+                        .size(CardSize::Sm)
+                        .px(px(16.0))
+                        .action(CardAction::new().child(app_icon(
+                            icon,
+                            IconSize::Sm,
+                            icon_tone,
+                            theme,
+                        )))
+                        .theme(theme)
+                        .child(
+                            div()
+                                .text_xs()
+                                .font_weight(FontWeight::MEDIUM)
+                                .text_color(theme.text_muted)
+                                .child(label.to_string()),
+                        ),
+                )
+                .child(
+                    CardContent::new().size(CardSize::Sm).px(px(16.0)).child(
                         div()
-                            .text_xs()
-                            .font_weight(gpui_kit::FontWeight::MEDIUM)
-                            .text_color(theme.text_muted)
-                            .child(label.to_string()),
-                    )
-                    .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
-            )
-            .child(
-                div()
-                    .mt(px(6.0))
-                    .text_xl()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
-                    .text_color(value_color)
-                    .child(value.to_string()),
-            )
+                            .text_xl()
+                            .font_weight(FontWeight::BOLD)
+                            .text_color(value_color)
+                            .child(value.to_string()),
+                    ),
+                ),
+        )
     }
 
     fn render_chart_bar(
@@ -453,33 +450,19 @@ impl DashboardScreen {
         bar_color: gpui_kit::Hsla,
         theme: &SemanticTheme,
     ) -> impl IntoElement {
-        let ratio = if total > Decimal::ZERO {
-            (amount / total).to_f32().unwrap_or(0.0).clamp(0.0, 1.0)
+        let pct_f32 = if total > Decimal::ZERO {
+            ((amount / total).to_f32().unwrap_or(0.0).clamp(0.0, 1.0)) * 100.0
         } else {
             0.0
         };
-        let pct = (ratio * 100.0).round() as i32;
+        let pct = pct_f32.round() as i32;
 
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(4.0))
-            .child(
-                div()
-                    .flex()
-                    .justify_between()
-                    .text_xs()
-                    .text_color(theme.text_primary)
-                    .child(format!("{} ({} RWF)", label, amount))
-                    .child(format!("{}%", pct)),
-            )
-            .child(
-                div()
-                    .w_full()
-                    .h(px(12.0))
-                    .bg(theme.bg_elevated)
-                    .child(div().h_full().bg(bar_color).w(relative(ratio))),
-            )
+        Progress::new(pct_f32)
+            .indicator_color(bar_color)
+            .gap(px(6.0))
+            .theme(theme)
+            .child(ProgressLabel::new(format!("{} ({} RWF)", label, amount)).theme(theme))
+            .child(ProgressValue::new(format!("{}%", pct)).theme(theme))
     }
 
     fn render_donut_row(
@@ -509,7 +492,7 @@ impl DashboardScreen {
             .child(
                 div()
                     .text_xs()
-                    .font_weight(gpui_kit::FontWeight::BOLD)
+                    .font_weight(FontWeight::BOLD)
                     .text_color(theme.text_muted)
                     .child(percent.to_string()),
             )
