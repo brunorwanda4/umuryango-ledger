@@ -34,6 +34,7 @@ impl RootView {
                 && let Ok(locked) = db.lock()
             {
                 self.state.save_session_to_db(&locked);
+                self.state.save_navigation_to_db(&locked);
             }
             let client = self.api.client.clone();
             let is_auth = self.state.is_authenticated;
@@ -77,8 +78,7 @@ impl RootView {
             cx.notify();
             self.refresh_active_scope(cx);
         } else {
-            self.state.current_screen = Screen::Onboarding;
-            cx.notify();
+            self.select_screen(Screen::Onboarding, cx);
         }
     }
 
@@ -105,12 +105,16 @@ impl RootView {
     }
 
     pub fn handle_logout(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let locale = self.state.locale;
+        self.state.reset_session();
+
         #[cfg(not(target_arch = "wasm32"))]
         {
             if let Some(ref db) = self.db
                 && let Ok(locked) = db.lock()
             {
                 crate::state::AppState::clear_session_in_db(&locked);
+                self.state.save_navigation_to_db(&locked);
             }
             let client = self.api.client.clone();
             let fut = self.api.run(async move {
@@ -122,8 +126,6 @@ impl RootView {
             .detach();
         }
 
-        let locale = self.state.locale;
-        self.state.reset_session();
         self.auth_inputs.clear_passwords(window, cx);
         self.onboarding_inputs.clear_all(window, cx);
         self.quick_entry_inputs.reset(window, cx);
@@ -134,12 +136,16 @@ impl RootView {
     }
 
     pub(crate) fn handle_session_expired(&mut self, cx: &mut Context<Self>) {
+        let locale = self.state.locale;
+        self.state.reset_session();
+
         #[cfg(not(target_arch = "wasm32"))]
         {
             if let Some(ref db) = self.db
                 && let Ok(locked) = db.lock()
             {
                 crate::state::AppState::clear_session_in_db(&locked);
+                self.state.save_navigation_to_db(&locked);
             }
             let client = self.api.client.clone();
             let fut = self.api.run(async move {
@@ -151,8 +157,6 @@ impl RootView {
             .detach();
         }
 
-        let locale = self.state.locale;
-        self.state.reset_session();
         self.state
             .set_toast(umuryango_i18n::t(locale, "auth.session_expired"), true);
         cx.notify();
@@ -433,6 +437,7 @@ impl RootView {
         self.state.user_phone = user_phone;
         self.state.auth_token = Some(auth.token);
         self.state.is_authenticated = true;
+        self.state.auth_mode_register = false;
         self.state.auth_password.clear();
         self.state.auth_confirm_password.clear();
         self.state.families = auth.families;
@@ -465,6 +470,7 @@ impl RootView {
             && let Ok(locked) = db.lock()
         {
             self.state.save_session_to_db(&locked);
+            self.state.save_navigation_to_db(&locked);
         }
 
         let toast_key = if is_new_account {
@@ -561,6 +567,7 @@ impl RootView {
                             this.state.onboarding_phone_draft.clear();
                             this.state.onboarding_member_phones.clear();
                             this.state.current_screen = Screen::Dashboard;
+                            this.persist_navigation();
                             this.state.set_toast(
                                 umuryango_i18n::t_args(
                                     locale,
@@ -693,6 +700,7 @@ impl RootView {
                         drop(db_lock);
                         this.state.onboarding_join_code.clear();
                         this.state.current_screen = Screen::Dashboard;
+                        this.persist_navigation();
                         this.state.set_toast(
                             Translator::t(locale, terms::CONTINUE_TO_DASHBOARD, None),
                             false,
@@ -727,6 +735,7 @@ impl RootView {
         );
         drop(db_lock);
         self.state.current_screen = Screen::Dashboard;
+        self.persist_navigation();
         cx.notify();
         self.refresh_active_scope(cx);
     }

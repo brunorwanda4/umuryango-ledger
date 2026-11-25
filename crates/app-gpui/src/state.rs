@@ -28,7 +28,7 @@ const SESSION_KEY_TOKEN: &str = "session.token";
 const SESSION_KEY_USER_ID: &str = "session.user_id";
 const SESSION_KEY_USER_NAME: &str = "session.user_name";
 const SESSION_KEY_USER_PHONE: &str = "session.user_phone";
-const SESSION_KEY_LOCALE: &str = "session.locale";
+pub(crate) const SESSION_KEY_LOCALE: &str = "session.locale";
 const SESSION_KEY_FAMILY_ID: &str = "session.active_family_id";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -427,6 +427,7 @@ impl AppState {
         self.onboarding_phone_draft.clear();
         self.onboarding_member_phones.clear();
         self.onboarding_join_code.clear();
+        self.auth_mode_register = false;
         self.current_screen = Screen::Auth;
     }
 
@@ -514,12 +515,13 @@ impl AppState {
         crate::safe_area::platform::set_system_bars_contrast(self.theme_mode != ThemeMode::Dark);
 
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(database) = db
-            && !self.user_id.is_nil()
-        {
-            let repo = CacheRepository::new(database);
-            let prefs = self.theme_config.to_prefs(self.theme_mode);
-            let _ = repo.save_theme_prefs(self.user_id, &prefs);
+        if let Some(database) = db {
+            self.save_theme_mode_to_db(database);
+            if !self.user_id.is_nil() {
+                let repo = CacheRepository::new(database);
+                let prefs = self.theme_config.to_prefs(self.theme_mode);
+                let _ = repo.save_theme_prefs(self.user_id, &prefs);
+            }
         }
         #[cfg(target_arch = "wasm32")]
         let _ = db;

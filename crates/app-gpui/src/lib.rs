@@ -7,6 +7,7 @@ pub mod components;
 pub mod db_facade;
 pub mod hooks;
 pub mod mobile;
+mod navigation_persistence;
 pub mod safe_area;
 pub mod screens;
 pub mod state;
@@ -73,10 +74,11 @@ impl RootView {
         cx: &mut Context<Self>,
     ) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
-        let restored_token = db
-            .as_ref()
-            .and_then(|d| d.lock().ok())
-            .and_then(|locked| state.restore_session_from_db(&locked));
+        let restored_token = db.as_ref().and_then(|d| d.lock().ok()).and_then(|locked| {
+            let token = state.restore_session_from_db(&locked);
+            state.restore_navigation_from_db(&locked);
+            token
+        });
 
         let api = ApiBridge::new(state.locale);
         state.api_base_url = api.base_url();
@@ -116,7 +118,25 @@ impl RootView {
 
     pub fn select_screen(&mut self, screen: Screen, cx: &mut Context<Self>) {
         self.state.select_screen(screen);
+        self.persist_navigation();
         cx.notify();
+    }
+
+    pub fn toggle_auth_mode(&mut self, cx: &mut Context<Self>) {
+        if !self.state.is_busy {
+            self.state.auth_mode_register = !self.state.auth_mode_register;
+            self.persist_navigation();
+            cx.notify();
+        }
+    }
+
+    pub(crate) fn persist_navigation(&self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(ref db) = self.db
+            && let Ok(locked) = db.lock()
+        {
+            self.state.save_navigation_to_db(&locked);
+        }
     }
 
     pub fn toggle_theme(&mut self, cx: &mut Context<Self>) {
