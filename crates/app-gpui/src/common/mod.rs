@@ -30,6 +30,7 @@ pub mod skeleton;
 pub mod slider;
 pub mod spinner;
 pub mod switch;
+pub mod tabs;
 pub mod textarea;
 pub mod toggle;
 pub mod toggle_group;
@@ -102,6 +103,9 @@ pub use slider::{
 };
 pub use spinner::{Spinner, spinner, spinner_static};
 pub use switch::{KitSwitch, Switch, SwitchSize, switch_field};
+pub use tabs::{
+    KitTab, KitTabBar, Tabs, TabsContent, TabsList, TabsListVariant, TabsOrientation, TabsTrigger,
+};
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use toggle::{KitToggle, Toggle, ToggleSize, ToggleVariant};
 pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};
