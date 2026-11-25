@@ -9,6 +9,7 @@ pub mod attachment;
 pub mod avatar;
 pub mod badge;
 pub mod breadcrumb;
+pub mod bubble;
 pub mod button;
 pub mod button_group;
 pub mod calendar;
@@ -87,6 +88,11 @@ pub use badge::{Badge, BadgeVariant, OverlayCountBadge, badge};
 pub use breadcrumb::{
     Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
     BreadcrumbSeparator, KitBreadcrumb, KitBreadcrumbItem,
+};
+pub use bubble::{
+    Bubble, BubbleAlign, BubbleContent, BubbleGroup, BubbleReactionSide, BubbleReactions,
+    BubbleVariant, KitBubble, KitBubbleContent, KitBubbleGroup, KitBubbleReactionSide,
+    KitBubbleReactions, KitBubbleVariant,
 };
 pub use button::{Button, ButtonSize, ButtonVariant, KitButton, button};
 pub use button_group::{
