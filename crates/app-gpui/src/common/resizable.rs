@@ -21,8 +21,7 @@ pub use gpui_kit::component::resizable::{
 use gpui_kit::component::StyledExt as _;
 use gpui_kit::{
     AnyElement, App, Axis, ElementId, Entity, FocusHandle, InteractiveElement, IntoElement,
-    ParentElement, Pixels, RenderOnce, StatefulInteractiveElement, StyleRefinement, Styled, Window,
-    deferred, div, px,
+    ParentElement, Pixels, RenderOnce, StyleRefinement, Styled, Window, deferred, div, px,
 };
 
 use crate::common::utils::{PresetRadius, PresetTokens, StyleComposeExt, focus_ring_shadow};

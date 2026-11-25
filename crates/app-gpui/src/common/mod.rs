@@ -34,6 +34,7 @@ pub mod skeleton;
 pub mod slider;
 pub mod spinner;
 pub mod switch;
+pub mod table;
 pub mod tabs;
 pub mod textarea;
 pub mod toggle;
@@ -124,6 +125,10 @@ pub use slider::{
 };
 pub use spinner::{Spinner, spinner, spinner_static};
 pub use switch::{KitSwitch, Switch, SwitchSize, switch_field};
+pub use table::{
+    KitColumnSort, KitDataTable, KitTable, KitTableColumn, KitTableDelegate, KitTableState, Table,
+    TableAlign, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow,
+};
 pub use tabs::{
     KitTab, KitTabBar, Tabs, TabsContent, TabsList, TabsListVariant, TabsOrientation, TabsTrigger,
 };
