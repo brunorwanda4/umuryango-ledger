@@ -37,6 +37,7 @@ pub mod kbd;
 pub mod label;
 pub mod marker;
 pub mod menubar;
+pub mod message;
 pub mod native_select;
 pub mod navigation_menu;
 pub mod pagination;
@@ -191,6 +192,11 @@ pub use menubar::{
     MenubarItemVariant, MenubarLabel, MenubarMenu, MenubarPortal, MenubarRadioGroup,
     MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent,
     MenubarSubTrigger, MenubarTrigger, menubar_checkbox_item, menubar_content, menubar_radio_item,
+};
+pub use message::{
+    KitMessage, KitMessageAlignment, KitMessageAvatar, KitMessageContent, KitMessageFooter,
+    KitMessageGroup, KitMessageHeader, Message, MessageAlign, MessageAvatar, MessageContent,
+    MessageFooter, MessageGroup, MessageHeader,
 };
 pub use native_select::{
     NativeSelect, NativeSelectOptGroup, NativeSelectOption, NativeSelectSize,
