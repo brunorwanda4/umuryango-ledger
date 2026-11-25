@@ -121,6 +121,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `c440e3a` | `feat(ui): port shadcn trace to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `d23283f` | `feat(ui): port shadcn questionnaire to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-25** | `44a19df` | `feat(ui): port shadcn sidebar to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-25** | `ad6a498` | `refactor(ui): split questionnaire and sidebar into submodules under 1000-line limit` | `cargo check -p umuryango-app` |
 
 ---
 

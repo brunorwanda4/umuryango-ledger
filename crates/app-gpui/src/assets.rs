@@ -83,12 +83,17 @@ const EMBEDDED_ASSETS: &[(&str, &[u8])] = &[
     fa_icon!("xmark.svg"),
 ];
 
+fn kit_assets() -> &'static gpui_kit::assets::Assets {
+    static KIT_ASSETS: std::sync::OnceLock<gpui_kit::assets::Assets> = std::sync::OnceLock::new();
+    KIT_ASSETS.get_or_init(|| gpui_kit::assets::Assets::new(""))
+}
+
 impl AssetSource for AppAssets {
     fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
         if let Some((_, bytes)) = EMBEDDED_ASSETS.iter().find(|(p, _)| *p == path) {
             return Ok(Some(Cow::Borrowed(bytes)));
         }
-        gpui_kit::assets::Assets.load(path)
+        kit_assets().load(path)
     }
 
     fn list(&self, path: &str) -> Result<Vec<SharedString>> {
@@ -97,7 +102,7 @@ impl AssetSource for AppAssets {
             .filter(|(p, _)| p.starts_with(path))
             .map(|(p, _)| SharedString::from(*p))
             .collect();
-        results.extend(gpui_kit::assets::Assets.list(path)?);
+        results.extend(kit_assets().list(path)?);
         Ok(results)
     }
 }
@@ -134,6 +139,8 @@ mod tests {
             AppIcon::Close,
             AppIcon::ChevronDown,
             AppIcon::ChevronRight,
+            AppIcon::ArrowUp,
+            AppIcon::ArrowDown,
             AppIcon::Eye,
             AppIcon::EyeSlash,
             AppIcon::Sun,
