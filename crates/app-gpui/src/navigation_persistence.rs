@@ -1,9 +1,9 @@
-//! Local persistence for active screen, auth mode (Login vs Register), and pre-auth UI preferences.
+//! Local persistence for active screen, auth mode (Login vs Register), onboarding step, and pre-auth UI preferences.
 
 use crate::db_facade::LocalDatabase;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::state::SESSION_KEY_LOCALE;
-use crate::state::{AppState, Screen};
+use crate::state::{AppState, OnboardingStep, Screen};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::theme::{SemanticTheme, ThemeMode};
 #[cfg(not(target_arch = "wasm32"))]
@@ -14,7 +14,30 @@ const NAV_KEY_CURRENT_SCREEN: &str = "nav.current_screen";
 #[cfg(not(target_arch = "wasm32"))]
 const NAV_KEY_AUTH_MODE_REGISTER: &str = "nav.auth_mode_register";
 #[cfg(not(target_arch = "wasm32"))]
+const NAV_KEY_ONBOARDING_STEP: &str = "nav.onboarding_step";
+#[cfg(not(target_arch = "wasm32"))]
 const UI_KEY_THEME_MODE: &str = "ui.theme_mode";
+
+impl OnboardingStep {
+    /// Stable lowercase slug persisted in local SQLite `app_config`.
+    pub fn as_slug(self) -> &'static str {
+        match self {
+            OnboardingStep::Choose => "choose",
+            OnboardingStep::CreateFamily => "create",
+            OnboardingStep::JoinFamily => "join",
+        }
+    }
+
+    /// Parses a persisted slug back into an `OnboardingStep`.
+    pub fn from_slug(slug: &str) -> Option<Self> {
+        match slug.trim().to_ascii_lowercase().as_str() {
+            "choose" => Some(OnboardingStep::Choose),
+            "create" => Some(OnboardingStep::CreateFamily),
+            "join" => Some(OnboardingStep::JoinFamily),
+            _ => None,
+        }
+    }
+}
 
 impl Screen {
     /// Stable lowercase slug persisted in local SQLite `app_config`.
@@ -57,7 +80,7 @@ impl Screen {
 }
 
 impl AppState {
-    /// Persists the current screen, auth mode (Login vs Register), and locale into SQLite `app_config`.
+    /// Persists the current screen, auth mode (Login vs Register), onboarding step, and locale into SQLite `app_config`.
     #[cfg(target_arch = "wasm32")]
     pub fn save_navigation_to_db(&self, _db: &LocalDatabase) {}
 
@@ -72,6 +95,7 @@ impl AppState {
                 "false"
             },
         );
+        let _ = db.set_config(NAV_KEY_ONBOARDING_STEP, self.onboarding_step.as_slug());
         let _ = db.set_config(SESSION_KEY_LOCALE, self.locale.as_str());
     }
 
@@ -88,7 +112,7 @@ impl AppState {
         let _ = db.set_config(UI_KEY_THEME_MODE, mode_str);
     }
 
-    /// Restores the last visited screen, Login/Register mode, and pre-auth UI preferences.
+    /// Restores the last visited screen, Login/Register mode, onboarding step, and pre-auth UI preferences.
     ///
     /// Must be called after `restore_session_from_db`:
     /// - When unauthenticated, never restores an authenticated-only screen (stays on `Screen::Auth`),
@@ -122,6 +146,7 @@ impl AppState {
                     self.theme_mode != ThemeMode::Dark,
                 );
             }
+            self.onboarding_step = OnboardingStep::Choose;
             self.current_screen = Screen::Auth;
             return;
         }
@@ -133,6 +158,16 @@ impl AppState {
             .and_then(|slug| Screen::from_slug(&slug))
             .filter(|screen| screen.requires_auth())
             .unwrap_or(Screen::Dashboard);
+
+        self.onboarding_step = if restored_screen == Screen::Onboarding {
+            db.get_config(NAV_KEY_ONBOARDING_STEP)
+                .ok()
+                .flatten()
+                .and_then(|slug| OnboardingStep::from_slug(&slug))
+                .unwrap_or(OnboardingStep::Choose)
+        } else {
+            OnboardingStep::Choose
+        };
 
         self.current_screen = restored_screen;
     }
@@ -163,6 +198,15 @@ mod tests {
             assert_eq!(Screen::from_slug(screen.as_slug()), Some(screen));
         }
         assert_eq!(Screen::from_slug("unknown-screen"), None);
+
+        for step in [
+            OnboardingStep::Choose,
+            OnboardingStep::CreateFamily,
+            OnboardingStep::JoinFamily,
+        ] {
+            assert_eq!(OnboardingStep::from_slug(step.as_slug()), Some(step));
+        }
+        assert_eq!(OnboardingStep::from_slug("unknown-step"), None);
     }
 
     #[test]
@@ -228,7 +272,7 @@ mod tests {
     }
 
     #[test]
-    fn authenticated_startup_restores_onboarding_screen() {
+    fn authenticated_startup_restores_onboarding_screen_and_step() {
         let db = LocalDatabase::open_in_memory().expect("in-memory db");
         let uid = Uuid::new_v4();
 
@@ -236,6 +280,7 @@ mod tests {
         first_run.auth_token = Some("jwt-onboarding".to_string());
         first_run.is_authenticated = true;
         first_run.current_screen = Screen::Onboarding;
+        first_run.onboarding_step = OnboardingStep::JoinFamily;
         first_run.save_session_to_db(&db);
         first_run.save_navigation_to_db(&db);
 
@@ -244,6 +289,7 @@ mod tests {
         reopened.restore_navigation_from_db(&db);
 
         assert_eq!(reopened.current_screen, Screen::Onboarding);
+        assert_eq!(reopened.onboarding_step, OnboardingStep::JoinFamily);
     }
 
     #[test]
@@ -256,6 +302,7 @@ mod tests {
         state.is_authenticated = true;
         state.current_screen = Screen::Loans;
         state.auth_mode_register = true;
+        state.onboarding_step = OnboardingStep::CreateFamily;
         state.save_session_to_db(&db);
         state.save_navigation_to_db(&db);
 
@@ -269,5 +316,6 @@ mod tests {
 
         assert_eq!(reopened.current_screen, Screen::Auth);
         assert!(!reopened.auth_mode_register);
+        assert_eq!(reopened.onboarding_step, OnboardingStep::Choose);
     }
 }

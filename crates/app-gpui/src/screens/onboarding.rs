@@ -5,12 +5,13 @@ use umuryango_i18n::{Translator, terms};
 use super::onboarding_inputs::OnboardingInputs;
 use crate::RootView;
 use crate::common::{
-    Alert, AlertTitle, Badge, Button, ButtonSize, Card, CardContent, CardHeader, CardSize,
-    CardTitle, Item, ItemActions, ItemContent, ItemSize, text_field,
+    Alert, AlertTitle, Badge, Button, ButtonSize, ButtonVariant, Card, CardContent, CardFooter,
+    CardHeader, CardSize, CardTitle, Field, InputOTP, Item, ItemActions, ItemContent, ItemSize,
+    Label, Tooltip, text_field,
 };
-use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
+use crate::components::icon::{AppIcon, BrandMark, brand_mark};
 use crate::components::lang_toggle::LangToggle;
-use crate::state::AppState;
+use crate::state::{AppState, OnboardingStep};
 use crate::theme::{SemanticTheme, ThemeMode};
 
 pub struct OnboardingScreen;
@@ -68,72 +69,105 @@ impl OnboardingScreen {
                             })),
                     ),
             )
-            // Main Onboarding Container
+            // Active Onboarding Page
+            .child(match state.onboarding_step {
+                OnboardingStep::Choose => {
+                    Self::render_choose_page(state, theme, cx).into_any_element()
+                }
+                OnboardingStep::CreateFamily => {
+                    Self::render_create_family_page(state, inputs, theme, cx).into_any_element()
+                }
+                OnboardingStep::JoinFamily => {
+                    Self::render_join_family_page(state, inputs, theme, cx).into_any_element()
+                }
+            })
+    }
+
+    fn render_choose_page(
+        state: &AppState,
+        theme: &SemanticTheme,
+        cx: &Context<RootView>,
+    ) -> impl IntoElement {
+        Card::new()
+            .size(CardSize::Sm)
+            .w(px(460.0))
+            .gap(px(18.0))
+            .py(px(24.0))
+            .theme(theme)
             .child(
-                div()
-                    .w(px(520.0))
-                    .max_w(px(520.0))
+                CardHeader::new()
+                    .size(CardSize::Sm)
+                    .items_center()
+                    .theme(theme)
+                    .child(
+                        div()
+                            .w_full()
+                            .flex()
+                            .flex_col()
+                            .items_center()
+                            .gap(px(10.0))
+                            .child(brand_mark(BrandMark::Logo, 64.0))
+                            .child(
+                                CardTitle::new(Translator::t(
+                                    state.locale,
+                                    terms::ONBOARDING_TITLE,
+                                    None,
+                                ))
+                                .text_center()
+                                .theme(theme),
+                            ),
+                    ),
+            )
+            .child(
+                CardContent::new()
+                    .size(CardSize::Sm)
                     .flex()
                     .flex_col()
-                    .gap(px(16.0))
-                    // Header Card
-                    .child(
-                        Card::new()
-                            .size(CardSize::Sm)
-                            .py(px(20.0))
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .theme(theme)
-                            .child(
-                                CardHeader::new().size(CardSize::Sm).theme(theme).child(
-                                    div()
-                                        .w_full()
-                                        .flex()
-                                        .flex_col()
-                                        .items_center()
-                                        .gap(px(10.0))
-                                        .child(brand_mark(BrandMark::Logo, 56.0))
-                                        .child(
-                                            CardTitle::new(Translator::t(
-                                                state.locale,
-                                                terms::ONBOARDING_TITLE,
-                                                None,
-                                            ))
-                                            .text_center()
-                                            .theme(theme),
-                                        ),
-                                ),
-                            ),
-                    )
-                    // Pending Invites Banner (from real PostgreSQL)
+                    .gap(px(12.0))
                     .children(if !state.pending_invites.is_empty() {
                         Some(Self::render_pending_invites(state, theme, cx))
                     } else {
                         None
                     })
-                    // Option 1: Create Family Card
-                    .child(Self::render_create_family_card(state, inputs, theme, cx))
-                    // Option 2: Join Family Card
-                    .child(Self::render_join_family_card(state, inputs, theme, cx))
-                    // Option 3: Skip for now -> Personal Ledger
                     .child(
-                        div()
+                        Button::new("onboarding-choose-create-btn")
+                            .icon_start(AppIcon::Add)
+                            .disabled(state.is_busy)
+                            .label(Translator::t(state.locale, terms::CREATE_FAMILY, None))
                             .w_full()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .py(px(4.0))
-                            .child(
-                                Button::new("onboarding-skip-btn")
-                                    .ghost()
-                                    .size(ButtonSize::Sm)
-                                    .label(Translator::t(state.locale, terms::SKIP_FOR_NOW, None))
-                                    .text_color(theme.text_muted)
-                                    .theme(theme)
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.handle_skip_onboarding(cx);
-                                    })),
-                            ),
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.set_onboarding_step(OnboardingStep::CreateFamily, window, cx);
+                            })),
+                    )
+                    .child(
+                        Button::new("onboarding-choose-join-btn")
+                            .outline()
+                            .icon_start(AppIcon::FamilyLedger)
+                            .disabled(state.is_busy)
+                            .label(Translator::t(state.locale, terms::JOIN_FAMILY, None))
+                            .w_full()
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.set_onboarding_step(OnboardingStep::JoinFamily, window, cx);
+                            })),
+                    ),
+            )
+            .child(
+                CardFooter::new()
+                    .size(CardSize::Sm)
+                    .justify_center()
+                    .theme(theme)
+                    .child(
+                        Button::new("onboarding-skip-btn")
+                            .link()
+                            .size(ButtonSize::Sm)
+                            .disabled(state.is_busy)
+                            .label(Translator::t(state.locale, terms::SKIP_FOR_NOW, None))
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.handle_skip_onboarding(cx);
+                            })),
                     ),
             )
     }
@@ -223,7 +257,7 @@ impl OnboardingScreen {
             )
     }
 
-    fn render_create_family_card(
+    fn render_create_family_page(
         state: &AppState,
         inputs: &OnboardingInputs,
         theme: &SemanticTheme,
@@ -237,37 +271,23 @@ impl OnboardingScreen {
 
         Card::new()
             .size(CardSize::Sm)
-            .gap(px(14.0))
-            .py(px(18.0))
-            .border_1()
-            .border_color(theme.border_subtle)
+            .w(px(460.0))
+            .gap(px(18.0))
+            .py(px(24.0))
             .theme(theme)
-            .child(
-                CardHeader::new().size(CardSize::Sm).theme(theme).child(
-                    div()
-                        .flex()
-                        .flex_row()
-                        .items_center()
-                        .gap(px(8.0))
-                        .child(app_icon(
-                            AppIcon::Add,
-                            IconSize::Sm,
-                            IconTone::AccentPrimary,
-                            theme,
-                        ))
-                        .child(
-                            CardTitle::new(Translator::t(state.locale, terms::CREATE_FAMILY, None))
-                                .text_sm()
-                                .theme(theme),
-                        ),
-                ),
-            )
+            .child(Self::render_step_header(
+                "onboarding-create-back-btn",
+                Translator::t(state.locale, terms::CREATE_FAMILY, None),
+                state,
+                theme,
+                cx,
+            ))
             .child(
                 CardContent::new()
                     .size(CardSize::Sm)
                     .flex()
                     .flex_col()
-                    .gap(px(12.0))
+                    .gap(px(14.0))
                     // Editable Family Name Input
                     .child(text_field(
                         "onboarding-family-name-input",
@@ -294,18 +314,28 @@ impl OnboardingScreen {
                                         theme,
                                     )))
                                     .child(
-                                        Button::new("add-member-phone-btn")
-                                            .outline()
-                                            .size(ButtonSize::Sm)
-                                            .label(Translator::t(
+                                        Tooltip::new(
+                                            "Add-new member",
+                                            Translator::t(
                                                 state.locale,
-                                                terms::ADD_PHONE_BTN,
+                                                terms::ADD_MEMBER_PHONE,
                                                 None,
-                                            ))
-                                            .theme(theme)
-                                            .on_click(cx.listener(|this, _, window, cx| {
-                                                this.add_onboarding_phone_with_window(window, cx);
-                                            })),
+                                            ),
+                                        )
+                                        .child(
+                                            Button::new("add-member-phone-btn")
+                                                .outline()
+                                                .icon(AppIcon::Add)
+                                                .size(ButtonSize::Sm)
+                                                .variant(ButtonVariant::Outline)
+                                                .disabled(state.is_busy)
+                                                .theme(theme)
+                                                .on_click(cx.listener(|this, _, window, cx| {
+                                                    this.add_onboarding_phone_with_window(
+                                                        window, cx,
+                                                    );
+                                                })),
+                                        ),
                                     ),
                             )
                             .children(if !state.onboarding_member_phones.is_empty() {
@@ -333,7 +363,6 @@ impl OnboardingScreen {
                     // Create Family Submit Button
                     .child(
                         Button::new("create-family-submit-btn")
-                            .icon_start(AppIcon::Check)
                             .loading(state.is_busy)
                             .label(submit_label)
                             .w_full()
@@ -343,9 +372,26 @@ impl OnboardingScreen {
                             })),
                     ),
             )
+            .child(
+                CardFooter::new()
+                    .size(CardSize::Sm)
+                    .justify_center()
+                    .theme(theme)
+                    .child(
+                        Button::new("onboarding-switch-to-join-btn")
+                            .link()
+                            .size(ButtonSize::Sm)
+                            .disabled(state.is_busy)
+                            .label(Translator::t(state.locale, terms::JOIN_FAMILY, None))
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.set_onboarding_step(OnboardingStep::JoinFamily, window, cx);
+                            })),
+                    ),
+            )
     }
 
-    fn render_join_family_card(
+    fn render_join_family_page(
         state: &AppState,
         inputs: &OnboardingInputs,
         theme: &SemanticTheme,
@@ -359,48 +405,57 @@ impl OnboardingScreen {
 
         Card::new()
             .size(CardSize::Sm)
-            .gap(px(14.0))
-            .py(px(18.0))
-            .border_1()
-            .border_color(theme.border_subtle)
+            .w(px(460.0))
+            .gap(px(18.0))
+            .py(px(24.0))
             .theme(theme)
-            .child(
-                CardHeader::new().size(CardSize::Sm).theme(theme).child(
-                    div()
-                        .flex()
-                        .flex_row()
-                        .items_center()
-                        .gap(px(8.0))
-                        .child(app_icon(
-                            AppIcon::FamilyLedger,
-                            IconSize::Sm,
-                            IconTone::AccentPrimary,
-                            theme,
-                        ))
-                        .child(
-                            CardTitle::new(Translator::t(state.locale, terms::JOIN_FAMILY, None))
-                                .text_sm()
-                                .theme(theme),
-                        ),
-                ),
-            )
+            .child(Self::render_step_header(
+                "onboarding-join-back-btn",
+                Translator::t(state.locale, terms::JOIN_FAMILY, None),
+                state,
+                theme,
+                cx,
+            ))
             .child(
                 CardContent::new()
                     .size(CardSize::Sm)
                     .flex()
                     .flex_col()
-                    .gap(px(12.0))
-                    // Editable 4-Character Code Input
-                    .child(text_field(
-                        "onboarding-join-code-input",
-                        Translator::t(state.locale, terms::ENTER_4_CHAR_CODE, None),
-                        &inputs.join_code,
-                        theme,
-                    ))
+                    .gap(px(20.0))
+                    // 4-Character Uppercase OTP Input
+                    .child(
+                        Field::new()
+                            .items_center()
+                            .gap(px(12.0))
+                            .theme(theme)
+                            .child(
+                                Label::new(Translator::t(
+                                    state.locale,
+                                    terms::ENTER_4_CHAR_CODE,
+                                    None,
+                                ))
+                                .text_center()
+                                .theme(theme),
+                            )
+                            .child(
+                                InputOTP::new(&inputs.join_code)
+                                    .groups(1)
+                                    .uppercase_alphanumeric(true)
+                                    .disabled(state.is_busy)
+                                    .theme(theme)
+                                    .on_change(cx.listener(|this, code: &String, _, cx| {
+                                        this.state.onboarding_join_code = code.clone();
+                                        cx.notify();
+                                    }))
+                                    .on_submit(cx.listener(|this, code: &String, _, cx| {
+                                        this.state.onboarding_join_code = code.clone();
+                                        this.handle_join_family_submit(cx);
+                                    })),
+                            ),
+                    )
                     // Join Family Submit Button
                     .child(
                         Button::new("join-family-submit-btn")
-                            .icon_start(AppIcon::ChevronRight)
                             .loading(state.is_busy)
                             .label(submit_label)
                             .w_full()
@@ -409,6 +464,70 @@ impl OnboardingScreen {
                                 this.handle_join_family_submit(cx);
                             })),
                     ),
+            )
+            .child(
+                CardFooter::new()
+                    .size(CardSize::Sm)
+                    .justify_center()
+                    .theme(theme)
+                    .child(
+                        Button::new("onboarding-switch-to-create-btn")
+                            .link()
+                            .size(ButtonSize::Sm)
+                            .disabled(state.is_busy)
+                            .label(Translator::t(state.locale, terms::CREATE_FAMILY, None))
+                            .theme(theme)
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.set_onboarding_step(OnboardingStep::CreateFamily, window, cx);
+                            })),
+                    ),
+            )
+    }
+
+    fn render_step_header(
+        back_btn_id: &'static str,
+        title: String,
+        state: &AppState,
+        theme: &SemanticTheme,
+        cx: &Context<RootView>,
+    ) -> impl IntoElement {
+        CardHeader::new()
+            .size(CardSize::Sm)
+            .items_center()
+            .theme(theme)
+            .child(
+                div()
+                    .w_full()
+                    .flex()
+                    .flex_col()
+                    .items_center()
+                    .gap(px(10.0))
+                    .child(
+                        div()
+                            .w_full()
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .justify_start()
+                            .child(
+                                Button::new(back_btn_id)
+                                    .ghost()
+                                    .size(ButtonSize::Xs)
+                                    .icon_start(AppIcon::ArrowLeft)
+                                    .disabled(state.is_busy)
+                                    .label(umuryango_i18n::t(state.locale, "common.back"))
+                                    .theme(theme)
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        this.set_onboarding_step(
+                                            OnboardingStep::Choose,
+                                            window,
+                                            cx,
+                                        );
+                                    })),
+                            ),
+                    )
+                    .child(brand_mark(BrandMark::Logo, 56.0))
+                    .child(CardTitle::new(title).text_center().theme(theme)),
             )
     }
 }

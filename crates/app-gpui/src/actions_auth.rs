@@ -13,7 +13,7 @@ use uuid::Uuid;
 use crate::RootView;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::api_bridge::ApiBridge;
-use crate::state::Screen;
+use crate::state::{OnboardingStep, Screen};
 
 #[cfg(not(target_arch = "wasm32"))]
 use umuryango_api_client::{
@@ -438,6 +438,7 @@ impl RootView {
         self.state.auth_token = Some(auth.token);
         self.state.is_authenticated = true;
         self.state.auth_mode_register = false;
+        self.state.onboarding_step = OnboardingStep::Choose;
         self.state.auth_password.clear();
         self.state.auth_confirm_password.clear();
         self.state.families = auth.families;
@@ -563,6 +564,7 @@ impl RootView {
                                 db_lock.as_deref(),
                             );
                             drop(db_lock);
+                            this.state.onboarding_step = OnboardingStep::Choose;
                             this.state.onboarding_family_name.clear();
                             this.state.onboarding_phone_draft.clear();
                             this.state.onboarding_member_phones.clear();
@@ -606,10 +608,12 @@ impl RootView {
             return;
         }
         let locale = self.state.locale;
-        let code = self.state.onboarding_join_code.trim().to_uppercase();
+        let code = self.state.onboarding_join_code.trim().to_ascii_uppercase();
         if code.len() != 4 {
-            self.state
-                .set_toast(umuryango_i18n::t(locale, "onboarding.invalid_code"), true);
+            self.state.set_toast(
+                umuryango_i18n::t(locale, "errors.invalid_invite_code"),
+                true,
+            );
             cx.notify();
             return;
         }
@@ -698,6 +702,7 @@ impl RootView {
                             db_lock.as_deref(),
                         );
                         drop(db_lock);
+                        this.state.onboarding_step = OnboardingStep::Choose;
                         this.state.onboarding_join_code.clear();
                         this.state.current_screen = Screen::Dashboard;
                         this.persist_navigation();
@@ -734,6 +739,7 @@ impl RootView {
             db_lock.as_deref(),
         );
         drop(db_lock);
+        self.state.onboarding_step = OnboardingStep::Choose;
         self.state.current_screen = Screen::Dashboard;
         self.persist_navigation();
         cx.notify();

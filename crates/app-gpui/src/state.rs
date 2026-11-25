@@ -31,6 +31,14 @@ const SESSION_KEY_USER_PHONE: &str = "session.user_phone";
 pub(crate) const SESSION_KEY_LOCALE: &str = "session.locale";
 const SESSION_KEY_FAMILY_ID: &str = "session.active_family_id";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum OnboardingStep {
+    #[default]
+    Choose,
+    CreateFamily,
+    JoinFamily,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Screen {
     Auth,
@@ -161,6 +169,7 @@ pub struct AppState {
     pub auth_confirm_password: String,
     pub auth_full_name: String,
     pub auth_gender: String,
+    pub onboarding_step: OnboardingStep,
     pub onboarding_family_name: String,
     pub onboarding_phone_draft: String,
     pub onboarding_member_phones: Vec<String>,
@@ -229,6 +238,7 @@ impl Default for AppState {
             auth_confirm_password: String::new(),
             auth_full_name: String::new(),
             auth_gender: "MALE".to_string(),
+            onboarding_step: OnboardingStep::Choose,
             onboarding_family_name: String::new(),
             onboarding_phone_draft: String::new(),
             onboarding_member_phones: Vec::new(),
@@ -423,6 +433,7 @@ impl AppState {
         self.is_busy = false;
         self.auth_password.clear();
         self.auth_confirm_password.clear();
+        self.onboarding_step = OnboardingStep::Choose;
         self.onboarding_family_name.clear();
         self.onboarding_phone_draft.clear();
         self.onboarding_member_phones.clear();
@@ -493,6 +504,9 @@ impl AppState {
     }
 
     pub fn select_screen(&mut self, screen: Screen) {
+        if screen == Screen::Onboarding {
+            self.onboarding_step = OnboardingStep::Choose;
+        }
         self.current_screen = screen;
     }
 
@@ -760,6 +774,7 @@ mod tests {
         assert!(state.transactions.is_empty());
         assert!(state.family_members.is_empty());
         assert_eq!(state.current_screen, Screen::Auth);
+        assert_eq!(state.onboarding_step, OnboardingStep::Choose);
     }
 
     #[test]

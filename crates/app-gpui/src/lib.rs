@@ -28,7 +28,7 @@ use gpui_kit::{Context, IntoElement, ParentElement, Render, Styled, Window, div,
 pub use safe_area::SafeAreaInsets;
 use screens::auth_inputs::AuthInputs;
 use screens::onboarding_inputs::OnboardingInputs;
-use state::{AppState, Screen};
+use state::{AppState, OnboardingStep, Screen};
 use theme::ThemeMode;
 #[cfg(not(target_arch = "wasm32"))]
 use umuryango_api_client::{RealtimeClient, RealtimeHandle};
@@ -128,6 +128,23 @@ impl RootView {
             self.persist_navigation();
             cx.notify();
         }
+    }
+
+    pub fn set_onboarding_step(
+        &mut self,
+        step: OnboardingStep,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.state.is_busy {
+            return;
+        }
+        self.state.onboarding_step = step;
+        self.persist_navigation();
+        if step == OnboardingStep::JoinFamily {
+            self.onboarding_inputs.focus_join_code(window, cx);
+        }
+        cx.notify();
     }
 
     pub(crate) fn persist_navigation(&self) {
