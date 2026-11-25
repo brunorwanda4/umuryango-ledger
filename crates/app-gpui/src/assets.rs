@@ -10,6 +10,13 @@ use gpui_kit::{AssetSource, Result, SharedString};
 #[derive(Clone, Copy, Debug, Default)]
 pub struct AppAssets;
 
+impl AppAssets {
+    pub const APP_ICON_PATH: &'static str = "crates/app-gpui/assets/icons/icon-256.png";
+    pub const LOGO_PATH: &'static str = "crates/app-gpui/assets/icons/logo-256.png";
+    pub const LOGO_BLACK_PATH: &'static str = "crates/app-gpui/assets/icons/logo-black-256.png";
+    pub const LOGO_WHITE_PATH: &'static str = "crates/app-gpui/assets/icons/logo-white-256.png";
+}
+
 macro_rules! fa_icon {
     ($file:literal) => {
         (
@@ -21,19 +28,19 @@ macro_rules! fa_icon {
 
 const EMBEDDED_ASSETS: &[(&str, &[u8])] = &[
     (
-        "crates/app-gpui/assets/icons/icon-256.png",
+        AppAssets::APP_ICON_PATH,
         include_bytes!("../assets/icons/icon-256.png"),
     ),
     (
-        "crates/app-gpui/assets/icons/logo-256.png",
+        AppAssets::LOGO_PATH,
         include_bytes!("../assets/icons/logo-256.png"),
     ),
     (
-        "crates/app-gpui/assets/icons/logo-black-256.png",
+        AppAssets::LOGO_BLACK_PATH,
         include_bytes!("../assets/icons/logo-black-256.png"),
     ),
     (
-        "crates/app-gpui/assets/icons/logo-white-256.png",
+        AppAssets::LOGO_WHITE_PATH,
         include_bytes!("../assets/icons/logo-white-256.png"),
     ),
     fa_icon!("arrow-left.svg"),
