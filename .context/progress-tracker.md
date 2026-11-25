@@ -83,6 +83,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `a49e5ad` | `feat(ui): port shadcn alert to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `979d208` | `feat(ui): port shadcn empty to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `03e25f4` | `feat(ui): port shadcn item to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `8a05b9b` | `feat(ui): port shadcn marker to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -121,7 +122,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 25. `empty.tsx` → `empty.rs`
 - [x] 26. `item.tsx` → `item.rs`
 - [x] 27. `marker.tsx` → `marker.rs`
-- [ ] 28. `toggle.tsx` → `toggle.rs`
+- [x] 28. `toggle.tsx` → `toggle.rs`
 - [ ] 29. `toggle-group.tsx` → `toggle_group.rs`
 - [ ] 30. `collapsible.tsx` → `collapsible.rs`
 - [ ] 31. `accordion.tsx` → `accordion.rs`
