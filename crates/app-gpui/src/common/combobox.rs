@@ -30,7 +30,7 @@ use crate::common::input_group::{
 use crate::common::popover::{PopoverAlign, PopoverSide, apply_anchored_position};
 use crate::common::select::{SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectValue};
 use crate::common::utils::{PresetRadius, PresetTokens, StyleComposeExt, overlay_surface_shadow};
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::AppIcon;
 use crate::theme::{FONT_FAMILY, SemanticTheme, ThemeConfig, ThemeMode};
 
 fn resolve_theme(explicit: Option<&SemanticTheme>, cx: &App) -> SemanticTheme {

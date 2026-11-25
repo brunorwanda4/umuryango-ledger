@@ -50,6 +50,7 @@ pub mod switch;
 pub mod table;
 pub mod tabs;
 pub mod textarea;
+pub mod toast;
 pub mod toggle;
 pub mod toggle_group;
 pub mod tooltip;
@@ -212,6 +213,12 @@ pub use tabs::{
     KitTab, KitTabBar, Tabs, TabsContent, TabsList, TabsListVariant, TabsOrientation, TabsTrigger,
 };
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
+pub use toast::{
+    KitNotification, KitNotificationList, KitNotificationSettings, KitNotificationType, Toast,
+    ToastAction, ToastClose, ToastContent, ToastDescription, ToastIcon, ToastManager, ToastPortal,
+    ToastProvider, ToastRecord, ToastTitle, ToastType, ToastViewport, Toaster,
+    create_toast_manager,
+};
 pub use toggle::{KitToggle, Toggle, ToggleSize, ToggleVariant};
 pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};
 pub use tooltip::{
