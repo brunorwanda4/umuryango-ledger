@@ -27,6 +27,7 @@ pub mod pagination;
 pub mod progress;
 pub mod radio;
 pub mod radio_group;
+pub mod resizable;
 pub mod scroll_area;
 pub mod separator;
 pub mod skeleton;
@@ -103,6 +104,11 @@ pub use progress::{
 pub use radio::{Radio, RadioGroup, radio_button, radio_field, radio_group_field, radio_option};
 pub use radio_group::{
     RadioGroup as RadioGroupContainer, RadioGroupItem, RadioGroupOrientation,
+};
+pub use resizable::{
+    KitResizablePanel, KitResizablePanelGroup, ResizableHandle, ResizableOrientation,
+    ResizablePanel, ResizablePanelEvent, ResizablePanelGroup, ResizableState,
+    kit_h_resizable, kit_resizable_panel, kit_v_resizable, preset_resize_handle_appearance,
 };
 pub use scroll_area::{
     KitScrollable, KitScrollbar, ScrollArea, ScrollBar, ScrollBarOrientation, ScrollableElement,

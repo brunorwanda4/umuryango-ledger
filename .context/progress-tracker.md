@@ -91,6 +91,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `d77a58a` | `feat(ui): port shadcn tabs to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `bd56b21` | `feat(ui): port shadcn breadcrumb to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `6645ac4` | `feat(ui): port shadcn pagination to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `4798089` | `feat(ui): port shadcn scroll-area to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -137,7 +138,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 33. `breadcrumb.tsx` → `breadcrumb.rs`
 - [x] 34. `pagination.tsx` → `pagination.rs`
 - [x] 35. `scroll-area.tsx` → `scroll_area.rs`
-- [ ] 36. `resizable.tsx` → `resizable.rs`
+- [x] 36. `resizable.tsx` → `resizable.rs`
 - [ ] 37. `table.tsx` → `table.rs`
 - [ ] 38. `tooltip.tsx` → `tooltip.rs`
 - [ ] 39. `popover.tsx` → `popover.rs`
