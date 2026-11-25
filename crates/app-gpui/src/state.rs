@@ -133,6 +133,8 @@ pub struct AppState {
     pub active_family_invite_code: Option<String>,
     pub active_role: FamilyRole,
     pub families: Vec<FamilyWithRole>,
+    pub money_expanded: bool,
+    pub user_menu_open: bool,
 
     pub locale: Locale,
     pub theme_mode: ThemeMode,
@@ -204,6 +206,8 @@ impl Default for AppState {
             active_family_invite_code: None,
             active_role: FamilyRole::Member,
             families: Vec::new(),
+            money_expanded: true,
+            user_menu_open: false,
 
             locale: Locale::Rw,
             theme_mode,
@@ -430,6 +434,7 @@ impl AppState {
         self.show_notifications_drawer = false;
         self.show_quick_entry = false;
         self.active_modal = None;
+        self.user_menu_open = false;
         self.is_busy = false;
         self.auth_password.clear();
         self.auth_confirm_password.clear();
@@ -507,6 +512,7 @@ impl AppState {
         if screen == Screen::Onboarding {
             self.onboarding_step = OnboardingStep::Choose;
         }
+        self.user_menu_open = false;
         self.current_screen = screen;
     }
 

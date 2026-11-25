@@ -190,6 +190,16 @@ impl RootView {
         cx.notify();
     }
 
+    pub fn toggle_money_group(&mut self, cx: &mut Context<Self>) {
+        self.state.money_expanded = !self.state.money_expanded;
+        cx.notify();
+    }
+
+    pub fn toggle_user_menu(&mut self, cx: &mut Context<Self>) {
+        self.state.user_menu_open = !self.state.user_menu_open;
+        cx.notify();
+    }
+
     pub fn close_notifications(&mut self, cx: &mut Context<Self>) {
         self.state.show_notifications_drawer = false;
         cx.notify();

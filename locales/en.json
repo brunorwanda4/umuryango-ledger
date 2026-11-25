@@ -106,6 +106,20 @@
     "family_scope": "Family Ledger",
     "switched_to_personal": "Switched to Personal scope"
   },
+  "nav": {
+    "dashboard": "Dashboard",
+    "money": "Money",
+    "transactions": "Transactions",
+    "loans": "Loans & Debts",
+    "plans": "Future Plans",
+    "projects": "Projects",
+    "reports": "Reports",
+    "notifications": "Notifications",
+    "members": "Members",
+    "settings": "Settings",
+    "group_family": "Family",
+    "group_management": "Management"
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Overview of assets and recent activity",

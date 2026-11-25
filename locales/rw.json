@@ -106,6 +106,20 @@
     "family_scope": "Imari y'Umuryango",
     "switched_to_personal": "Muri kuri konti bwite (Amafaranga Yanjye)"
   },
+  "nav": {
+    "dashboard": "Incamake",
+    "money": "Amafaranga",
+    "transactions": "Ibikorwa",
+    "loans": "Amadeni",
+    "plans": "Imigambi",
+    "projects": "Imishinga",
+    "reports": "Raporo",
+    "notifications": "Integuza",
+    "members": "Abagize Umuryango",
+    "settings": "Igenamiterere",
+    "group_family": "Umuryango",
+    "group_management": "Ubuyobozi"
+  },
   "dashboard": {
     "title": "Incamake",
     "subtitle": "Incamake y'umutungo n'ibikorwa biheruka",

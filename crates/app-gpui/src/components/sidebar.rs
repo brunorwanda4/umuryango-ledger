@@ -1,20 +1,26 @@
 use gpui_kit::{
-    Context, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement, Styled, div, px,
+    Context, ElementId, FontWeight, InteractiveElement, IntoElement, ParentElement,
+    StatefulInteractiveElement, Styled, div, px,
 };
-use umuryango_core_domain::SyncStatus;
+use umuryango_i18n::t;
 
 use crate::RootView;
-use crate::common::{
-    Badge, Button, ButtonSize, ButtonVariant, SidebarContent, SidebarFooter, SidebarHeader,
-    SidebarMenu, SidebarMenuButton, SidebarMenuButtonSize, SidebarMenuItem, SidebarSeparator,
-};
-use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
-use crate::components::lang_toggle::LangToggle;
-use crate::components::scope_switcher::ScopeSwitcher;
+use crate::common::{Button, ButtonSize};
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{AppState, Screen};
-use crate::theme::SemanticTheme;
+use crate::theme::{SemanticTheme, ThemeMode};
 
 pub struct Sidebar;
+
+/// What a nav row does when clicked.
+#[derive(Clone, Copy)]
+enum NavAction {
+    Go(Screen),
+    Notifications,
+    ToggleMoney,
+    ToggleTheme,
+    Logout,
+}
 
 impl Sidebar {
     pub fn render(
@@ -23,237 +29,147 @@ impl Sidebar {
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        let screens = [
-            (Screen::Dashboard, AppIcon::Dashboard, state.locale),
-            (Screen::Transactions, AppIcon::Transactions, state.locale),
-            (Screen::Reports, AppIcon::Reports, state.locale),
-            (Screen::Projects, AppIcon::Projects, state.locale),
-            (Screen::Loans, AppIcon::Loans, state.locale),
-            (Screen::Plans, AppIcon::FuturePlans, state.locale),
-            (Screen::Members, AppIcon::Members, state.locale),
-            (Screen::Settings, AppIcon::Settings, state.locale),
-        ];
+        let loc = state.locale;
+        let current = state.current_screen;
 
-        let (sync_icon, sync_label, sync_color) = match state.sync_status {
-            SyncStatus::Synced => (
-                AppIcon::SyncOnline,
-                umuryango_i18n::t(state.locale, "common.synced"),
-                theme.income_color,
+        let money_children = [
+            (
+                Screen::Transactions,
+                AppIcon::Transactions,
+                "nav.transactions",
             ),
-            SyncStatus::PendingSync(n) => (
-                AppIcon::SyncPending,
-                umuryango_i18n::t_args(
-                    state.locale,
-                    "common.sync_pending",
-                    &[("count", &n.to_string())],
-                ),
-                theme.accent_secondary,
-            ),
-            SyncStatus::Offline => (
-                AppIcon::SyncOffline,
-                umuryango_i18n::t(state.locale, "common.offline"),
-                theme.expense_color,
-            ),
-        };
+            (Screen::Loans, AppIcon::Loans, "nav.loans"),
+            (Screen::Plans, AppIcon::FuturePlans, "nav.plans"),
+        ];
+        let money_active = money_children.iter().any(|(s, _, _)| *s == current);
+        let money_open = state.money_expanded;
+
+        let mut money = div().flex().flex_col().gap(px(2.0)).child(nav_row(
+            "sidebar-nav-money".to_string(),
+            AppIcon::Transactions,
+            t(loc, "nav.money"),
+            NavAction::ToggleMoney,
+            money_active,
+            Some(if money_open {
+                AppIcon::ChevronDown
+            } else {
+                AppIcon::ChevronRight
+            }),
+            theme,
+            cx,
+        ));
+
+        if money_open {
+            for (screen, icon, key) in money_children {
+                money = money.child(div().pl(px(14.0)).child(go_row(
+                    icon,
+                    t(loc, key),
+                    screen,
+                    current,
+                    theme,
+                    cx,
+                )));
+            }
+        }
+
+        let family = div()
+            .flex()
+            .flex_col()
+            .gap(px(2.0))
+            .child(go_row(
+                AppIcon::Dashboard,
+                t(loc, "nav.dashboard"),
+                Screen::Dashboard,
+                current,
+                theme,
+                cx,
+            ))
+            .child(money)
+            .child(go_row(
+                AppIcon::Projects,
+                t(loc, "nav.projects"),
+                Screen::Projects,
+                current,
+                theme,
+                cx,
+            ))
+            .child(go_row(
+                AppIcon::Reports,
+                t(loc, "nav.reports"),
+                Screen::Reports,
+                current,
+                theme,
+                cx,
+            ))
+            .child(nav_row(
+                "sidebar-nav-notifications".to_string(),
+                AppIcon::Bell,
+                t(loc, "nav.notifications"),
+                NavAction::Notifications,
+                false,
+                None,
+                theme,
+                cx,
+            ));
+
+        let management = div()
+            .flex()
+            .flex_col()
+            .gap(px(2.0))
+            .child(go_row(
+                AppIcon::Members,
+                t(loc, "nav.members"),
+                Screen::Members,
+                current,
+                theme,
+                cx,
+            ))
+            .child(go_row(
+                AppIcon::Settings,
+                t(loc, "nav.settings"),
+                Screen::Settings,
+                current,
+                theme,
+                cx,
+            ));
 
         div()
             .id(id)
-            .w(px(248.0))
+            .w(px(240.0))
             .h_full()
-            .p(px(12.0))
             .flex()
             .flex_col()
-            .justify_between()
             .bg(theme.bg_canvas)
             .border_r_1()
             .border_color(theme.border_subtle)
             .font_family(theme.font_family)
-            // Top Section: Brand + Scope Switcher + Clickable Sync Status
             .child(
-                SidebarHeader::new()
-                    .gap(px(12.0))
-                    .p(px(4.0))
+                div()
+                    .id("sidebar-nav-scroll")
+                    .flex_1()
+                    .overflow_y_scroll()
+                    .px(px(12.0))
+                    .pt(px(16.0))
+                    .pb(px(8.0))
+                    .flex()
+                    .flex_col()
+                    .gap(px(24.0))
                     .child(
                         div()
                             .flex()
-                            .flex_row()
-                            .items_center()
-                            .justify_between()
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_row()
-                                    .items_center()
-                                    .gap(px(8.0))
-                                    .child(brand_mark(BrandMark::Logo, 32.0))
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .flex_col()
-                                            .gap(px(1.0))
-                                            .child(
-                                                div()
-                                                    .text_sm()
-                                                    .font_weight(FontWeight::BOLD)
-                                                    .text_color(theme.text_primary)
-                                                    .child("Umuryango"),
-                                            )
-                                            .child(
-                                                div()
-                                                    .text_xs()
-                                                    .text_color(theme.text_muted)
-                                                    .child(state.user_name.clone()),
-                                            ),
-                                    ),
-                            )
-                            // Notification Bell Button with Unread Count Badge
-                            .child(
-                                Button::new("sidebar-bell-btn")
-                                    .variant(if state.unread_notifications_count > 0 {
-                                        ButtonVariant::Secondary
-                                    } else {
-                                        ButtonVariant::Outline
-                                    })
-                                    .size(if state.unread_notifications_count > 0 {
-                                        ButtonSize::Xs
-                                    } else {
-                                        ButtonSize::IconXs
-                                    })
-                                    .icon_start(AppIcon::Bell)
-                                    .theme(theme)
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.toggle_notifications(cx);
-                                    }))
-                                    .children(if state.unread_notifications_count > 0 {
-                                        Some(
-                                            Badge::new(
-                                                state.unread_notifications_count.to_string(),
-                                            )
-                                            .px(px(5.0))
-                                            .py(px(1.0))
-                                            .bg(theme.accent_primary)
-                                            .text_color(theme.bg_canvas)
-                                            .theme(theme),
-                                        )
-                                    } else {
-                                        None
-                                    }),
-                            ),
+                            .flex_col()
+                            .child(section_label(t(loc, "nav.group_family"), theme))
+                            .child(family),
                     )
-                    // Scope switcher
-                    .child(ScopeSwitcher::render(
-                        "sidebar-scope-switcher",
-                        &state.active_scope,
-                        state.locale,
-                        theme,
-                        cx,
-                    ))
-                    // Clickable sync status badge (triggers real PostgreSQL refresh)
                     .child(
-                        Button::new("sidebar-sync-refresh-btn")
-                            .outline()
-                            .size(ButtonSize::Xs)
-                            .icon_start(sync_icon)
-                            .label(sync_label)
-                            .w_full()
-                            .justify_start()
-                            .text_color(sync_color)
-                            .theme(theme)
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                this.refresh_active_scope(cx);
-                            })),
+                        div()
+                            .flex()
+                            .flex_col()
+                            .child(section_label(t(loc, "nav.group_management"), theme))
+                            .child(management),
                     ),
             )
-            // Center Section: Nav links
-            .child(
-                SidebarContent::new("sidebar-nav-scroll")
-                    .my(px(12.0))
-                    .child(
-                        SidebarMenu::new()
-                            .gap(px(4.0))
-                            .children(screens.into_iter().map(|(screen, icon, loc)| {
-                                let is_active = state.current_screen == screen;
-                                let label = screen.label(loc);
-                                let target_screen = screen;
-
-                                SidebarMenuItem::new().child(
-                                    SidebarMenuButton::new(format!("sidebar-nav-{:?}", screen))
-                                        .icon(icon)
-                                        .label(label)
-                                        .size(SidebarMenuButtonSize::Default)
-                                        .active(is_active)
-                                        .theme(theme)
-                                        .on_click(cx.listener(move |this, _, _, cx| {
-                                            this.select_screen(target_screen, cx);
-                                        })),
-                                )
-                            })),
-                    ),
-            )
-            // Bottom Section: Separator + Language, Theme, and Logout
-            .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(8.0))
-                    .child(SidebarSeparator::new().mx(px(0.0)).theme(theme))
-                    .child(
-                        SidebarFooter::new()
-                            .p(px(4.0))
-                            .gap(px(8.0))
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_row()
-                                    .items_center()
-                                    .justify_between()
-                                    .gap(px(8.0))
-                                    .child(LangToggle::render(
-                                        "sidebar-lang-toggle",
-                                        state.locale,
-                                        theme,
-                                        cx,
-                                    ))
-                                    .child(
-                                        Button::new("sidebar-theme-toggle")
-                                            .outline()
-                                            .size(ButtonSize::Sm)
-                                            .icon_start(if state.theme_mode.is_dark() {
-                                                AppIcon::Sun
-                                            } else {
-                                                AppIcon::Moon
-                                            })
-                                            .label(if state.theme_mode.is_dark() {
-                                                umuryango_i18n::t(
-                                                    state.locale,
-                                                    "settings.light_mode",
-                                                )
-                                            } else {
-                                                umuryango_i18n::t(
-                                                    state.locale,
-                                                    "settings.dark_mode",
-                                                )
-                                            })
-                                            .theme(theme)
-                                            .on_click(cx.listener(|this, _, _, cx| {
-                                                this.toggle_theme(cx);
-                                            })),
-                                    ),
-                            )
-                            .child(
-                                Button::new("sidebar-logout-btn")
-                                    .destructive()
-                                    .size(ButtonSize::Sm)
-                                    .icon_start(AppIcon::Close)
-                                    .label(umuryango_i18n::t(state.locale, "auth.logout"))
-                                    .w_full()
-                                    .theme(theme)
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.handle_logout(window, cx);
-                                    })),
-                            ),
-                    ),
-            )
+            .child(user_footer(state, theme, cx))
     }
 
     /// Renders bottom navigation bar for mobile viewports
@@ -327,4 +243,213 @@ impl Sidebar {
                     )
             }))
     }
+}
+
+fn section_label(text: String, theme: &SemanticTheme) -> impl IntoElement {
+    div()
+        .px(px(10.0))
+        .pb(px(6.0))
+        .text_xs()
+        .font_weight(FontWeight::MEDIUM)
+        .text_color(theme.text_muted)
+        .child(text)
+}
+
+fn go_row(
+    icon: AppIcon,
+    label: String,
+    screen: Screen,
+    current: Screen,
+    theme: &SemanticTheme,
+    cx: &Context<RootView>,
+) -> impl IntoElement {
+    nav_row(
+        format!("sidebar-nav-{:?}", screen),
+        icon,
+        label,
+        NavAction::Go(screen),
+        current == screen,
+        None,
+        theme,
+        cx,
+    )
+}
+
+fn nav_row(
+    id: String,
+    icon: AppIcon,
+    label: String,
+    action: NavAction,
+    active: bool,
+    trailing: Option<AppIcon>,
+    theme: &SemanticTheme,
+    cx: &Context<RootView>,
+) -> impl IntoElement {
+    let tone = if active {
+        IconTone::AccentPrimary
+    } else {
+        IconTone::Muted
+    };
+    let text = if active {
+        theme.text_primary
+    } else {
+        theme.text_muted
+    };
+    let bg = if active {
+        theme.bg_surface
+    } else {
+        theme.bg_canvas
+    };
+
+    div()
+        .id(id)
+        .flex()
+        .flex_row()
+        .items_center()
+        .justify_between()
+        .h(px(36.0))
+        .px(px(10.0))
+        .rounded_lg()
+        .bg(bg)
+        .text_color(text)
+        .text_sm()
+        .font_weight(if active {
+            FontWeight::MEDIUM
+        } else {
+            FontWeight::NORMAL
+        })
+        .cursor_pointer()
+        .hover(|s| s.bg(theme.bg_surface))
+        .on_click(cx.listener(move |this, _, window, cx| match action {
+            NavAction::Go(screen) => this.select_screen(screen, cx),
+            NavAction::Notifications => this.toggle_notifications(cx),
+            NavAction::ToggleMoney => this.toggle_money_group(cx),
+            NavAction::ToggleTheme => this.toggle_theme(cx),
+            NavAction::Logout => this.handle_logout(window, cx),
+        }))
+        .child(
+            div()
+                .flex()
+                .flex_row()
+                .items_center()
+                .gap(px(10.0))
+                .child(app_icon(icon, IconSize::Md, tone, theme))
+                .child(label),
+        )
+        .children(trailing.map(|chev| app_icon(chev, IconSize::Sm, IconTone::Muted, theme)))
+}
+
+fn user_footer(
+    state: &AppState,
+    theme: &SemanticTheme,
+    cx: &Context<RootView>,
+) -> impl IntoElement {
+    let initial = state
+        .user_name
+        .chars()
+        .next()
+        .map(|c| c.to_uppercase().to_string())
+        .unwrap_or_else(|| "?".to_string());
+    let loc = state.locale;
+    let menu_open = state.user_menu_open;
+    let is_dark = state.theme_mode == ThemeMode::Dark;
+
+    let menu = menu_open.then(|| {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(2.0))
+            .pb(px(8.0))
+            .child(nav_row(
+                "sidebar-user-theme".to_string(),
+                if is_dark { AppIcon::Sun } else { AppIcon::Moon },
+                t(
+                    loc,
+                    if is_dark {
+                        "common.light_mode"
+                    } else {
+                        "common.dark_mode"
+                    },
+                ),
+                NavAction::ToggleTheme,
+                false,
+                None,
+                theme,
+                cx,
+            ))
+            .child(nav_row(
+                "sidebar-user-logout".to_string(),
+                AppIcon::ArrowRight,
+                t(loc, "auth.logout"),
+                NavAction::Logout,
+                false,
+                None,
+                theme,
+                cx,
+            ))
+    });
+
+    div()
+        .border_t_1()
+        .border_color(theme.border_subtle)
+        .p(px(12.0))
+        .children(menu)
+        .child(
+            div()
+                .id("sidebar-user-menu")
+                .flex()
+                .flex_row()
+                .items_center()
+                .gap(px(10.0))
+                .p(px(8.0))
+                .rounded_lg()
+                .cursor_pointer()
+                .hover(|s| s.bg(theme.bg_surface))
+                .on_click(cx.listener(|this, _, _, cx| this.toggle_user_menu(cx)))
+                .child(
+                    div()
+                        .size(px(32.0))
+                        .rounded_full()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .bg(theme.accent_primary)
+                        .text_color(theme.bg_canvas)
+                        .text_sm()
+                        .font_weight(FontWeight::BOLD)
+                        .child(initial),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .flex()
+                        .flex_col()
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::MEDIUM)
+                                .text_color(theme.text_primary)
+                                .truncate()
+                                .child(state.user_name.clone()),
+                        )
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(theme.text_muted)
+                                .truncate()
+                                .child(state.user_phone.clone()),
+                        ),
+                )
+                .child(app_icon(
+                    if menu_open {
+                        AppIcon::ChevronDown
+                    } else {
+                        AppIcon::ChevronUp
+                    },
+                    IconSize::Md,
+                    IconTone::Muted,
+                    theme,
+                )),
+        )
 }
