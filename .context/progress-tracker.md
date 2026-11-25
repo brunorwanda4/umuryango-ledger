@@ -88,6 +88,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `6dd2aa2` | `feat(ui): port shadcn toggle-group to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `2d1eccc` | `feat(ui): port shadcn collapsible to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `6d4d80e` | `feat(ui): port shadcn accordion to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `d77a58a` | `feat(ui): port shadcn tabs to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -131,7 +132,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 30. `collapsible.tsx` → `collapsible.rs`
 - [x] 31. `accordion.tsx` → `accordion.rs`
 - [x] 32. `tabs.tsx` → `tabs.rs`
-- [ ] 33. `breadcrumb.tsx` → `breadcrumb.rs`
+- [x] 33. `breadcrumb.tsx` → `breadcrumb.rs`
 - [ ] 34. `pagination.tsx` → `pagination.rs`
 - [ ] 35. `scroll-area.tsx` → `scroll_area.rs`
 - [ ] 36. `resizable.tsx` → `resizable.rs`

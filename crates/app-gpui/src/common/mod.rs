@@ -6,6 +6,7 @@ pub mod alert;
 pub mod aspect_ratio;
 pub mod avatar;
 pub mod badge;
+pub mod breadcrumb;
 pub mod button;
 pub mod button_group;
 pub mod card;
@@ -47,6 +48,10 @@ pub use avatar::{
     KitAvatar, KitAvatarGroup, initials_from_name,
 };
 pub use badge::{Badge, BadgeVariant, OverlayCountBadge, badge};
+pub use breadcrumb::{
+    Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
+    BreadcrumbSeparator, KitBreadcrumb, KitBreadcrumbItem,
+};
 pub use button::{Button, ButtonSize, ButtonVariant, KitButton, button};
 pub use button_group::{
     ButtonGroup, ButtonGroupOrientation, ButtonGroupSeparator, ButtonGroupText, KitButtonGroup,
