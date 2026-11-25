@@ -15,6 +15,7 @@ pub mod field;
 pub mod input;
 pub mod input_group;
 pub mod input_otp;
+pub mod item;
 pub mod kbd;
 pub mod label;
 pub mod native_select;
@@ -62,6 +63,10 @@ pub use input_group::{
 };
 pub use input_otp::{
     InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot, KitOtpInput, OtpEvent, OtpState,
+};
+pub use item::{
+    Item, ItemActions, ItemContent, ItemDescription, ItemFooter, ItemGroup, ItemHeader, ItemMedia,
+    ItemMediaVariant, ItemSize, ItemTitle, ItemVariant, item_separator,
 };
 pub use kbd::{Kbd, KbdGroup};
 pub use label::{Label, LabelMode, field_label};
