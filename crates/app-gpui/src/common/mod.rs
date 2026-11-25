@@ -38,6 +38,7 @@ pub mod label;
 pub mod marker;
 pub mod menubar;
 pub mod message;
+pub mod message_scroller;
 pub mod native_select;
 pub mod navigation_menu;
 pub mod pagination;
@@ -197,6 +198,12 @@ pub use message::{
     KitMessage, KitMessageAlignment, KitMessageAvatar, KitMessageContent, KitMessageFooter,
     KitMessageGroup, KitMessageHeader, Message, MessageAlign, MessageAvatar, MessageContent,
     MessageFooter, MessageGroup, MessageHeader,
+};
+pub use message_scroller::{
+    KitMessageScroller, KitMessageScrollerState, MessageScroller, MessageScrollerButton,
+    MessageScrollerContent, MessageScrollerDirection, MessageScrollerItem,
+    MessageScrollerProvider, MessageScrollerViewport, message_scroller_button_visible,
+    message_scroller_is_scrollable, scroll_message_scroller_to,
 };
 pub use native_select::{
     NativeSelect, NativeSelectOptGroup, NativeSelectOption, NativeSelectSize,
