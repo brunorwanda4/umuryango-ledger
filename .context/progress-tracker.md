@@ -79,6 +79,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-24** | `a19b5ac` | `feat(ui): port shadcn progress to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `a3e28bb` | `feat(ui): port shadcn native-select to GPUI common` | `cargo check -p umuryango-app` |
 | **2026-11-24** | `2399de4` | `feat(ui): port shadcn field to GPUI common` | `cargo check -p umuryango-app` |
+| **2026-11-24** | `944e9e0` | `feat(ui): port shadcn avatar to GPUI common` | `cargo check -p umuryango-app` |
 
 ---
 
@@ -113,7 +114,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 - [x] 21. `native-select.tsx` → `native_select.rs`
 - [x] 22. `field.tsx` → `field.rs`
 - [x] 23. `avatar.tsx` → `avatar.rs`
-- [ ] 24. `alert.tsx` → `alert.rs`
+- [x] 24. `alert.tsx` → `alert.rs`
 - [ ] 25. `empty.tsx` → `empty.rs`
 - [ ] 26. `item.tsx` → `item.rs`
 - [ ] 27. `marker.tsx` → `marker.rs`

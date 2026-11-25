@@ -1,6 +1,7 @@
 //! Reusable UI primitives shared across screens and feature components
 //! (inputs, radios, text areas, cards, etc.).
 
+pub mod alert;
 pub mod aspect_ratio;
 pub mod avatar;
 pub mod badge;
@@ -27,6 +28,7 @@ pub mod switch;
 pub mod textarea;
 pub mod utils;
 
+pub use alert::{Alert, AlertAction, AlertDescription, AlertTitle, AlertVariant, KitAlert};
 pub use aspect_ratio::{AspectRatio, aspect_ratio};
 pub use avatar::{
     Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage, AvatarSize,
