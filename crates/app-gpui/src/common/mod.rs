@@ -30,6 +30,7 @@ pub mod spinner;
 pub mod switch;
 pub mod textarea;
 pub mod toggle;
+pub mod toggle_group;
 pub mod utils;
 
 pub use alert::{Alert, AlertAction, AlertDescription, AlertTitle, AlertVariant, KitAlert};
@@ -96,6 +97,7 @@ pub use spinner::{Spinner, spinner, spinner_static};
 pub use switch::{KitSwitch, Switch, SwitchSize, switch_field};
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use toggle::{KitToggle, Toggle, ToggleSize, ToggleVariant};
+pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};
 pub use utils::{
     PresetRadius, PresetSpacing, PresetTokens, StyleComposeExt, card_surface_shadow,
     focus_ring_shadow, invalid_ring_shadow, overlay_surface_shadow, to_preset_uppercase,
