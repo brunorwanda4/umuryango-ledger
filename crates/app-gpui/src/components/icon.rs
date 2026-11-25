@@ -1,6 +1,7 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px, svg};
 use serde::{Deserialize, Serialize};
+use umuryango_i18n::Locale;
 
 use crate::theme::SemanticTheme;
 
@@ -33,6 +34,22 @@ pub fn brand_mark(mark: BrandMark, size_px: f32) -> impl IntoElement {
     gpui_kit::img(mark.asset_path())
         .w(px(size_px))
         .h(px(size_px))
+}
+
+/// Returns the embedded asset path for a locale's flag image.
+pub const fn locale_flag_path(locale: Locale) -> &'static str {
+    match locale {
+        Locale::Rw => "assets/flags/kinyarwanda.png",
+        Locale::En => "assets/flags/english.png",
+    }
+}
+
+/// Renders a square circular flag image for the given locale at `size_px`.
+pub fn locale_flag(locale: Locale, size_px: f32) -> impl IntoElement {
+    gpui_kit::img(locale_flag_path(locale))
+        .w(px(size_px))
+        .h(px(size_px))
+        .flex_shrink_0()
 }
 
 /// Type-safe catalog of official FontAwesome icons used across Umuryango Ledger
@@ -349,6 +366,12 @@ mod tests {
             BrandMark::LogoWhite.asset_path(),
             "crates/app-gpui/assets/icons/logo-white-256.png"
         );
+    }
+
+    #[test]
+    fn test_locale_flag_asset_paths() {
+        assert_eq!(locale_flag_path(Locale::Rw), "assets/flags/kinyarwanda.png");
+        assert_eq!(locale_flag_path(Locale::En), "assets/flags/english.png");
     }
 
     #[test]

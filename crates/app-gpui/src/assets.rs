@@ -1,6 +1,6 @@
 //! Embedded GPUI `AssetSource` serving the app's FontAwesome SVG icons,
-//! brand emblem and logo variants, and delegating built-in `gpui-kit` component
-//! icons to `gpui_kit::assets::Assets`.
+//! brand emblem and logo variants, locale flag images, and delegating built-in
+//! `gpui-kit` component icons to `gpui_kit::assets::Assets`.
 
 use std::borrow::Cow;
 
@@ -15,6 +15,8 @@ impl AppAssets {
     pub const LOGO_PATH: &'static str = "crates/app-gpui/assets/icons/logo-256.png";
     pub const LOGO_BLACK_PATH: &'static str = "crates/app-gpui/assets/icons/logo-black-256.png";
     pub const LOGO_WHITE_PATH: &'static str = "crates/app-gpui/assets/icons/logo-white-256.png";
+    pub const FLAG_RW_PATH: &'static str = "assets/flags/kinyarwanda.png";
+    pub const FLAG_EN_PATH: &'static str = "assets/flags/english.png";
 }
 
 macro_rules! fa_icon {
@@ -42,6 +44,14 @@ const EMBEDDED_ASSETS: &[(&str, &[u8])] = &[
     (
         AppAssets::LOGO_WHITE_PATH,
         include_bytes!("../assets/icons/logo-white-256.png"),
+    ),
+    (
+        AppAssets::FLAG_RW_PATH,
+        include_bytes!("../../../assets/flags/kinyarwanda.png"),
+    ),
+    (
+        AppAssets::FLAG_EN_PATH,
+        include_bytes!("../../../assets/flags/english.png"),
     ),
     fa_icon!("arrow-down.svg"),
     fa_icon!("arrow-left.svg"),
@@ -129,7 +139,8 @@ impl AssetSource for AppAssets {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::icon::{AppIcon, BrandMark};
+    use crate::components::icon::{AppIcon, BrandMark, locale_flag_path};
+    use umuryango_i18n::Locale;
 
     #[test]
     fn loads_eye_and_all_app_icons() {
@@ -203,6 +214,17 @@ mod tests {
                 loaded.is_some_and(|b| !b.is_empty()),
                 "missing embedded brand asset for {:?}",
                 brand
+            );
+        }
+
+        for locale in [Locale::Rw, Locale::En] {
+            let loaded = AppAssets
+                .load(locale_flag_path(locale))
+                .expect("locale flag load should not fail");
+            assert!(
+                loaded.is_some_and(|b| !b.is_empty()),
+                "missing embedded flag asset for {:?}",
+                locale
             );
         }
     }

@@ -1,9 +1,9 @@
-use gpui_kit::{Context, ElementId, IntoElement};
+use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, px};
 use umuryango_i18n::Locale;
 
 use crate::RootView;
 use crate::common::{Button, ButtonSize};
-use crate::components::icon::AppIcon;
+use crate::components::icon::locale_flag;
 use crate::theme::SemanticTheme;
 
 pub struct LangToggle;
@@ -34,8 +34,10 @@ impl LangToggle {
         Button::new(id)
             .outline()
             .size(ButtonSize::Sm)
-            .icon_start(AppIcon::Language)
-            .label(label)
+            .pl(px(12.0))
+            .gap(px(6.0))
+            .child(locale_flag(current, 16.0))
+            .child(label)
             .theme(theme)
             .on_click(cx.listener(|this, _, _, cx| {
                 this.toggle_locale(cx);

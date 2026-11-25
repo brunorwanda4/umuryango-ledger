@@ -279,7 +279,6 @@ impl AuthScreen {
     ) -> impl IntoElement {
         Button::new(id)
             .label(label)
-            .icon_start(AppIcon::Check)
             .loading(is_busy)
             .w_full()
             .theme(theme)
