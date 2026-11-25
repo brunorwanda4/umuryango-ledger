@@ -6,7 +6,7 @@ use super::auth_inputs::AuthInputs;
 use crate::RootView;
 use crate::common::input::{password_field, text_field};
 use crate::common::radio::{radio_field, radio_option};
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::components::lang_toggle::LangToggle;
 use crate::state::AppState;
 use crate::theme::{SemanticTheme, ThemeMode};
@@ -90,12 +90,8 @@ impl AuthScreen {
                     .flex_col()
                     .items_center()
                     .gap(px(16.0))
-                    // Official Application Emblem
-                    .child(
-                        gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
-                            .w(px(56.0))
-                            .h(px(56.0)),
-                    )
+                    // Official Brand Logo
+                    .child(brand_mark(BrandMark::Logo, 64.0))
                     // Card Title & Tagline
                     .child(
                         div()

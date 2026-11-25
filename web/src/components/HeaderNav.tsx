@@ -26,11 +26,11 @@ export const HeaderNav: React.FC<{ locale: "rw" | "en" }> = ({ locale }) => {
         <div className="flex items-center space-x-6">
           <Link href={`/${locale}`} className="flex items-center space-x-3 group">
             <img
-              src="/icon-192.png"
-              alt="Umuryango Ledger Emblem"
+              src="/logo.png"
+              alt="Umuryango Ledger Logo"
               width={36}
               height={36}
-              className="shadow-sm border border-slate-200 dark:border-slate-700 group-hover:scale-105 transition-transform"
+              className="object-contain group-hover:scale-105 transition-transform"
             />
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tight text-[#003049] dark:text-[#fdf0d5] leading-none">

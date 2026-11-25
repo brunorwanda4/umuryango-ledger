@@ -37,8 +37,11 @@ use umuryango_api_client::{RealtimeClient, RealtimeHandle};
 #[cfg(not(target_arch = "wasm32"))]
 use umuryango_core_domain::realtime::RealtimeEvent;
 
-/// Official 256x256 embedded emblem icon
+/// Official 256x256 embedded application icon
 pub const APP_ICON_256_PNG: &[u8] = include_bytes!("../assets/icons/icon-256.png");
+
+/// Official 256x256 embedded primary brand logo
+pub const APP_LOGO_256_PNG: &[u8] = include_bytes!("../assets/icons/logo-256.png");
 
 pub struct RootView {
     pub state: AppState,

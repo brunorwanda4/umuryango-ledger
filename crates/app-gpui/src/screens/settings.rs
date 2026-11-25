@@ -2,7 +2,7 @@ use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 
 use crate::RootView;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::state::AppState;
 use crate::theme::{SemanticTheme, hex_to_hsla};
 
@@ -398,13 +398,7 @@ impl SettingsScreen {
                     .flex_row()
                     .items_center()
                     .gap(px(16.0))
-                    .child(
-                        gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
-                            .w(px(54.0))
-                            .h(px(54.0))
-                            .border_1()
-                            .border_color(theme.border_subtle),
-                    )
+                    .child(brand_mark(BrandMark::AppIcon, 54.0))
                     .child(
                         div()
                             .flex()

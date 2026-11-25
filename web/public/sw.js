@@ -1,4 +1,4 @@
-const CACHE_NAME = "umuryango-ledger-v1";
+const CACHE_NAME = "umuryango-ledger-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
@@ -6,6 +6,9 @@ const STATIC_ASSETS = [
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",
+  "/logo.png",
+  "/logo-white.png",
+  "/logo-black.png",
 ];
 
 self.addEventListener("install", (event) => {

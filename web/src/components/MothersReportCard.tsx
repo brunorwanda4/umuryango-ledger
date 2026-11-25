@@ -44,8 +44,6 @@ interface MothersReportCardProps {
 }
 
 export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, locale }) => {
-  const isRw = locale === "rw";
-
   const handlePrint = () => {
     window.print();
   };
@@ -62,10 +60,11 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
       <div className="bg-gradient-to-r from-brand-dark to-[#004e75] p-8 text-white text-center flex flex-col items-center relative">
         <div className="w-16 h-16 bg-white/10 p-2 shadow-inner border border-white/20 mb-3 flex items-center justify-center">
           <img
-            src="/icon-192.png"
-            alt="Umuryango Emblem"
+            src="/logo-white.png"
+            alt="Umuryango Ledger Logo"
             width={48}
             height={48}
+            className="object-contain"
           />
         </div>
         <div className="inline-block bg-brand-cream/20 border border-brand-cream/30 text-brand-cream px-3 py-1 text-xs font-black tracking-widest uppercase mb-2">
@@ -111,9 +110,7 @@ export const MothersReportCard: React.FC<MothersReportCardProps> = ({ data, loca
         <div>
           <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center space-x-1.5">
             <MapPin className="w-3.5 h-3.5 text-brand-steel-blue" />
-            <span>
-              {t(locale, "report.where_funds_held")}
-            </span>
+            <span>{t(locale, "report.where_funds_held")}</span>
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

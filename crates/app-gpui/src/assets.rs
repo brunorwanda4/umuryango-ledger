@@ -1,6 +1,6 @@
 //! Embedded GPUI `AssetSource` serving the app's FontAwesome SVG icons,
-//! brand emblem, and delegating built-in `gpui-kit` component icons to
-//! `gpui_kit::assets::Assets`.
+//! brand emblem and logo variants, and delegating built-in `gpui-kit` component
+//! icons to `gpui_kit::assets::Assets`.
 
 use std::borrow::Cow;
 
@@ -23,6 +23,18 @@ const EMBEDDED_ASSETS: &[(&str, &[u8])] = &[
     (
         "crates/app-gpui/assets/icons/icon-256.png",
         include_bytes!("../assets/icons/icon-256.png"),
+    ),
+    (
+        "crates/app-gpui/assets/icons/logo-256.png",
+        include_bytes!("../assets/icons/logo-256.png"),
+    ),
+    (
+        "crates/app-gpui/assets/icons/logo-black-256.png",
+        include_bytes!("../assets/icons/logo-black-256.png"),
+    ),
+    (
+        "crates/app-gpui/assets/icons/logo-white-256.png",
+        include_bytes!("../assets/icons/logo-white-256.png"),
     ),
     fa_icon!("arrow-left.svg"),
     fa_icon!("arrow-right-arrow-left.svg"),
@@ -103,7 +115,7 @@ impl AssetSource for AppAssets {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::icon::AppIcon;
+    use crate::components::icon::{AppIcon, BrandMark};
 
     #[test]
     fn loads_eye_and_all_app_icons() {
@@ -162,9 +174,20 @@ mod tests {
             );
         }
 
-        let emblem = AppAssets
-            .load("crates/app-gpui/assets/icons/icon-256.png")
-            .expect("emblem load should not fail");
-        assert!(emblem.is_some_and(|b| !b.is_empty()));
+        for brand in [
+            BrandMark::AppIcon,
+            BrandMark::Logo,
+            BrandMark::LogoBlack,
+            BrandMark::LogoWhite,
+        ] {
+            let loaded = AppAssets
+                .load(brand.asset_path())
+                .expect("brand asset load should not fail");
+            assert!(
+                loaded.is_some_and(|b| !b.is_empty()),
+                "missing embedded brand asset for {:?}",
+                brand
+            );
+        }
     }
 }

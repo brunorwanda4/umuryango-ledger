@@ -2,7 +2,39 @@ use gpui_kit::prelude::*;
 use gpui_kit::{ElementId, IntoElement, ParentElement, Styled, div, px, svg};
 use serde::{Deserialize, Serialize};
 
+use crate::assets::AppAssets;
 use crate::theme::SemanticTheme;
+
+/// Official Umuryango Ledger brand marks embedded in `AppAssets`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BrandMark {
+    /// Rounded crimson square application icon (`icon-256.png`).
+    AppIcon,
+    /// Primary brand red lion emblem on transparent background (`logo-256.png`).
+    Logo,
+    /// Monochrome black lion emblem for light surfaces (`logo-black-256.png`).
+    LogoBlack,
+    /// Monochrome white lion emblem for dark surfaces (`logo-white-256.png`).
+    LogoWhite,
+}
+
+impl BrandMark {
+    pub const fn asset_path(self) -> &'static str {
+        match self {
+            BrandMark::AppIcon => AppAssets::APP_ICON_PATH,
+            BrandMark::Logo => AppAssets::LOGO_PATH,
+            BrandMark::LogoBlack => AppAssets::LOGO_BLACK_PATH,
+            BrandMark::LogoWhite => AppAssets::LOGO_WHITE_PATH,
+        }
+    }
+}
+
+/// Renders a square-centered official brand icon or logo at `size_px`.
+pub fn brand_mark(mark: BrandMark, size_px: f32) -> impl IntoElement {
+    gpui_kit::img(mark.asset_path())
+        .w(px(size_px))
+        .h(px(size_px))
+}
 
 /// Type-safe catalog of official FontAwesome icons used across Umuryango Ledger
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -293,6 +325,26 @@ pub fn icon_button(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_brand_mark_asset_paths() {
+        assert_eq!(
+            BrandMark::AppIcon.asset_path(),
+            "crates/app-gpui/assets/icons/icon-256.png"
+        );
+        assert_eq!(
+            BrandMark::Logo.asset_path(),
+            "crates/app-gpui/assets/icons/logo-256.png"
+        );
+        assert_eq!(
+            BrandMark::LogoBlack.asset_path(),
+            "crates/app-gpui/assets/icons/logo-black-256.png"
+        );
+        assert_eq!(
+            BrandMark::LogoWhite.asset_path(),
+            "crates/app-gpui/assets/icons/logo-white-256.png"
+        );
+    }
 
     #[test]
     fn test_icon_file_names() {

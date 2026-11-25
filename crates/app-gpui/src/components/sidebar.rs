@@ -3,7 +3,7 @@ use gpui_kit::{Context, ElementId, IntoElement, ParentElement, Styled, div, px};
 use umuryango_core_domain::SyncStatus;
 
 use crate::RootView;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::components::lang_toggle::LangToggle;
 use crate::components::scope_switcher::ScopeSwitcher;
 use crate::state::{AppState, Screen};
@@ -84,11 +84,7 @@ impl Sidebar {
                                     .flex_row()
                                     .items_center()
                                     .gap(px(8.0))
-                                    .child(
-                                        gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
-                                            .w(px(30.0))
-                                            .h(px(30.0)),
-                                    )
+                                    .child(brand_mark(BrandMark::Logo, 32.0))
                                     .child(
                                         div()
                                             .flex()

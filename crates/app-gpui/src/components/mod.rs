@@ -13,7 +13,7 @@ pub mod wallet_card;
 #[allow(unused_imports)]
 pub use entity_modals::EntityModalDialog;
 #[allow(unused_imports)]
-pub use icon::{AppIcon, IconSize, IconTone, app_icon, icon_button};
+pub use icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark, icon_button};
 #[allow(unused_imports)]
 pub use lang_toggle::LangToggle;
 pub use notifications_drawer::NotificationsDrawer;

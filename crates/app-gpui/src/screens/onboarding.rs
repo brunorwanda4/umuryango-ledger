@@ -5,7 +5,7 @@ use umuryango_i18n::{Translator, terms};
 use super::onboarding_inputs::OnboardingInputs;
 use crate::RootView;
 use crate::common::input::text_field;
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark};
 use crate::components::lang_toggle::LangToggle;
 use crate::state::AppState;
 use crate::theme::{SemanticTheme, ThemeMode};
@@ -96,11 +96,7 @@ impl OnboardingScreen {
                             .flex_col()
                             .items_center()
                             .gap(px(10.0))
-                            .child(
-                                gpui_kit::img("crates/app-gpui/assets/icons/icon-256.png")
-                                    .w(px(52.0))
-                                    .h(px(52.0)),
-                            )
+                            .child(brand_mark(BrandMark::Logo, 56.0))
                             .child(
                                 div()
                                     .text_xl()

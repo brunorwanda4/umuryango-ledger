@@ -92,7 +92,14 @@ export default function GpuiAppPage() {
       {status === "loading" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#003049] text-[#fdf0d5] z-10 transition-opacity duration-300">
           <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-10 h-10 animate-spin text-[#c1121f]" />
+            <img
+              src="/logo-white.png"
+              alt="Umuryango Ledger Logo"
+              width={64}
+              height={64}
+              className="object-contain"
+            />
+            <Loader2 className="w-6 h-6 animate-spin text-[#c1121f]" />
             <div className="text-center">
               <h2 className="text-xl font-bold font-archivo tracking-tight">Umuryango Ledger</h2>
               <p className="text-xs text-[#669bbc] mt-1 font-mono">Loading GPUI WebAssembly...</p>

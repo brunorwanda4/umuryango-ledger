@@ -37,6 +37,9 @@ const IGNORE_GLOBS = [
   "**/*.ico",
   "**/*.icns",
   "**/icon-*",
+  "**/logo-*-256.png",
+  "**/logo-256.png",
+  "**/AppIcon*",
   "**/ic_launcher*",
   "**/*.desktop",
   "**/*~",
@@ -72,7 +75,9 @@ export function isIgnoredPath(filename) {
   const segments = filename.split(/[\\/]/);
   if (segments.some((seg) => IGNORED_DIRS.has(seg))) return true;
   const base = segments.at(-1) ?? "";
-  return /\.(ico|icns|desktop|swp|tmp)$|~$|^icon-|^ic_launcher/i.test(base);
+  return /\.(ico|icns|desktop|swp|tmp)$|~$|^icon-|^logo-.*256\.png$|^AppIcon|^ic_launcher/i.test(
+    base,
+  );
 }
 
 export function spawnTree(cmd, options = {}) {
