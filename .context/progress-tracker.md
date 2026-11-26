@@ -131,6 +131,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-25** | `4cd4309` | `style(gpui): format common UI component modules with rustfmt` | Pure formatting (`rustfmt`) |
 | **2026-11-25** | `bdabb7f` | `feat(gpui): move locale flags to assets/flags and render flags in LangToggle` | `cargo test -p umuryango-app --lib` (27 passed) |
 | **2026-11-25** | `51a147b` | `feat(sidebar): wire collapsible money group, user menu, and nav locale keys` | `cargo check -p umuryango-app`, `cargo test -p umuryango-app -p umuryango-i18n` (all passed) |
+| **2026-11-26** | `0f230ed` | `feat(ui): position toasts at bottom-right on large screens and top on small screens` | `cargo check --workspace`, `cargo test --workspace --lib` (43 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
 
 ---
 
