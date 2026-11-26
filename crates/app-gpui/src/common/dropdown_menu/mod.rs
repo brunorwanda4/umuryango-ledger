@@ -234,27 +234,29 @@ impl RenderOnce for DropdownMenu {
         }
 
         if !self.disabled {
-            let state_toggle = state.clone();
-            let on_change_toggle = self.on_open_change.clone();
-            trig = trig.cursor_pointer().on_click(move |_ev, window, cx| {
-                let next = !is_open;
-                if !is_controlled {
-                    state_toggle.update(cx, |v, cx| {
-                        *v = next;
-                        cx.notify();
-                    });
-                }
-                if let Some(cb) = &on_change_toggle {
-                    cb(&next, window, cx);
-                }
-            });
+            trig = trig.cursor_pointer();
+            if !(is_open && self.content.is_some()) {
+                let state_toggle = state.clone();
+                let on_change_toggle = self.on_open_change.clone();
+                trig = trig.on_click(move |_ev, window, cx| {
+                    if !is_controlled {
+                        state_toggle.update(cx, |v, cx| {
+                            *v = true;
+                            cx.notify();
+                        });
+                    }
+                    if let Some(cb) = &on_change_toggle {
+                        cb(&true, window, cx);
+                    }
+                });
+            }
         }
 
         let mut root = div()
             .id(self.id.clone())
             .relative()
             .flex()
-            .items_center()
+            .flex_col()
             .refine_style(&self.style)
             .child(trig);
 

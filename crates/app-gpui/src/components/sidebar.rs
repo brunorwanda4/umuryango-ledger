@@ -5,7 +5,11 @@ use gpui_kit::{
 use umuryango_i18n::t;
 
 use crate::RootView;
-use crate::common::{Button, ButtonSize};
+use crate::common::dropdown_menu::{
+    DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator,
+    DropdownMenuTrigger,
+};
+use crate::common::{Button, ButtonSize, PopoverAlign, PopoverSide};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::state::{AppState, Screen};
 use crate::theme::{SemanticTheme, ThemeMode};
@@ -18,8 +22,6 @@ enum NavAction {
     Go(Screen),
     Notifications,
     ToggleMoney,
-    ToggleTheme,
-    Logout,
 }
 
 impl Sidebar {
@@ -319,12 +321,10 @@ fn nav_row(
         })
         .cursor_pointer()
         .hover(|s| s.bg(theme.bg_surface))
-        .on_click(cx.listener(move |this, _, window, cx| match action {
+        .on_click(cx.listener(move |this, _, _, cx| match action {
             NavAction::Go(screen) => this.select_screen(screen, cx),
             NavAction::Notifications => this.toggle_notifications(cx),
             NavAction::ToggleMoney => this.toggle_money_group(cx),
-            NavAction::ToggleTheme => this.toggle_theme(cx),
-            NavAction::Logout => this.handle_logout(window, cx),
         }))
         .child(
             div()
@@ -352,101 +352,115 @@ fn user_footer(
     let loc = state.locale;
     let menu_open = state.user_menu_open;
     let is_dark = state.theme_mode == ThemeMode::Dark;
+    let hover_bg = theme.bg_surface;
 
-    let menu = menu_open.then(|| {
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(2.0))
-            .pb(px(8.0))
-            .child(nav_row(
-                "sidebar-user-theme".to_string(),
-                if is_dark { AppIcon::Sun } else { AppIcon::Moon },
-                t(
-                    loc,
-                    if is_dark {
-                        "common.light_mode"
-                    } else {
-                        "common.dark_mode"
-                    },
+    let trigger_row = div()
+        .w_full()
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(10.0))
+        .p(px(8.0))
+        .bg(if menu_open {
+            theme.bg_surface
+        } else {
+            theme.bg_canvas
+        })
+        .hover(move |s| s.bg(hover_bg))
+        .child(
+            div()
+                .size(px(32.0))
+                .flex()
+                .items_center()
+                .justify_center()
+                .bg(theme.accent_primary)
+                .text_color(theme.bg_canvas)
+                .text_sm()
+                .font_weight(FontWeight::BOLD)
+                .child(initial),
+        )
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .flex()
+                .flex_col()
+                .child(
+                    div()
+                        .text_sm()
+                        .font_weight(FontWeight::MEDIUM)
+                        .text_color(theme.text_primary)
+                        .truncate()
+                        .child(state.user_name.clone()),
+                )
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(theme.text_muted)
+                        .truncate()
+                        .child(state.user_phone.clone()),
                 ),
-                NavAction::ToggleTheme,
-                false,
-                None,
-                theme,
-                cx,
-            ))
-            .child(nav_row(
-                "sidebar-user-logout".to_string(),
-                AppIcon::ArrowRight,
-                t(loc, "auth.logout"),
-                NavAction::Logout,
-                false,
-                None,
-                theme,
-                cx,
-            ))
-    });
+        )
+        .child(app_icon(
+            if menu_open {
+                AppIcon::ChevronDown
+            } else {
+                AppIcon::ChevronUp
+            },
+            IconSize::Md,
+            IconTone::Muted,
+            theme,
+        ));
+
+    let trigger = DropdownMenuTrigger::new("sidebar-user-menu-trigger")
+        .w_full()
+        .child(trigger_row);
+
+    let content = DropdownMenuContent::new()
+        .side(PopoverSide::Top)
+        .side_offset(8.0)
+        .align(PopoverAlign::Start)
+        .w(px(216.0))
+        .theme(theme)
+        .child(
+            DropdownMenuGroup::new().child(
+                DropdownMenuItem::new(
+                    "sidebar-user-theme",
+                    t(
+                        loc,
+                        if is_dark {
+                            "common.light_mode"
+                        } else {
+                            "common.dark_mode"
+                        },
+                    ),
+                )
+                .icon(if is_dark { AppIcon::Sun } else { AppIcon::Moon })
+                .theme(theme)
+                .on_click(cx.listener(|this, _, _, cx| this.toggle_theme(cx))),
+            ),
+        )
+        .child(DropdownMenuSeparator::new().theme(theme))
+        .child(
+            DropdownMenuItem::new("sidebar-user-logout", t(loc, "auth.logout"))
+                .icon(AppIcon::ArrowRight)
+                .destructive()
+                .theme(theme)
+                .on_click(cx.listener(|this, _, window, cx| this.handle_logout(window, cx))),
+        );
 
     div()
         .border_t_1()
         .border_color(theme.border_subtle)
         .p(px(12.0))
-        .children(menu)
         .child(
-            div()
-                .id("sidebar-user-menu")
-                .flex()
-                .flex_row()
-                .items_center()
-                .gap(px(10.0))
-                .p(px(8.0))
-                .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_surface))
-                .on_click(cx.listener(|this, _, _, cx| this.toggle_user_menu(cx)))
-                .child(
-                    div()
-                        .size(px(32.0))
-                        .flex()
-                        .items_center()
-                        .justify_center()
-                        .bg(theme.accent_primary)
-                        .text_color(theme.bg_canvas)
-                        .text_sm()
-                        .font_weight(FontWeight::BOLD)
-                        .child(initial),
-                )
-                .child(
-                    div()
-                        .flex_1()
-                        .min_w_0()
-                        .flex()
-                        .flex_col()
-                        .child(
-                            div()
-                                .text_sm()
-                                .font_weight(FontWeight::MEDIUM)
-                                .text_color(theme.text_primary)
-                                .truncate()
-                                .child(state.user_name.clone()),
-                        )
-                        .child(
-                            div()
-                                .text_xs()
-                                .text_color(theme.text_muted)
-                                .truncate()
-                                .child(state.user_phone.clone()),
-                        ),
-                )
-                .child(app_icon(
-                    if menu_open {
-                        AppIcon::ChevronDown
-                    } else {
-                        AppIcon::ChevronUp
-                    },
-                    IconSize::Md,
-                    IconTone::Muted,
-                    theme,
-                )),
+            DropdownMenu::new("sidebar-user-menu")
+                .w_full()
+                .open(menu_open)
+                .on_open_change(cx.listener(|this, open: &bool, _, cx| {
+                    this.set_user_menu_open(*open, cx);
+                }))
+                .trigger(trigger)
+                .content(content),
         )
 }
