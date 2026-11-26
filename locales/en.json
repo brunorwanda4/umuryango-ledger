@@ -101,6 +101,7 @@
   },
   "scopes": {
     "personal_money": "My Personal Money",
+    "personal_workspace": "Personal workspace",
     "family_ledger": "Family Ledger",
     "personal_scope": "Personal Finances",
     "family_scope": "Family Ledger",
@@ -118,7 +119,13 @@
     "members": "Members",
     "settings": "Settings",
     "group_family": "Family",
-    "group_management": "Management"
+    "group_management": "Management",
+    "search_placeholder": "Search...",
+    "families_switcher": "Families",
+    "workspaces_group": "Workspaces",
+    "command_navigation": "Navigation",
+    "command_actions": "Quick Actions",
+    "command_empty": "No matching results found."
   },
   "dashboard": {
     "title": "Dashboard",

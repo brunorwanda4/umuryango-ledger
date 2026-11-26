@@ -133,8 +133,12 @@ pub struct AppState {
     pub active_family_invite_code: Option<String>,
     pub active_role: FamilyRole,
     pub families: Vec<FamilyWithRole>,
+    pub sidebar_open: bool,
     pub money_expanded: bool,
     pub user_menu_open: bool,
+    pub families_menu_open: bool,
+    pub show_command_palette: bool,
+    pub command_query: String,
 
     pub locale: Locale,
     pub theme_mode: ThemeMode,
@@ -206,8 +210,12 @@ impl Default for AppState {
             active_family_invite_code: None,
             active_role: FamilyRole::Member,
             families: Vec::new(),
+            sidebar_open: true,
             money_expanded: true,
             user_menu_open: false,
+            families_menu_open: false,
+            show_command_palette: false,
+            command_query: String::new(),
 
             locale: Locale::Rw,
             theme_mode,
@@ -435,6 +443,9 @@ impl AppState {
         self.show_quick_entry = false;
         self.active_modal = None;
         self.user_menu_open = false;
+        self.families_menu_open = false;
+        self.show_command_palette = false;
+        self.command_query.clear();
         self.is_busy = false;
         self.auth_password.clear();
         self.auth_confirm_password.clear();
@@ -513,6 +524,8 @@ impl AppState {
             self.onboarding_step = OnboardingStep::Choose;
         }
         self.user_menu_open = false;
+        self.families_menu_open = false;
+        self.show_command_palette = false;
         self.current_screen = screen;
     }
 
@@ -779,6 +792,9 @@ mod tests {
         assert!(state.wallets.is_empty());
         assert!(state.transactions.is_empty());
         assert!(state.family_members.is_empty());
+        assert!(state.sidebar_open);
+        assert!(!state.families_menu_open);
+        assert!(!state.show_command_palette);
         assert_eq!(state.current_screen, Screen::Auth);
         assert_eq!(state.onboarding_step, OnboardingStep::Choose);
     }

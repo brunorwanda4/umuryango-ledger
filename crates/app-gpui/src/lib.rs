@@ -24,10 +24,12 @@ use common::{
 };
 use components::entity_modal_inputs::EntityModalInputs;
 use components::entity_modals::EntityModalDialog;
+use components::navbar::NavbarInputs;
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
 use components::quick_entry_inputs::QuickEntryInputs;
 use gpui_kit::{
-    Context, IntoElement, ParentElement, Render, Styled, Subscription, Window, div, px,
+    Context, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent, ParentElement, Render,
+    Styled, Subscription, Window, div, px,
 };
 pub use safe_area::SafeAreaInsets;
 use screens::auth_inputs::AuthInputs;
@@ -52,8 +54,10 @@ pub struct RootView {
     pub quick_entry_form: QuickEntryForm,
     pub auth_inputs: AuthInputs,
     pub onboarding_inputs: OnboardingInputs,
+    pub navbar_inputs: NavbarInputs,
     pub quick_entry_inputs: QuickEntryInputs,
     pub entity_modal_inputs: EntityModalInputs,
+    protected_focus: FocusHandle,
     _viewport_sub: Subscription,
 }
 
@@ -98,8 +102,10 @@ impl RootView {
         let locale = state.locale;
         let auth_inputs = AuthInputs::new(window, cx);
         let onboarding_inputs = OnboardingInputs::new(locale, window, cx);
+        let navbar_inputs = NavbarInputs::new(locale, window, cx);
         let quick_entry_inputs = QuickEntryInputs::new(window, cx);
         let entity_modal_inputs = EntityModalInputs::new(window, cx);
+        let protected_focus = cx.focus_handle();
         let viewport_sub = hooks::use_mobile::notify_on_resize(window, cx);
 
         #[allow(unused_mut)]
@@ -110,8 +116,10 @@ impl RootView {
             quick_entry_form: form,
             auth_inputs,
             onboarding_inputs,
+            navbar_inputs,
             quick_entry_inputs,
             entity_modal_inputs,
+            protected_focus,
             _viewport_sub: viewport_sub,
         };
 
@@ -192,6 +200,45 @@ impl RootView {
         cx.notify();
     }
 
+    pub fn toggle_sidebar(&mut self, cx: &mut Context<Self>) {
+        self.state.sidebar_open = !self.state.sidebar_open;
+        cx.notify();
+    }
+
+    pub fn set_families_menu_open(&mut self, open: bool, cx: &mut Context<Self>) {
+        if self.state.families_menu_open != open {
+            self.state.families_menu_open = open;
+            if open {
+                self.state.user_menu_open = false;
+            }
+            cx.notify();
+        }
+    }
+
+    pub fn open_command_palette(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.state.command_query.clear();
+        self.state.show_command_palette = true;
+        self.state.families_menu_open = false;
+        self.state.user_menu_open = false;
+        self.navbar_inputs
+            .reset_and_focus(self.state.locale, window, cx);
+        cx.notify();
+    }
+
+    pub fn set_command_palette_open(
+        &mut self,
+        open: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if open {
+            self.open_command_palette(window, cx);
+        } else if self.state.show_command_palette {
+            self.state.show_command_palette = false;
+            cx.notify();
+        }
+    }
+
     pub fn toggle_notifications(&mut self, cx: &mut Context<Self>) {
         self.state.toggle_notifications_drawer();
         cx.notify();
@@ -205,6 +252,9 @@ impl RootView {
     pub fn set_user_menu_open(&mut self, open: bool, cx: &mut Context<Self>) {
         if self.state.user_menu_open != open {
             self.state.user_menu_open = open;
+            if open {
+                self.state.families_menu_open = false;
+            }
             cx.notify();
         }
     }
@@ -332,6 +382,7 @@ impl Render for RootView {
 
         if matches!(self.state.current_screen, Screen::Auth | Screen::Onboarding) {
             return div()
+                .id("public-app-shell")
                 .flex()
                 .flex_col()
                 .w_full()
@@ -344,6 +395,19 @@ impl Render for RootView {
         }
 
         div()
+            .id("protected-app-shell")
+            .track_focus(&self.protected_focus)
+            .on_key_down(cx.listener(|this, ev: &KeyDownEvent, window, cx| {
+                let mods = &ev.keystroke.modifiers;
+                if mods.platform || mods.control {
+                    if ev.keystroke.key.eq_ignore_ascii_case("k") {
+                        let next = !this.state.show_command_palette;
+                        this.set_command_palette_open(next, window, cx);
+                    } else if ev.keystroke.key.eq_ignore_ascii_case("b") {
+                        this.toggle_sidebar(cx);
+                    }
+                }
+            }))
             .flex()
             .flex_row()
             .w_full()
@@ -351,29 +415,50 @@ impl Render for RootView {
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
             .relative()
-            // Desktop Sidebar Navigation
-            .child(components::Sidebar::render(
-                "app-sidebar",
-                &self.state,
-                &theme,
-                cx,
-            ))
-            // Active Screen Content Area with Update Banner
+            // Desktop Sidebar Navigation (collapsible via navbar trigger or Cmd/Ctrl+B)
+            .children(
+                self.state
+                    .sidebar_open
+                    .then(|| components::Sidebar::render("app-sidebar", &self.state, &theme, cx)),
+            )
+            // Protected Content Column: Top Workspace Navbar + Update Banner + Active Screen
             .child(
                 div()
                     .flex_1()
+                    .min_w_0()
                     .h_full()
                     .flex()
                     .flex_col()
                     .relative()
+                    .child(components::Navbar::render(
+                        "app-navbar",
+                        &self.state,
+                        &theme,
+                        cx,
+                    ))
                     .children(updater::update_banner::UpdateBanner::render(
                         "app-update-banner",
                         &self.state.updater.status,
                         self.state.locale,
                         &theme,
                     ))
-                    .child(div().flex_1().w_full().h_full().child(screen_element)),
+                    .child(
+                        div()
+                            .flex_1()
+                            .w_full()
+                            .min_h_0()
+                            .overflow_hidden()
+                            .child(screen_element),
+                    ),
             )
+            // Global Search & Command Palette (Cmd/Ctrl+K)
+            .child(components::Navbar::render_command_dialog(
+                "app-command-dialog",
+                &self.state,
+                &self.navbar_inputs,
+                &theme,
+                cx,
+            ))
             // Realtime Notifications Drawer (SheetOverlay + SheetContent)
             .children(if self.state.show_notifications_drawer {
                 Some(components::NotificationsDrawer::render(

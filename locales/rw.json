@@ -101,6 +101,7 @@
   },
   "scopes": {
     "personal_money": "Amafaranga Yanjye",
+    "personal_workspace": "Konti yanjye bwite",
     "family_ledger": "Konti y'Umuryango",
     "personal_scope": "Imari Yanjye Bwite",
     "family_scope": "Imari y'Umuryango",
@@ -118,7 +119,13 @@
     "members": "Abagize Umuryango",
     "settings": "Igenamiterere",
     "group_family": "Umuryango",
-    "group_management": "Ubuyobozi"
+    "group_management": "Ubuyobozi",
+    "search_placeholder": "Shakisha...",
+    "families_switcher": "Imiryango",
+    "workspaces_group": "Konti z'Umutungo",
+    "command_navigation": "Imbonerahamwe",
+    "command_actions": "Ibikorwa by'Ako Kanya",
+    "command_empty": "Nta gisubizo kibonetse."
   },
   "dashboard": {
     "title": "Incamake",

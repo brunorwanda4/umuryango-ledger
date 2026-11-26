@@ -54,7 +54,10 @@ impl RootView {
     }
 
     pub fn switch_to_family_scope(&mut self, cx: &mut Context<Self>) {
+        self.state.families_menu_open = false;
+        self.state.show_command_palette = false;
         if self.state.active_scope.is_family() {
+            cx.notify();
             return;
         }
         let target = self
@@ -65,25 +68,49 @@ impl RootView {
             .cloned();
 
         if let Some(fam) = target {
-            let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
-            self.state.switch_scope(
-                LedgerScope::Family { family_id: fam.id },
-                Some(fam.name),
-                fam.invite_code,
-                fam.role,
-                db_lock.as_deref(),
-            );
-            drop(db_lock);
-            self.sync_default_wallets();
-            cx.notify();
-            self.refresh_active_scope(cx);
+            self.switch_to_family_by_id(fam.id, cx);
         } else {
             self.select_screen(Screen::Onboarding, cx);
         }
     }
 
+    pub fn switch_to_family_by_id(&mut self, family_id: Uuid, cx: &mut Context<Self>) {
+        self.state.families_menu_open = false;
+        self.state.show_command_palette = false;
+        if self.state.active_scope.family_id() == Some(family_id) {
+            cx.notify();
+            return;
+        }
+        let Some(fam) = self
+            .state
+            .families
+            .iter()
+            .find(|f| f.id == family_id)
+            .cloned()
+        else {
+            cx.notify();
+            return;
+        };
+
+        let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
+        self.state.switch_scope(
+            LedgerScope::Family { family_id: fam.id },
+            Some(fam.name),
+            fam.invite_code,
+            fam.role,
+            db_lock.as_deref(),
+        );
+        drop(db_lock);
+        self.sync_default_wallets();
+        cx.notify();
+        self.refresh_active_scope(cx);
+    }
+
     pub fn switch_to_personal_scope(&mut self, cx: &mut Context<Self>) {
+        self.state.families_menu_open = false;
+        self.state.show_command_palette = false;
         if !self.state.active_scope.is_family() {
+            cx.notify();
             return;
         }
         let db_lock = self.db.as_ref().and_then(|d| d.lock().ok());
