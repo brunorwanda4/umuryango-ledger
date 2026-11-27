@@ -454,7 +454,6 @@ fn render_search_trigger(
         .flex_row()
         .items_center()
         .gap(px(8.0))
-        .rounded(px(999.0))
         .border_1()
         .border_color(theme.border_subtle)
         .bg(theme.bg_canvas)
