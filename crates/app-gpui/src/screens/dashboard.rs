@@ -21,6 +21,7 @@ use gpui_kit::prelude::*;
 use gpui_kit::{
     Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, Window, div, px,
 };
+use rust_decimal::Decimal;
 
 use crate::RootView;
 use crate::common::{Card, CardContent, CardSize, PresetRadius, to_preset_uppercase};
@@ -48,6 +49,18 @@ enum KpiTarget {
     ProjectsOrPlans,
     Loans,
     MembersOrWallets,
+}
+
+struct KpiCardSpec<'a> {
+    id: &'static str,
+    icon: AppIcon,
+    badge_style: KpiBadgeStyle,
+    label: &'a str,
+    value: &'a str,
+    subtitle: &'a str,
+    target: KpiTarget,
+    is_family: bool,
+    wallets_empty: bool,
 }
 
 pub struct DashboardScreen;
@@ -128,15 +141,52 @@ impl DashboardScreen {
         let locale = state.locale;
         let gap = px(tier.grid_gap_px());
 
+        let total_custody_label = umuryango_i18n::t(locale, "dashboard.kpi_total_custody");
+        let total_custody_value = format_rwf(snap.total_custody);
+        let total_custody_sub = format!(
+            "{} {}",
+            snap.active_wallets_count,
+            umuryango_i18n::t(locale, "dashboard.kpi_active_wallets")
+        );
+
+        let inflow_label = umuryango_i18n::t(locale, "dashboard.kpi_monthly_inflow");
+        let inflow_value = format_rwf(snap.period_inflow);
+
         let projects_kpi_label = if snap.is_family {
             umuryango_i18n::t(locale, "dashboard.kpi_active_projects")
         } else {
             umuryango_i18n::t(locale, "dashboard.kpi_active_plans")
         };
+        let projects_value = snap.active_projects_or_plans_count.to_string();
+        let projects_target_total: Decimal = if snap.is_family {
+            state.active_projects_budget()
+        } else {
+            state.future_plans.iter().map(|p| p.estimated_cost).sum()
+        };
+        let projects_sub = format_rwf(projects_target_total);
+
+        let loans_label = umuryango_i18n::t(locale, "dashboard.kpi_active_loans");
+        let loans_value = snap.active_loans_count.to_string();
+        let loans_remaining: Decimal = state
+            .loans
+            .iter()
+            .map(|l| l.balance_remaining.max(Decimal::ZERO))
+            .sum();
+        let loans_sub = format_rwf(loans_remaining);
+
         let members_kpi_label = if snap.is_family {
             umuryango_i18n::t(locale, "dashboard.kpi_family_members")
         } else {
             umuryango_i18n::t(locale, "dashboard.kpi_active_wallets")
+        };
+        let members_value = snap.members_or_wallets_count.to_string();
+        let members_sub = if snap.is_family {
+            state
+                .active_family_name
+                .clone()
+                .unwrap_or_else(|| umuryango_i18n::t(locale, "dashboard.family_pool"))
+        } else {
+            umuryango_i18n::t(locale, "dashboard.bank_momo_pool")
         };
 
         div()
@@ -145,85 +195,92 @@ impl DashboardScreen {
             .gap(gap)
             .w_full()
             .child(Self::render_kpi_card(
-                "dash-kpi-total-custody",
-                AppIcon::PersonalWallet,
-                KpiBadgeStyle::PrimarySolid,
-                &umuryango_i18n::t(locale, "dashboard.kpi_total_custody"),
-                &format_rwf(snap.total_custody),
-                KpiTarget::CustodyWallets,
-                snap.is_family,
-                snap.total_wallets_count == 0,
-                theme,
-                cx,
-            ))
-            .child(Self::render_kpi_card(
-                "dash-kpi-monthly-inflow",
-                AppIcon::Income,
-                KpiBadgeStyle::DeepCrimson,
-                &umuryango_i18n::t(locale, "dashboard.kpi_monthly_inflow"),
-                &format_rwf(snap.period_inflow),
-                KpiTarget::Transactions,
-                snap.is_family,
-                false,
-                theme,
-                cx,
-            ))
-            .child(Self::render_kpi_card(
-                "dash-kpi-active-projects",
-                if snap.is_family {
-                    AppIcon::Projects
-                } else {
-                    AppIcon::FuturePlans
+                KpiCardSpec {
+                    id: "dash-kpi-total-custody",
+                    icon: AppIcon::PersonalWallet,
+                    badge_style: KpiBadgeStyle::PrimarySolid,
+                    label: &total_custody_label,
+                    value: &total_custody_value,
+                    subtitle: &total_custody_sub,
+                    target: KpiTarget::CustodyWallets,
+                    is_family: snap.is_family,
+                    wallets_empty: snap.total_wallets_count == 0,
                 },
-                KpiBadgeStyle::PrimarySolid,
-                &projects_kpi_label,
-                &snap.active_projects_or_plans_count.to_string(),
-                KpiTarget::ProjectsOrPlans,
-                snap.is_family,
-                false,
                 theme,
                 cx,
             ))
             .child(Self::render_kpi_card(
-                "dash-kpi-active-loans",
-                AppIcon::Cash,
-                KpiBadgeStyle::DarkBordered,
-                &umuryango_i18n::t(locale, "dashboard.kpi_active_loans"),
-                &snap.active_loans_count.to_string(),
-                KpiTarget::Loans,
-                snap.is_family,
-                false,
-                theme,
-                cx,
-            ))
-            .child(Self::render_kpi_card(
-                "dash-kpi-family-members",
-                if snap.is_family {
-                    AppIcon::Members
-                } else {
-                    AppIcon::PersonalWallet
+                KpiCardSpec {
+                    id: "dash-kpi-monthly-inflow",
+                    icon: AppIcon::Income,
+                    badge_style: KpiBadgeStyle::DeepCrimson,
+                    label: &inflow_label,
+                    value: &inflow_value,
+                    subtitle: &snap.active_period_label,
+                    target: KpiTarget::Transactions,
+                    is_family: snap.is_family,
+                    wallets_empty: false,
                 },
-                KpiBadgeStyle::PrimarySolid,
-                &members_kpi_label,
-                &snap.members_or_wallets_count.to_string(),
-                KpiTarget::MembersOrWallets,
-                snap.is_family,
-                false,
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                KpiCardSpec {
+                    id: "dash-kpi-active-projects",
+                    icon: if snap.is_family {
+                        AppIcon::Projects
+                    } else {
+                        AppIcon::FuturePlans
+                    },
+                    badge_style: KpiBadgeStyle::PrimarySolid,
+                    label: &projects_kpi_label,
+                    value: &projects_value,
+                    subtitle: &projects_sub,
+                    target: KpiTarget::ProjectsOrPlans,
+                    is_family: snap.is_family,
+                    wallets_empty: false,
+                },
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                KpiCardSpec {
+                    id: "dash-kpi-active-loans",
+                    icon: AppIcon::Cash,
+                    badge_style: KpiBadgeStyle::DarkBordered,
+                    label: &loans_label,
+                    value: &loans_value,
+                    subtitle: &loans_sub,
+                    target: KpiTarget::Loans,
+                    is_family: snap.is_family,
+                    wallets_empty: false,
+                },
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                KpiCardSpec {
+                    id: "dash-kpi-family-members",
+                    icon: if snap.is_family {
+                        AppIcon::Members
+                    } else {
+                        AppIcon::PersonalWallet
+                    },
+                    badge_style: KpiBadgeStyle::PrimarySolid,
+                    label: &members_kpi_label,
+                    value: &members_value,
+                    subtitle: &members_sub,
+                    target: KpiTarget::MembersOrWallets,
+                    is_family: snap.is_family,
+                    wallets_empty: false,
+                },
                 theme,
                 cx,
             ))
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn render_kpi_card(
-        id: &'static str,
-        icon: AppIcon,
-        badge_style: KpiBadgeStyle,
-        label: &str,
-        value: &str,
-        target: KpiTarget,
-        is_family: bool,
-        wallets_empty: bool,
+        spec: KpiCardSpec<'_>,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
@@ -234,7 +291,7 @@ impl DashboardScreen {
             IconTone::OnPrimaryButton
         };
 
-        let (badge_bg, badge_border, icon_tone) = match badge_style {
+        let (badge_bg, badge_border, icon_tone) = match spec.badge_style {
             KpiBadgeStyle::PrimarySolid => (theme.primary, theme.primary_pressed, on_primary),
             KpiBadgeStyle::DeepCrimson => (
                 if is_dark {
@@ -252,8 +309,12 @@ impl DashboardScreen {
             ),
         };
 
+        let target = spec.target;
+        let is_family = spec.is_family;
+        let wallets_empty = spec.wallets_empty;
+
         div()
-            .id(id)
+            .id(spec.id)
             .h_full()
             .border_1()
             .border_color(theme.border_subtle)
@@ -289,44 +350,89 @@ impl DashboardScreen {
                 Card::new()
                     .size(CardSize::Sm)
                     .h_full()
-                    .py(px(18.0))
+                    .py(px(16.0))
                     .gap(px(0.0))
                     .theme(theme)
                     .child(
-                        CardContent::new().size(CardSize::Sm).px(px(14.0)).child(
-                            div()
-                                .flex()
-                                .flex_col()
-                                .items_center()
-                                .justify_center()
-                                .gap(px(10.0))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .items_center()
-                                        .justify_center()
-                                        .size(px(36.0))
-                                        .rounded(PresetRadius::NONE)
-                                        .bg(badge_bg)
-                                        .border_1()
-                                        .border_color(badge_border)
-                                        .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
-                                )
-                                .child(
-                                    div()
-                                        .text_size(px(10.0))
-                                        .font_weight(FontWeight::SEMIBOLD)
-                                        .text_color(theme.text_muted)
-                                        .child(to_preset_uppercase(label)),
-                                )
-                                .child(
-                                    div()
-                                        .text_lg()
-                                        .font_weight(FontWeight::BOLD)
-                                        .text_color(theme.text_primary)
-                                        .child(value.to_string()),
-                                ),
-                        ),
+                        CardContent::new()
+                            .size(CardSize::Sm)
+                            .px(px(18.0))
+                            .h_full()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .justify_between()
+                                    .items_start()
+                                    .w_full()
+                                    .h_full()
+                                    .gap(px(14.0))
+                                    // Top Row: Uppercase Label (left) + Square Accent Icon Badge (right)
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_row()
+                                            .items_center()
+                                            .justify_between()
+                                            .gap(px(10.0))
+                                            .w_full()
+                                            .child(
+                                                div()
+                                                    .min_w_0()
+                                                    .flex_1()
+                                                    .truncate()
+                                                    .text_xs()
+                                                    .font_weight(FontWeight::BOLD)
+                                                    .text_color(theme.text_muted)
+                                                    .child(to_preset_uppercase(spec.label)),
+                                            )
+                                            .child(
+                                                div()
+                                                    .flex()
+                                                    .flex_shrink_0()
+                                                    .items_center()
+                                                    .justify_center()
+                                                    .size(px(36.0))
+                                                    .rounded(PresetRadius::NONE)
+                                                    .bg(badge_bg)
+                                                    .border_1()
+                                                    .border_color(badge_border)
+                                                    .child(app_icon(
+                                                        spec.icon,
+                                                        IconSize::Md,
+                                                        icon_tone,
+                                                        theme,
+                                                    )),
+                                            ),
+                                    )
+                                    // Bottom Stack: Bold Primary Value + Supporting Subtitle
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .items_start()
+                                            .gap(px(4.0))
+                                            .w_full()
+                                            .min_w_0()
+                                            .child(
+                                                div()
+                                                    .w_full()
+                                                    .truncate()
+                                                    .text_xl()
+                                                    .font_weight(FontWeight::BOLD)
+                                                    .text_color(theme.text_primary)
+                                                    .child(spec.value.to_string()),
+                                            )
+                                            .child(
+                                                div()
+                                                    .w_full()
+                                                    .truncate()
+                                                    .text_xs()
+                                                    .text_color(theme.text_muted)
+                                                    .child(spec.subtitle.to_string()),
+                                            ),
+                                    ),
+                            ),
                     ),
             )
     }
