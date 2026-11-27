@@ -10,7 +10,8 @@ use crate::common::dropdown_menu::{
     DropdownMenuTrigger,
 };
 use crate::common::{Button, ButtonSize, PopoverAlign, PopoverSide};
-use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon, locale_flag};
+use crate::components::lang_toggle::LangToggle;
 use crate::state::{AppState, Screen};
 use crate::theme::{SemanticTheme, ThemeMode};
 
@@ -350,6 +351,7 @@ fn user_footer(
         .map(|c| c.to_uppercase().to_string())
         .unwrap_or_else(|| "?".to_string());
     let loc = state.locale;
+    let next_loc = LangToggle::next_locale(loc);
     let menu_open = state.user_menu_open;
     let is_dark = state.theme_mode == ThemeMode::Dark;
     let hover_bg = theme.bg_surface;
@@ -423,22 +425,36 @@ fn user_footer(
         .w(px(216.0))
         .theme(theme)
         .child(
-            DropdownMenuGroup::new().child(
-                DropdownMenuItem::new(
-                    "sidebar-user-theme",
-                    t(
-                        loc,
-                        if is_dark {
-                            "common.light_mode"
-                        } else {
-                            "common.dark_mode"
-                        },
-                    ),
+            DropdownMenuGroup::new()
+                .child(
+                    DropdownMenuItem::new(
+                        "sidebar-user-theme",
+                        t(
+                            loc,
+                            if is_dark {
+                                "common.light_mode"
+                            } else {
+                                "common.dark_mode"
+                            },
+                        ),
+                    )
+                    .icon(if is_dark { AppIcon::Sun } else { AppIcon::Moon })
+                    .theme(theme)
+                    .on_click(cx.listener(|this, _, _, cx| this.toggle_theme(cx))),
                 )
-                .icon(if is_dark { AppIcon::Sun } else { AppIcon::Moon })
-                .theme(theme)
-                .on_click(cx.listener(|this, _, _, cx| this.toggle_theme(cx))),
-            ),
+                .child(
+                    DropdownMenuItem::new("sidebar-user-language", t(next_loc, "meta.name"))
+                        .icon(AppIcon::Language)
+                        .child(
+                            div()
+                                .ml_auto()
+                                .flex()
+                                .items_center()
+                                .child(locale_flag(next_loc, 14.0)),
+                        )
+                        .theme(theme)
+                        .on_click(cx.listener(|this, _, _, cx| this.toggle_locale(cx))),
+                ),
         )
         .child(DropdownMenuSeparator::new().theme(theme))
         .child(
