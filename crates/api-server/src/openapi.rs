@@ -6,6 +6,7 @@ use utoipa::{
 use crate::error::LocalizedErrorResponse;
 use crate::handlers::{
     auth::{self, AuthResponse, LoginPayload, RegisterPayload, UpdateLocalePayload},
+    categories::{self, CreateCategoryPayload, ListCategoriesQuery},
     families::{
         self, CreateFamilyRequest, CreateFamilyResponse, FamilyMemberView, FamilyWithRole,
         InviteMemberRequest, JoinFamilyRequest, JoinFamilyResponse, UpdateMemberRoleRequest,
@@ -29,9 +30,9 @@ use crate::handlers::{
     wallets::{self, CreateWalletRequest, CustodyWalletView, ListWalletsQuery},
 };
 use umuryango_core_domain::models::{
-    Family, FamilyMember, FamilyRole, FuturePlan, Loan, LoanDirection, LoanStatus,
-    PendingFamilyInvite, Project, ProjectStatus, Transaction, TransactionType, User, Wallet,
-    WalletChannel,
+    CategoryKind, Family, FamilyMember, FamilyRole, FuturePlan, Loan, LoanDirection, LoanStatus,
+    MoneyCategory, PendingFamilyInvite, Project, ProjectStatus, Transaction, TransactionType, User,
+    Wallet, WalletChannel,
 };
 use umuryango_core_domain::reporting::{CustodianWalletSummary, MothersReport};
 use umuryango_core_domain::scope::LedgerScope;
@@ -75,6 +76,8 @@ impl Modify for SecurityAddon {
         families::update_member_role,
         wallets::list_wallets,
         wallets::create_wallet,
+        categories::list_categories,
+        categories::create_category,
         transactions::create_transaction,
         transactions::list_transactions,
         projects::list_projects,
@@ -100,6 +103,8 @@ impl Modify for SecurityAddon {
             LedgerScope,
             FamilyRole,
             WalletChannel,
+            CategoryKind,
+            MoneyCategory,
             TransactionType,
             ProjectStatus,
             LoanDirection,
@@ -131,6 +136,8 @@ impl Modify for SecurityAddon {
             ListWalletsQuery,
             CreateWalletRequest,
             CustodyWalletView,
+            ListCategoriesQuery,
+            CreateCategoryPayload,
             CreateTransactionPayload,
             ListTransactionsQuery,
             TransactionExecutionResult,
@@ -162,6 +169,7 @@ impl Modify for SecurityAddon {
         (name = "Auth", description = "Authentication, registration, and user locale endpoints"),
         (name = "Families", description = "Family group management, invitations, and role assignments"),
         (name = "Wallets", description = "Personal and family multi-channel custody wallets"),
+        (name = "Categories", description = "Custom income and expense money categories"),
         (name = "Transactions", description = "Idempotent double-entry transactions and handovers"),
         (name = "Projects", description = "Family development projects with milestone progress tracking"),
         (name = "Loans", description = "Zero-embarrassment personal and family lending ledger"),

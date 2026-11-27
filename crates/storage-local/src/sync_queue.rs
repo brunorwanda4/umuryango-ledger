@@ -3,7 +3,7 @@ use rusqlite::{Result, params};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use umuryango_core_domain::models::TransactionType;
+use umuryango_core_domain::models::{CategoryKind, TransactionType};
 use uuid::Uuid;
 
 use crate::db::LocalDatabase;
@@ -13,6 +13,13 @@ pub use umuryango_core_domain::SyncStatus;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "action", content = "data")]
 pub enum SyncMutation {
+    CreateCategory {
+        idempotency_key: Uuid,
+        scope: String, // "personal" or "family"
+        family_id: Option<Uuid>,
+        kind: CategoryKind,
+        name: String,
+    },
     CreateTransaction {
         idempotency_key: Uuid,
         scope: String, // "personal" or "family"
@@ -71,6 +78,7 @@ impl<'a> SyncQueueRepository<'a> {
     pub fn enqueue(&self, mutation: &SyncMutation) -> Result<Uuid> {
         let id = Uuid::new_v4();
         let action_name = match mutation {
+            SyncMutation::CreateCategory { .. } => "create_category",
             SyncMutation::CreateTransaction { .. } => "create_transaction",
             SyncMutation::CreateHandover { .. } => "create_handover",
             SyncMutation::RepayLoan { .. } => "repay_loan",

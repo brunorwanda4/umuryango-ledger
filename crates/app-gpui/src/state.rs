@@ -8,8 +8,9 @@ use umuryango_core_domain::DomainError;
 use umuryango_core_domain::SyncStatus;
 use umuryango_core_domain::ledger::LedgerValidator;
 use umuryango_core_domain::models::{
-    FamilyMemberView, FamilyRole, FamilyWithRole, FuturePlan, Loan, LoanDirection,
-    PendingFamilyInvite, Project, Transaction, TransactionType, Wallet, WalletChannel,
+    CategoryKind, FamilyMemberView, FamilyRole, FamilyWithRole, FuturePlan, Loan, LoanDirection,
+    MoneyCategory, PendingFamilyInvite, Project, Transaction, TransactionType, Wallet,
+    WalletChannel,
 };
 use umuryango_core_domain::realtime::RealtimeEvent;
 use umuryango_core_domain::scope::LedgerScope;
@@ -149,6 +150,7 @@ pub struct AppState {
 
     pub wallets: Vec<Wallet>,
     pub wallet_custodian_names: HashMap<Uuid, String>,
+    pub categories: Vec<MoneyCategory>,
     pub transactions: Vec<Transaction>,
     pub projects: Vec<Project>,
     pub loans: Vec<Loan>,
@@ -163,6 +165,11 @@ pub struct AppState {
     pub show_quick_entry: bool,
     pub active_modal: Option<ActiveModal>,
     pub entity_form: EntityFormState,
+
+    // Money Category AlertDialog state
+    pub active_category_dialog: Option<String>,
+    pub category_form_kind: CategoryKind,
+    pub category_form_name: String,
 
     // Realtime Notifications Drawer
     pub show_notifications_drawer: bool,
@@ -228,6 +235,7 @@ impl Default for AppState {
 
             wallets: Vec::new(),
             wallet_custodian_names: HashMap::new(),
+            categories: Vec::new(),
             transactions: Vec::new(),
             projects: Vec::new(),
             loans: Vec::new(),
@@ -242,6 +250,10 @@ impl Default for AppState {
             show_quick_entry: false,
             active_modal: None,
             entity_form: EntityFormState::default(),
+
+            active_category_dialog: None,
+            category_form_kind: CategoryKind::Expense,
+            category_form_name: String::new(),
 
             show_notifications_drawer: false,
             notifications: Vec::new(),
@@ -318,6 +330,9 @@ impl AppState {
         }
 
         self.wallets = repo.list_wallets(&self.active_scope).unwrap_or_default();
+        self.categories = repo
+            .list_money_categories(&self.active_scope)
+            .unwrap_or_default();
         self.transactions = repo
             .list_transactions(&self.active_scope, 100)
             .unwrap_or_default();
@@ -436,6 +451,7 @@ impl AppState {
         self.families.clear();
         self.wallets.clear();
         self.wallet_custodian_names.clear();
+        self.categories.clear();
         self.transactions.clear();
         self.projects.clear();
         self.loans.clear();
@@ -447,6 +463,8 @@ impl AppState {
         self.show_notifications_drawer = false;
         self.show_quick_entry = false;
         self.active_modal = None;
+        self.active_category_dialog = None;
+        self.category_form_name.clear();
         self.user_menu_open = false;
         self.families_menu_open = false;
         self.show_command_palette = false;
@@ -472,6 +490,9 @@ impl AppState {
         if snap.scope == self.active_scope {
             self.wallets = snap.wallets;
             self.wallet_custodian_names = snap.custodian_names;
+            if !snap.categories.is_empty() || self.categories.is_empty() {
+                self.categories = snap.categories;
+            }
             self.transactions = snap.transactions;
             self.projects = snap.projects;
             self.loans = snap.loans;
@@ -511,6 +532,7 @@ impl AppState {
         self.dashboard_period = None;
         self.wallets.clear();
         self.wallet_custodian_names.clear();
+        self.categories.clear();
         self.transactions.clear();
         self.projects.clear();
         self.loans.clear();
@@ -602,6 +624,45 @@ impl AppState {
             n.is_read = true;
         }
         self.unread_notifications_count = 0;
+    }
+
+    /// Persists a custom money category to local SQLite (and optionally the offline sync queue)
+    /// and updates the in-memory `categories` list in alphabetical order.
+    pub fn save_money_category_local(
+        &mut self,
+        category: MoneyCategory,
+        db: Option<&LocalDatabase>,
+        enqueue_sync: bool,
+    ) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(database) = db {
+            let repo = CacheRepository::new(database);
+            let _ = repo.upsert_money_category(&category);
+
+            if enqueue_sync {
+                let queue = SyncQueueRepository::new(database);
+                let _ = queue.enqueue(&SyncMutation::CreateCategory {
+                    idempotency_key: category.id,
+                    scope: self.active_scope.as_str().to_string(),
+                    family_id: self.active_scope.family_id(),
+                    kind: category.kind,
+                    name: category.name.clone(),
+                });
+                if let Ok(st) = queue.sync_status(false) {
+                    self.sync_status = st;
+                }
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        let _ = (db, enqueue_sync);
+
+        if let Some(existing) = self.categories.iter_mut().find(|c| c.id == category.id) {
+            *existing = category;
+        } else {
+            self.categories.push(category);
+        }
+        self.categories
+            .sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     }
 
     /// Resolves the custodian display name for a wallet from real PostgreSQL metadata.
@@ -788,173 +849,5 @@ impl AppState {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_default_state_has_no_fake_seed_data() {
-        let state = AppState::default();
-        assert!(!state.is_authenticated);
-        assert!(state.user_name.is_empty());
-        assert!(state.active_family_name.is_none());
-        assert!(state.wallets.is_empty());
-        assert!(state.transactions.is_empty());
-        assert!(state.family_members.is_empty());
-        assert!(state.sidebar_open);
-        assert!(!state.families_menu_open);
-        assert!(!state.show_command_palette);
-        assert!(state.dashboard_period.is_none());
-        assert_eq!(state.current_screen, Screen::Auth);
-        assert_eq!(state.onboarding_step, OnboardingStep::Choose);
-        assert_eq!(state.toast_id, 0);
-    }
-
-    #[test]
-    fn test_set_toast_increments_id_and_clear_resets_message() {
-        let mut state = AppState::default();
-        state.set_toast("First".to_string(), false);
-        assert_eq!(state.toast_id, 1);
-        assert_eq!(state.toast_message, Some(("First".to_string(), false)));
-
-        state.set_toast("Second".to_string(), true);
-        assert_eq!(state.toast_id, 2);
-        assert_eq!(state.toast_message, Some(("Second".to_string(), true)));
-
-        state.clear_toast();
-        assert_eq!(state.toast_id, 2);
-        assert!(state.toast_message.is_none());
-    }
-
-    #[test]
-    fn test_apply_realtime_income_event() {
-        let family_id = Uuid::new_v4();
-        let mut state = AppState {
-            locale: Locale::Rw,
-            user_id: Uuid::new_v4(),
-            active_scope: LedgerScope::Family { family_id },
-            ..Default::default()
-        };
-
-        let wallet_id = Uuid::new_v4();
-        state.wallets.push(Wallet {
-            id: wallet_id,
-            scope: LedgerScope::Family { family_id },
-            channel: WalletChannel::MobileMoney,
-            name: "MoMo Main".to_string(),
-            account_number: None,
-            currency: "RWF".to_string(),
-            balance: Decimal::new(20000, 0),
-            custodian_id: Some(state.user_id),
-            is_active: true,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        });
-
-        assert_eq!(state.unread_notifications_count, 0);
-
-        let event = RealtimeEvent::IncomeAdded {
-            family_id,
-            wallet_id,
-            wallet_name: "MoMo Main".to_string(),
-            amount: Decimal::new(50000, 0),
-            currency: "RWF".to_string(),
-            added_by_name: "Alice".to_string(),
-            source_description: "Salary".to_string(),
-            new_wallet_balance: Decimal::new(70000, 0),
-            occurred_at: Utc::now(),
-        };
-
-        state.apply_realtime_event(event, None);
-
-        assert_eq!(state.wallets[0].balance, Decimal::new(70000, 0));
-        assert_eq!(state.unread_notifications_count, 1);
-        assert_eq!(state.notifications.len(), 1);
-        assert!(
-            state.notifications[0]
-                .message
-                .contains("Alice yongeye 50000 RWF")
-        );
-        assert_eq!(
-            state.toast_message,
-            Some((state.notifications[0].message.clone(), false))
-        );
-
-        state.mark_all_notifications_as_read();
-        assert_eq!(state.unread_notifications_count, 0);
-        assert!(state.notifications[0].is_read);
-    }
-
-    #[test]
-    fn test_expense_category_breakdown_from_real_transactions() {
-        let mut state = AppState::default();
-        let uid = Uuid::new_v4();
-        let wid = Uuid::new_v4();
-        let scope = LedgerScope::Personal { user_id: uid };
-        let now = Utc::now();
-
-        state.transactions.push(Transaction {
-            id: Uuid::new_v4(),
-            scope,
-            source_wallet_id: wid,
-            destination_wallet_id: None,
-            tx_type: TransactionType::Expense,
-            amount: Decimal::from(7500),
-            currency: "RWF".to_string(),
-            category: "Food".to_string(),
-            description: None,
-            authorized_by: uid,
-            paid_to: None,
-            tx_date: now,
-            created_at: now,
-        });
-        state.transactions.push(Transaction {
-            id: Uuid::new_v4(),
-            scope,
-            source_wallet_id: wid,
-            destination_wallet_id: None,
-            tx_type: TransactionType::Expense,
-            amount: Decimal::from(2500),
-            currency: "RWF".to_string(),
-            category: "Transport".to_string(),
-            description: None,
-            authorized_by: uid,
-            paid_to: None,
-            tx_date: now,
-            created_at: now,
-        });
-
-        let rows = state.expense_category_breakdown();
-        assert_eq!(rows.len(), 2);
-        assert_eq!(rows[0], ("Food".to_string(), Decimal::from(7500), 75));
-        assert_eq!(rows[1], ("Transport".to_string(), Decimal::from(2500), 25));
-    }
-
-    #[test]
-    fn test_safe_area_insets_state() {
-        let mut state = AppState::default();
-        assert_eq!(state.safe_area.top, 0.0);
-        let insets = SafeAreaInsets::new(32.0, 48.0, 0.0, 0.0).with_ime(200.0);
-        state.update_safe_area(insets);
-        assert_eq!(state.safe_area.top, 32.0);
-        assert_eq!(state.safe_area.total_bottom(), 200.0);
-    }
-
-    #[test]
-    fn test_app_update_realtime_handling() {
-        let mut state = AppState::default();
-        let event = RealtimeEvent::AppUpdateAvailable {
-            version: "0.2.0".to_string(),
-            platform: "WINDOWS".to_string(),
-            is_mandatory: false,
-        };
-        state.apply_realtime_event(event, None);
-        if cfg!(windows) {
-            match state.updater.status {
-                crate::updater::UpdateStatus::Available { version, .. } => {
-                    assert_eq!(version, "0.2.0");
-                }
-                _ => panic!("Expected update available"),
-            }
-        }
-    }
-}
+#[path = "state_tests.rs"]
+mod tests;

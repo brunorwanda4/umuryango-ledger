@@ -1,10 +1,12 @@
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
+use umuryango_core_domain::models::CategoryKind;
 use umuryango_i18n::{Translator, terms};
 
 use crate::RootView;
 use crate::common::{Button, ButtonSize, Empty, EmptyDescription, EmptyHeader, EmptyMedia};
 use crate::components::icon::AppIcon;
+use crate::components::money::{MoneyCategoryForm, MoneyCategoryInputs};
 use crate::components::tx_row::TxRow;
 use crate::state::AppState;
 use crate::theme::SemanticTheme;
@@ -15,6 +17,7 @@ impl TransactionsScreen {
     pub fn render(
         id: impl Into<ElementId>,
         state: &AppState,
+        category_inputs: &MoneyCategoryInputs,
         theme: &SemanticTheme,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
@@ -36,9 +39,11 @@ impl TransactionsScreen {
                 div()
                     .flex()
                     .flex_row()
+                    .flex_wrap()
                     .justify_between()
                     .items_center()
-                    .mb(px(20.0))
+                    .gap(px(12.0))
+                    .mb(px(16.0))
                     .child(
                         div()
                             .text_2xl()
@@ -50,8 +55,17 @@ impl TransactionsScreen {
                         div()
                             .flex()
                             .flex_row()
+                            .flex_wrap()
                             .items_center()
                             .gap(px(8.0))
+                            .child(MoneyCategoryForm::render(
+                                "txs-money-category-form",
+                                CategoryKind::Expense,
+                                state,
+                                category_inputs,
+                                theme,
+                                cx,
+                            ))
                             .child(
                                 Button::new("transactions-refresh-btn")
                                     .outline()
@@ -78,6 +92,38 @@ impl TransactionsScreen {
                             ),
                     ),
             )
+            // Saved custom categories bar (quick tap logs a transaction with that category)
+            .children((!state.categories.is_empty()).then(|| {
+                div()
+                    .flex()
+                    .flex_row()
+                    .flex_wrap()
+                    .items_center()
+                    .gap(px(6.0))
+                    .mb(px(16.0))
+                    .children(state.categories.iter().map(|cat| {
+                        let kind = cat.kind;
+                        let cat_name = cat.name.clone();
+                        let icon = match kind {
+                            CategoryKind::Income => AppIcon::Income,
+                            CategoryKind::Expense => AppIcon::Expense,
+                        };
+                        Button::new(format!("saved-cat-chip-{}", cat.id))
+                            .outline()
+                            .size(ButtonSize::Xs)
+                            .icon_start(icon)
+                            .label(cat.name.clone())
+                            .theme(theme)
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.open_quick_entry_for_category(
+                                    kind,
+                                    cat_name.clone(),
+                                    window,
+                                    cx,
+                                );
+                            }))
+                    }))
+            }))
             // Transactions full list or empty state
             .child(div().flex().flex_col().gap(px(8.0)).children(
                 if state.transactions.is_empty() {

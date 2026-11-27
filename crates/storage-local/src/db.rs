@@ -95,6 +95,19 @@ impl LocalDatabase {
             );
             CREATE INDEX IF NOT EXISTS idx_wallets_scope ON wallets(scope_type, family_id, user_id);
 
+            -- Cached Custom Money Categories (Income & Expense)
+            CREATE TABLE IF NOT EXISTS money_categories (
+                id TEXT PRIMARY KEY,
+                scope_type TEXT NOT NULL, -- 'personal' or 'family'
+                family_id TEXT,
+                user_id TEXT,
+                kind TEXT NOT NULL, -- 'income' or 'expense'
+                name TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_money_categories_scope
+                ON money_categories(scope_type, family_id, user_id);
+
             -- Cached Transactions & Handovers
             CREATE TABLE IF NOT EXISTS transactions (
                 id TEXT PRIMARY KEY,

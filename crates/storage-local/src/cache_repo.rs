@@ -3,8 +3,8 @@ use rusqlite::{Result, params};
 use rust_decimal::Decimal;
 use std::str::FromStr;
 use umuryango_core_domain::models::{
-    FuturePlan, Loan, LoanDirection, LoanStatus, Project, ProjectStatus, Transaction,
-    TransactionType, Wallet, WalletChannel,
+    CategoryKind, FuturePlan, Loan, LoanDirection, LoanStatus, MoneyCategory, Project,
+    ProjectStatus, Transaction, TransactionType, Wallet, WalletChannel,
 };
 use umuryango_core_domain::scope::LedgerScope;
 use uuid::Uuid;
@@ -234,6 +234,94 @@ impl<'a> CacheRepository<'a> {
                 is_active: is_active_int == 1,
                 created_at,
                 updated_at,
+            })
+        })?;
+
+        let mut list = Vec::new();
+        for r in rows {
+            list.push(r?);
+        }
+        Ok(list)
+    }
+
+    // ================= MONEY CATEGORIES =================
+
+    pub fn upsert_money_category(&self, cat: &MoneyCategory) -> Result<()> {
+        let (scope_type, fid_str, uid_str) = match cat.scope {
+            LedgerScope::Personal { user_id } => ("personal", None, Some(user_id.to_string())),
+            LedgerScope::Family { family_id } => ("family", Some(family_id.to_string()), None),
+        };
+
+        self.db.conn().execute(
+            r#"
+            INSERT INTO money_categories (id, scope_type, family_id, user_id, kind, name, created_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+            ON CONFLICT(id) DO UPDATE SET
+                kind = excluded.kind,
+                name = excluded.name
+            "#,
+            params![
+                cat.id.to_string(),
+                scope_type,
+                fid_str,
+                uid_str,
+                cat.kind.as_str(),
+                cat.name,
+                cat.created_at.to_rfc3339(),
+            ],
+        )?;
+
+        Ok(())
+    }
+
+    pub fn list_money_categories(&self, scope: &LedgerScope) -> Result<Vec<MoneyCategory>> {
+        let (scope_type, fid_str, uid_str) = match scope {
+            LedgerScope::Personal { user_id } => ("personal", None, Some(user_id.to_string())),
+            LedgerScope::Family { family_id } => ("family", Some(family_id.to_string()), None),
+        };
+
+        let mut stmt = self.db.conn().prepare(
+            r#"
+            SELECT id, scope_type, family_id, user_id, kind, name, created_at
+            FROM money_categories
+            WHERE scope_type = ?1
+              AND (?2 IS NULL OR family_id = ?2)
+              AND (?3 IS NULL OR user_id = ?3)
+            ORDER BY name ASC
+            "#,
+        )?;
+
+        let rows = stmt.query_map(params![scope_type, fid_str, uid_str], |row| {
+            let id: String = row.get(0)?;
+            let scope_type: String = row.get(1)?;
+            let family_id: Option<String> = row.get(2)?;
+            let user_id: Option<String> = row.get(3)?;
+            let kind_str: String = row.get(4)?;
+            let name: String = row.get(5)?;
+            let created_at_str: String = row.get(6)?;
+
+            let scope = if scope_type == "family" {
+                LedgerScope::Family {
+                    family_id: family_id
+                        .and_then(|s| Uuid::from_str(&s).ok())
+                        .unwrap_or_default(),
+                }
+            } else {
+                LedgerScope::Personal {
+                    user_id: user_id
+                        .and_then(|s| Uuid::from_str(&s).ok())
+                        .unwrap_or_default(),
+                }
+            };
+
+            Ok(MoneyCategory {
+                id: Uuid::from_str(&id).unwrap_or_default(),
+                scope,
+                kind: CategoryKind::from_db_str(&kind_str),
+                name,
+                created_at: DateTime::parse_from_rfc3339(&created_at_str)
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .unwrap_or_else(|_| Utc::now()),
             })
         })?;
 

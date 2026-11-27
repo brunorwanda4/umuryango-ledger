@@ -25,6 +25,7 @@ use common::{
 };
 use components::entity_modal_inputs::EntityModalInputs;
 use components::entity_modals::EntityModalDialog;
+use components::money::MoneyCategoryInputs;
 use components::navbar::NavbarInputs;
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
 use components::quick_entry_inputs::QuickEntryInputs;
@@ -58,6 +59,7 @@ pub struct RootView {
     pub navbar_inputs: NavbarInputs,
     pub quick_entry_inputs: QuickEntryInputs,
     pub entity_modal_inputs: EntityModalInputs,
+    pub money_category_inputs: MoneyCategoryInputs,
     protected_focus: FocusHandle,
     is_mobile_viewport: bool,
     toast_scheduled_id: u64,
@@ -109,6 +111,7 @@ impl RootView {
         let navbar_inputs = NavbarInputs::new(locale, window, cx);
         let quick_entry_inputs = QuickEntryInputs::new(window, cx);
         let entity_modal_inputs = EntityModalInputs::new(window, cx);
+        let money_category_inputs = MoneyCategoryInputs::new(locale, window, cx);
         let protected_focus = cx.focus_handle();
 
         let initial_mobile = hooks::use_mobile::is_mobile(window);
@@ -161,6 +164,7 @@ impl RootView {
             navbar_inputs,
             quick_entry_inputs,
             entity_modal_inputs,
+            money_category_inputs,
             protected_focus,
             is_mobile_viewport: initial_mobile,
             toast_scheduled_id: 0,
@@ -470,10 +474,14 @@ impl Render for RootView {
                 cx,
             )
             .into_any_element(),
-            Screen::Transactions => {
-                screens::TransactionsScreen::render("screen-txs", &self.state, &theme, cx)
-                    .into_any_element()
-            }
+            Screen::Transactions => screens::TransactionsScreen::render(
+                "screen-txs",
+                &self.state,
+                &self.money_category_inputs,
+                &theme,
+                cx,
+            )
+            .into_any_element(),
             Screen::Reports => {
                 screens::ReportViewScreen::render("screen-reports", &self.state, &theme, cx)
                     .into_any_element()
@@ -601,8 +609,10 @@ impl Render for RootView {
                 let is_family = self.state.active_scope.is_family();
                 Some(QuickEntryDialog::render(
                     "app-quick-entry-dialog",
+                    &self.state,
                     &self.quick_entry_form,
                     &self.quick_entry_inputs,
+                    &self.money_category_inputs,
                     wallets,
                     is_family,
                     self.state.is_busy,

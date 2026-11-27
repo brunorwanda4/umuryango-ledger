@@ -316,6 +316,19 @@
     "saved_offline": "Saved offline. Will sync automatically when connected.",
     "select_destination_wallet": "Select Destination Wallet"
   },
+  "categories": {
+    "create_btn": "New Category",
+    "dialog_title": "Create Money Category",
+    "dialog_desc": "Choose whether this category tracks income or expenses, then enter its name.",
+    "type_label": "Category Type",
+    "income": "Income",
+    "expense": "Expense",
+    "name_label": "Category Name",
+    "name_placeholder": "e.g. School Fees, Salary, Harvest",
+    "saved_toast": "Category '{name}' saved successfully!",
+    "name_required": "Category name is required.",
+    "duplicate_error": "Category '{name}' already exists for this type."
+  },
   "report": {
     "title": "Reports",
     "subtitle": "Financial statements and summaries",

@@ -6,8 +6,8 @@
 
 use std::collections::HashMap;
 use umuryango_core_domain::models::{
-    FamilyMemberView, FamilyWithRole, FuturePlan, Loan, PendingFamilyInvite, Project, Transaction,
-    Wallet,
+    FamilyMemberView, FamilyWithRole, FuturePlan, Loan, MoneyCategory, PendingFamilyInvite,
+    Project, Transaction, Wallet,
 };
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::Locale;
@@ -26,6 +26,7 @@ pub struct ScopeSnapshot {
     pub scope: LedgerScope,
     pub wallets: Vec<Wallet>,
     pub custodian_names: HashMap<Uuid, String>,
+    pub categories: Vec<MoneyCategory>,
     pub transactions: Vec<Transaction>,
     pub projects: Vec<Project>,
     pub loans: Vec<Loan>,
@@ -126,6 +127,7 @@ impl ApiBridge {
             wallets.push(wallet);
         }
 
+        let categories = client.list_categories(&scope).await.unwrap_or_default();
         let transactions = client.list_transactions(&scope).await?;
         let loans = client.list_loans(&scope).await?;
         let future_plans = client.list_plans(&scope).await?;
@@ -149,6 +151,9 @@ impl ApiBridge {
             for w in &wallets {
                 let _ = repo.upsert_wallet(w);
             }
+            for cat in &categories {
+                let _ = repo.upsert_money_category(cat);
+            }
             for tx in &transactions {
                 let _ = repo.save_transaction(tx);
             }
@@ -169,6 +174,7 @@ impl ApiBridge {
             scope,
             wallets,
             custodian_names,
+            categories,
             transactions,
             projects,
             loans,

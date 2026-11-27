@@ -7,8 +7,9 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
 use umuryango_core_domain::models::{
-    Family, FamilyMemberView, FamilyRole, FamilyWithRole, FuturePlan, Loan, LoanDirection,
-    PendingFamilyInvite, Project, Transaction, TransactionType, User, Wallet, WalletChannel,
+    CategoryKind, Family, FamilyMemberView, FamilyRole, FamilyWithRole, FuturePlan, Loan,
+    LoanDirection, MoneyCategory, PendingFamilyInvite, Project, Transaction, TransactionType, User,
+    Wallet, WalletChannel,
 };
 use umuryango_core_domain::reporting::MothersReport;
 use umuryango_core_domain::scope::LedgerScope;
@@ -142,6 +143,15 @@ pub struct CreateWalletRequest {
     pub custodian_id: Option<Uuid>,
     pub scope: String,
     pub family_id: Option<Uuid>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateCategoryRequest {
+    pub scope: String,
+    pub family_id: Option<Uuid>,
+    pub kind: CategoryKind,
+    pub name: String,
+    pub idempotency_key: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -585,6 +595,43 @@ impl ApiClient {
             .http
             .post(&url)
             .headers(self.build_headers(None).await)
+            .json(req)
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
+    // ================= CATEGORIES =================
+
+    pub async fn list_categories(
+        &self,
+        scope: &LedgerScope,
+    ) -> Result<Vec<MoneyCategory>, ApiClientError> {
+        let mut url = format!("{}{}", self.base_url, ApiEndpoints::CATEGORIES);
+        match scope {
+            LedgerScope::Personal { .. } => url.push_str("?scope=personal"),
+            LedgerScope::Family { family_id } => {
+                url.push_str(&format!("?scope=family&family_id={}", family_id))
+            }
+        }
+        let resp = self
+            .http
+            .get(&url)
+            .headers(self.build_headers(None).await)
+            .send()
+            .await?;
+        Self::handle_response(resp).await
+    }
+
+    pub async fn create_category(
+        &self,
+        req: &CreateCategoryRequest,
+    ) -> Result<MoneyCategory, ApiClientError> {
+        let url = format!("{}{}", self.base_url, ApiEndpoints::CATEGORIES);
+        let resp = self
+            .http
+            .post(&url)
+            .headers(self.build_headers(req.idempotency_key).await)
             .json(req)
             .send()
             .await?;

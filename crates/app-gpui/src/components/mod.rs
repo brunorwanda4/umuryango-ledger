@@ -3,6 +3,7 @@ pub mod entity_modal_inputs;
 pub mod entity_modals;
 pub mod icon;
 pub mod lang_toggle;
+pub mod money;
 pub mod navbar;
 pub mod notifications_drawer;
 pub mod quick_entry;
@@ -19,6 +20,8 @@ pub use entity_modals::EntityModalDialog;
 pub use icon::{AppIcon, BrandMark, IconSize, IconTone, app_icon, brand_mark, icon_button};
 #[allow(unused_imports)]
 pub use lang_toggle::LangToggle;
+#[allow(unused_imports)]
+pub use money::{MoneyCategoryForm, MoneyCategoryInputs, money_category_form};
 pub use navbar::{Navbar, NavbarInputs};
 pub use notifications_drawer::NotificationsDrawer;
 #[allow(unused_imports)]

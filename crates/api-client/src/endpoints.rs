@@ -5,6 +5,7 @@ impl ApiEndpoints {
     pub const REGISTER: &'static str = "/api/v1/auth/register";
     pub const FAMILIES: &'static str = "/api/v1/families";
     pub const WALLETS: &'static str = "/api/v1/wallets";
+    pub const CATEGORIES: &'static str = "/api/v1/categories";
     pub const TRANSACTIONS: &'static str = "/api/v1/transactions";
     pub const HANDOVERS: &'static str = "/api/v1/transactions/handovers";
     pub const PROJECTS: &'static str = "/api/v1/projects";

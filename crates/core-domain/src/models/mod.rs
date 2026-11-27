@@ -1,3 +1,4 @@
+pub mod category;
 pub mod family;
 pub mod loan;
 pub mod plan;
@@ -6,6 +7,7 @@ pub mod transaction;
 pub mod user;
 pub mod wallet;
 
+pub use category::{CategoryKind, MoneyCategory};
 pub use family::{
     Family, FamilyMember, FamilyMemberView, FamilyRole, FamilyWithRole, PendingFamilyInvite,
 };

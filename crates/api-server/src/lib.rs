@@ -65,6 +65,11 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
                     .route("", web::post().to(handlers::wallets::create_wallet)),
             )
             .service(
+                web::scope("/categories")
+                    .route("", web::get().to(handlers::categories::list_categories))
+                    .route("", web::post().to(handlers::categories::create_category)),
+            )
+            .service(
                 web::scope("/transactions")
                     .route("", web::get().to(handlers::transactions::list_transactions))
                     .route(

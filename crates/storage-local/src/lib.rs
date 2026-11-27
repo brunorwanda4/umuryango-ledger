@@ -14,8 +14,8 @@ mod tests {
     use chrono::{NaiveDate, Utc};
     use rust_decimal::Decimal;
     use umuryango_core_domain::models::{
-        FuturePlan, Loan, LoanDirection, LoanStatus, Project, ProjectStatus, Transaction,
-        TransactionType, Wallet, WalletChannel,
+        CategoryKind, FuturePlan, Loan, LoanDirection, LoanStatus, MoneyCategory, Project,
+        ProjectStatus, Transaction, TransactionType, Wallet, WalletChannel,
     };
     use umuryango_core_domain::scope::LedgerScope;
     use uuid::Uuid;
@@ -29,6 +29,56 @@ mod tests {
 
         let wallets = repo.list_wallets(&scope).expect("list wallets failed");
         assert_eq!(wallets.len(), 0);
+    }
+
+    #[test]
+    fn test_money_categories_persistence_and_sync_queue() {
+        let db = LocalDatabase::open_in_memory().expect("failed to open db");
+        let repo = CacheRepository::new(&db);
+        let queue = SyncQueueRepository::new(&db);
+
+        let family_id = Uuid::new_v4();
+        let scope = LedgerScope::Family { family_id };
+        let income_cat = MoneyCategory {
+            id: Uuid::new_v4(),
+            scope,
+            kind: CategoryKind::Income,
+            name: "Coffee Harvest".to_string(),
+            created_at: Utc::now(),
+        };
+        let expense_cat = MoneyCategory {
+            id: Uuid::new_v4(),
+            scope,
+            kind: CategoryKind::Expense,
+            name: "School Fees".to_string(),
+            created_at: Utc::now(),
+        };
+
+        repo.upsert_money_category(&income_cat)
+            .expect("upsert income category");
+        repo.upsert_money_category(&expense_cat)
+            .expect("upsert expense category");
+
+        let loaded = repo
+            .list_money_categories(&scope)
+            .expect("list money categories");
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].name, "Coffee Harvest");
+        assert_eq!(loaded[0].kind, CategoryKind::Income);
+        assert_eq!(loaded[1].name, "School Fees");
+        assert_eq!(loaded[1].kind, CategoryKind::Expense);
+
+        let qid = queue
+            .enqueue(&SyncMutation::CreateCategory {
+                idempotency_key: expense_cat.id,
+                scope: "family".to_string(),
+                family_id: Some(family_id),
+                kind: CategoryKind::Expense,
+                name: "School Fees".to_string(),
+            })
+            .expect("enqueue create_category");
+        let item = queue.get(qid).expect("get queued").expect("exists");
+        assert_eq!(item.action, "create_category");
     }
 
     #[test]

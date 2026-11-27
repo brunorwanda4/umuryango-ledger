@@ -3,7 +3,7 @@ use std::str::FromStr;
 use gpui_kit::prelude::*;
 use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
 use rust_decimal::Decimal;
-use umuryango_core_domain::models::{Transaction, TransactionType, Wallet};
+use umuryango_core_domain::models::{CategoryKind, Transaction, TransactionType, Wallet};
 use umuryango_core_domain::scope::LedgerScope;
 use umuryango_i18n::{Locale, Translator, terms};
 use uuid::Uuid;
@@ -15,7 +15,9 @@ use crate::common::{
     ItemContent, ItemSize, Label, text_field,
 };
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
+use crate::components::money::{MoneyCategoryForm, MoneyCategoryInputs};
 use crate::components::quick_entry_inputs::QuickEntryInputs;
+use crate::state::AppState;
 use crate::theme::SemanticTheme;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,8 +62,10 @@ impl QuickEntryDialog {
     #[allow(clippy::too_many_arguments)]
     pub fn render(
         id: impl Into<ElementId>,
+        state: &AppState,
         form: &QuickEntryForm,
         inputs: &QuickEntryInputs,
+        category_inputs: &MoneyCategoryInputs,
         wallets: &[Wallet],
         _is_family: bool,
         is_busy: bool,
@@ -73,6 +77,38 @@ impl QuickEntryDialog {
         let expense_label = Translator::t(locale, terms::EXPENSE, None);
         let handover_label = Translator::t(locale, terms::HANDOVER, None);
         let view_for_close = cx.entity().clone();
+
+        let active_category_kind = match form.mode {
+            QuickEntryMode::Income => CategoryKind::Income,
+            QuickEntryMode::Expense | QuickEntryMode::Handover => CategoryKind::Expense,
+        };
+
+        let mut category_options: Vec<String> = match active_category_kind {
+            CategoryKind::Income => vec![
+                "Salary".to_string(),
+                "Business".to_string(),
+                "Harvest".to_string(),
+                "Remittance".to_string(),
+                "Other".to_string(),
+            ],
+            CategoryKind::Expense => vec![
+                "Food".to_string(),
+                "Utilities".to_string(),
+                "Health".to_string(),
+                "Education".to_string(),
+                "Transport".to_string(),
+                "Other".to_string(),
+            ],
+        };
+        for saved in &state.categories {
+            if saved.kind == active_category_kind
+                && !category_options
+                    .iter()
+                    .any(|existing| existing.eq_ignore_ascii_case(&saved.name))
+            {
+                category_options.push(saved.name.clone());
+            }
+        }
 
         DialogOverlay::new("quick-entry-overlay")
             .on_click(cx.listener(|this, _, _, cx| {
@@ -229,55 +265,58 @@ impl QuickEntryDialog {
                                         ),
                                     ),
                             )
-                            // Category quick chips
-                            .child(
+                            // Category quick chips + inline MoneyCategoryForm (Income & Expense modes)
+                            .children((form.mode != QuickEntryMode::Handover).then(|| {
                                 Field::new()
                                     .gap(px(6.0))
                                     .theme(theme)
                                     .child(
-                                        Label::new(umuryango_i18n::t(
-                                            locale,
-                                            "transactions.category",
-                                        ))
-                                        .theme(theme),
+                                        div()
+                                            .flex()
+                                            .flex_row()
+                                            .justify_between()
+                                            .items_center()
+                                            .gap(px(8.0))
+                                            .child(
+                                                Label::new(umuryango_i18n::t(
+                                                    locale,
+                                                    "transactions.category",
+                                                ))
+                                                .theme(theme),
+                                            )
+                                            .child(MoneyCategoryForm::render(
+                                                "quick-entry-category-form",
+                                                active_category_kind,
+                                                state,
+                                                category_inputs,
+                                                theme,
+                                                cx,
+                                            )),
                                     )
-                                    .child(
-                                        div().flex().flex_wrap().gap(px(6.0)).children(
-                                            [
-                                                "Food",
-                                                "Utilities",
-                                                "Health",
-                                                "Education",
-                                                "Transport",
-                                                "Salary",
-                                                "Other",
-                                            ]
-                                            .into_iter()
-                                            .map(
-                                                |cat| {
-                                                    let is_sel = form.category == cat;
-                                                    let cat_val = cat.to_string();
-                                                    Button::new(format!("cat-preset-{}", cat))
-                                                        .variant(if is_sel {
-                                                            ButtonVariant::Default
-                                                        } else {
-                                                            ButtonVariant::Outline
-                                                        })
-                                                        .size(ButtonSize::Xs)
-                                                        .label(cat)
-                                                        .theme(theme)
-                                                        .on_click(cx.listener(
-                                                            move |this, _, _, cx| {
-                                                                this.quick_entry_form.category =
-                                                                    cat_val.clone();
-                                                                cx.notify();
-                                                            },
-                                                        ))
-                                                },
-                                            ),
+                                    .child(div().flex().flex_wrap().gap(px(6.0)).children(
+                                        category_options.into_iter().enumerate().map(
+                                            |(idx, cat)| {
+                                                let is_sel =
+                                                    form.category.eq_ignore_ascii_case(&cat);
+                                                let cat_val = cat.clone();
+                                                Button::new(format!("cat-preset-{idx}"))
+                                                    .variant(if is_sel {
+                                                        ButtonVariant::Default
+                                                    } else {
+                                                        ButtonVariant::Outline
+                                                    })
+                                                    .size(ButtonSize::Xs)
+                                                    .label(cat)
+                                                    .theme(theme)
+                                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                                        this.quick_entry_form.category =
+                                                            cat_val.clone();
+                                                        cx.notify();
+                                                    }))
+                                            },
                                         ),
-                                    ),
-                            )
+                                    ))
+                            }))
                             // Editable Description & Paid To
                             .child(text_field(
                                 "quick-entry-description-input",
@@ -489,6 +528,12 @@ impl QuickEntryDialog {
             Some(form.paid_to.trim().to_string())
         };
 
+        let category = if tx_type == TransactionType::Handover {
+            "Handover".to_string()
+        } else {
+            form.category.clone()
+        };
+
         let now = chrono::Utc::now();
         Ok(Transaction {
             id: Uuid::new_v4(),
@@ -498,7 +543,7 @@ impl QuickEntryDialog {
             tx_type,
             amount,
             currency: "RWF".to_string(),
-            category: form.category.clone(),
+            category,
             description: if form.description.trim().is_empty() {
                 None
             } else {

@@ -3,7 +3,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{info, warn};
-use umuryango_api_client::{ApiClient, ApiClientError, CreateTransactionRequest};
+use umuryango_api_client::{
+    ApiClient, ApiClientError, CreateCategoryRequest, CreateTransactionRequest,
+};
 use umuryango_core_domain::scope::LedgerScope;
 
 use crate::cache_repo::CacheRepository;
@@ -89,6 +91,52 @@ impl SyncWorker {
         }
 
         match &item.mutation {
+            SyncMutation::CreateCategory {
+                idempotency_key,
+                scope,
+                family_id,
+                kind,
+                name,
+            } => {
+                let req = CreateCategoryRequest {
+                    scope: scope.clone(),
+                    family_id: *family_id,
+                    kind: *kind,
+                    name: name.clone(),
+                    idempotency_key: Some(*idempotency_key),
+                };
+
+                match client.create_category(&req).await {
+                    Ok(cat) => {
+                        let locked = db.lock().unwrap();
+                        let q_repo = SyncQueueRepository::new(&locked);
+                        let cache_repo = CacheRepository::new(&locked);
+                        let _ = q_repo.mark_synced(item.id);
+                        let _ = cache_repo.upsert_money_category(&cat);
+                    }
+                    Err(e) => {
+                        warn!("Offline category mutation {} failed: {:?}", item.id, e);
+                        let locked = db.lock().unwrap();
+                        let q_repo = SyncQueueRepository::new(&locked);
+                        match &e {
+                            ApiClientError::Reqwest(req_err) => {
+                                let _ = q_repo.reset_to_pending(item.id, &req_err.to_string());
+                            }
+                            ApiClientError::ServerError { status: 409, .. } => {
+                                // Duplicate category on server: treat as synced so queue unblocks
+                                let _ = q_repo.mark_synced(item.id);
+                            }
+                            ApiClientError::ServerError { code, message, .. } => {
+                                let _ =
+                                    q_repo.mark_failed(item.id, &format!("{}: {}", code, message));
+                            }
+                            _ => {
+                                let _ = q_repo.mark_failed(item.id, &e.to_string());
+                            }
+                        }
+                    }
+                }
+            }
             SyncMutation::CreateTransaction {
                 idempotency_key,
                 scope,
@@ -266,7 +314,16 @@ impl SyncWorker {
             }
         }
 
-        // 2. Transactions
+        // 2. Categories
+        if let Ok(categories) = client.list_categories(scope).await {
+            let locked = db.lock().unwrap();
+            let repo = CacheRepository::new(&locked);
+            for cat in categories {
+                let _ = repo.upsert_money_category(&cat);
+            }
+        }
+
+        // 3. Transactions
         if let Ok(txs) = client.list_transactions(scope).await {
             let locked = db.lock().unwrap();
             let repo = CacheRepository::new(&locked);
@@ -275,7 +332,7 @@ impl SyncWorker {
             }
         }
 
-        // 3. Projects (if Family scope)
+        // 4. Projects (if Family scope)
         if let LedgerScope::Family { family_id } = scope {
             if let Ok(projects) = client.list_projects(Some(*family_id)).await {
                 let locked = db.lock().unwrap();
@@ -286,7 +343,7 @@ impl SyncWorker {
             }
         }
 
-        // 4. Loans
+        // 5. Loans
         if let Ok(loans) = client.list_loans(scope).await {
             let locked = db.lock().unwrap();
             let repo = CacheRepository::new(&locked);
@@ -295,7 +352,7 @@ impl SyncWorker {
             }
         }
 
-        // 5. Future Plans
+        // 6. Future Plans
         if let Ok(plans) = client.list_future_plans(scope).await {
             let locked = db.lock().unwrap();
             let repo = CacheRepository::new(&locked);

@@ -316,6 +316,19 @@
     "saved_offline": "Byabitswe offline. Bizahuzwa nuramuka ubonye murandasi.",
     "select_destination_wallet": "Hitamo Konti Yakira"
   },
+  "categories": {
+    "create_btn": "Icyiciro Gishya",
+    "dialog_title": "Rema Icyiciro cy'Amafaranga",
+    "dialog_desc": "Hitamo niba iki cyiciro ari icy'amafaranga yinjira cyangwa asohoka, hanyuma wandike izina ryacyo.",
+    "type_label": "Ubwoko bw'Icyiciro",
+    "income": "Amafaranga Yinjiye",
+    "expense": "Amafaranga Yasohotse",
+    "name_label": "Izina ry'Icyiciro",
+    "name_placeholder": "urugero: Minerval, Umushahara, Umusaruro",
+    "saved_toast": "Icyiciro '{name}' cyabitswe neza!",
+    "name_required": "Izina ry'icyiciro rirakenewe.",
+    "duplicate_error": "Icyiciro '{name}' gisanzwe gihari kuri ubu bwoko."
+  },
   "report": {
     "title": "Raporo",
     "subtitle": "Incamake n'imbonerahamwe y'imari",
