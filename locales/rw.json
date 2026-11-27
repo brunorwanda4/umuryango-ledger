@@ -73,7 +73,9 @@
     "logged_out": "Wasohotse neza.",
     "full_name_required": "Amazina yawe arakenewe.",
     "password_too_short": "Ijambo ry'ibanga rigomba kugira nibura inyuguti 6.",
-    "session_expired": "Igihe cyo kwinjira cyarangiye. Ongera winjire."
+    "session_expired": "Igihe cyo kwinjira cyarangiye. Ongera winjire.",
+    "about_footer": "Umuryango Ledger — Igitabo cy'umutungo w'umuryango n'uw'umuntu bwite.",
+    "built_by": "Yakozwe na"
   },
   "onboarding": {
     "title": "Murakaza neza muri Umuryango Ledger",

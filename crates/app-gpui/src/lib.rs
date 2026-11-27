@@ -110,11 +110,17 @@ impl RootView {
         if hooks::use_mobile::is_mobile(window) {
             state.sidebar_open = false;
         }
-        let mut last_bucket = (hooks::use_mobile::viewport_width(window) as i32) / 16;
+        let mut last_bucket = (
+            (hooks::use_mobile::viewport_width(window) as i32) / 16,
+            (hooks::use_mobile::viewport_height(window) as i32) / 16,
+        );
         let mut last_mobile = hooks::use_mobile::is_mobile(window);
         let viewport_sub =
             hooks::use_mobile::observe_viewport(window, cx, move |this, metrics, _window, cx| {
-                let next_bucket = (f32::from(metrics.size.width) as i32) / 16;
+                let next_bucket = (
+                    (f32::from(metrics.size.width) as i32) / 16,
+                    (f32::from(metrics.size.height) as i32) / 16,
+                );
                 let now_mobile = metrics.is_mobile();
                 let mut changed = false;
 
@@ -367,6 +373,7 @@ impl Render for RootView {
                 &self.state,
                 &self.auth_inputs,
                 &theme,
+                window,
                 cx,
             )
             .into_any_element(),
@@ -504,7 +511,7 @@ impl Render for RootView {
             } else {
                 None
             })
-            // Quick Entry Modal Dialog Overlay (DialogOverlay + DialogContent)
+            // Quick Entry Modal Dialog Overlay (DialogOverlay + SheetContent)
             .children(if self.state.show_quick_entry {
                 let wallets = self.state.active_wallets();
                 let is_family = self.state.active_scope.is_family();

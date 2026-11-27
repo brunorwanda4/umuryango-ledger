@@ -73,7 +73,9 @@
     "logged_out": "Logged out successfully.",
     "full_name_required": "Full name is required.",
     "password_too_short": "Password must be at least 6 characters.",
-    "session_expired": "Your session expired. Please log in again."
+    "session_expired": "Your session expired. Please log in again.",
+    "about_footer": "Umuryango Ledger — Family & personal custody ledger.",
+    "built_by": "Built by"
   },
   "onboarding": {
     "title": "Welcome to Umuryango Ledger",
