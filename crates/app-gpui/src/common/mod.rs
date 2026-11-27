@@ -283,10 +283,10 @@ pub use tabs::{
 };
 pub use textarea::{KitTextarea, Textarea, TextareaState, textarea_field};
 pub use toast::{
-    KitNotification, KitNotificationList, KitNotificationSettings, KitNotificationType, Toast,
-    ToastAction, ToastClose, ToastContent, ToastDescription, ToastIcon, ToastManager,
-    ToastPlacement, ToastPortal, ToastProvider, ToastRecord, ToastTitle, ToastType, ToastViewport,
-    Toaster, create_toast_manager,
+    KitNotification, KitNotificationList, KitNotificationSettings, KitNotificationType,
+    TOAST_DURATION, Toast, ToastAction, ToastClose, ToastContent, ToastDescription, ToastIcon,
+    ToastManager, ToastPlacement, ToastPortal, ToastProvider, ToastRecord, ToastTitle, ToastType,
+    ToastViewport, Toaster, create_toast_manager,
 };
 pub use toggle::{KitToggle, Toggle, ToggleSize, ToggleVariant};
 pub use toggle_group::{ToggleGroup, ToggleGroupItem, ToggleGroupOrientation};

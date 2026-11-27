@@ -20,7 +20,8 @@ use std::sync::{Arc, Mutex};
 
 use api_bridge::ApiBridge;
 use common::{
-    Toast, ToastClose, ToastContent, ToastIcon, ToastPortal, ToastTitle, ToastType, ToastViewport,
+    TOAST_DURATION, Toast, ToastClose, ToastContent, ToastIcon, ToastPortal, ToastTitle, ToastType,
+    ToastViewport,
 };
 use components::entity_modal_inputs::EntityModalInputs;
 use components::entity_modals::EntityModalDialog;
@@ -29,7 +30,7 @@ use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
 use components::quick_entry_inputs::QuickEntryInputs;
 use gpui_kit::{
     Context, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent, ParentElement, Render,
-    Styled, Subscription, Window, div, px,
+    Styled, Subscription, Task, Window, div, px,
 };
 pub use safe_area::SafeAreaInsets;
 use screens::auth_inputs::AuthInputs;
@@ -58,6 +59,8 @@ pub struct RootView {
     pub quick_entry_inputs: QuickEntryInputs,
     pub entity_modal_inputs: EntityModalInputs,
     protected_focus: FocusHandle,
+    toast_scheduled_id: u64,
+    _toast_timer_task: Option<Task<()>>,
     _viewport_sub: Subscription,
 }
 
@@ -156,6 +159,8 @@ impl RootView {
             quick_entry_inputs,
             entity_modal_inputs,
             protected_focus,
+            toast_scheduled_id: 0,
+            _toast_timer_task: None,
             _viewport_sub: viewport_sub,
         };
 
@@ -307,7 +312,29 @@ impl RootView {
 
     pub fn dismiss_toast(&mut self, cx: &mut Context<Self>) {
         self.state.clear_toast();
+        self._toast_timer_task = None;
         cx.notify();
+    }
+
+    fn sync_toast_timer(&mut self, cx: &mut Context<Self>) {
+        if self.state.toast_message.is_none() {
+            self._toast_timer_task = None;
+            return;
+        }
+        let target_id = self.state.toast_id;
+        if self.toast_scheduled_id == target_id {
+            return;
+        }
+        self.toast_scheduled_id = target_id;
+        self._toast_timer_task = Some(cx.spawn(async move |this, cx| {
+            cx.background_executor().timer(TOAST_DURATION).await;
+            let _ = this.update(cx, |this, cx| {
+                if this.state.toast_id == target_id && this.state.toast_message.is_some() {
+                    this.state.clear_toast();
+                    cx.notify();
+                }
+            });
+        }));
     }
 
     pub fn copy_to_clipboard(&mut self, text: String, feedback: String, cx: &mut Context<Self>) {
@@ -366,6 +393,7 @@ impl RootView {
 
 impl Render for RootView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        self.sync_toast_timer(cx);
         let theme = self.state.theme.clone();
         let screen_element = match self.state.current_screen {
             Screen::Auth => screens::AuthScreen::render(

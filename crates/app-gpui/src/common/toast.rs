@@ -8,9 +8,12 @@
 //! - `ToastContent`: `flex items-center gap-3 p-4`
 //! - `ToastIcon`: `Success` | `Info` | `Warning` | `Error` (`app_icon`) | `Loading` ([`Spinner`])
 //! - `ToastTitle`: `text-sm font-medium`, `ToastDescription`: `text-sm text-muted-foreground`
-//! - `ToastAction` (`Button` `Outline` `Sm`) & `ToastClose` (`Button` `Ghost` `IconSm` `AppIcon::Close`).
+//! - `ToastAction` (`Button` `Outline` `Sm`) & `ToastClose` (`Button` `Ghost` `IconSm` `AppIcon::Close`)
+//! - Auto-dismisses after [`TOAST_DURATION`] (`10s`) by default.
 
+use std::collections::HashMap;
 use std::rc::Rc;
+use std::time::Duration;
 
 use gpui_kit::component::StyledExt as _;
 pub use gpui_kit::component::notification::{
@@ -18,9 +21,9 @@ pub use gpui_kit::component::notification::{
     NotificationSettings as KitNotificationSettings, NotificationType as KitNotificationType,
 };
 use gpui_kit::{
-    AnyElement, App, AppContext as _, ClickEvent, ElementId, Entity, FontWeight,
+    AnyElement, App, AppContext as _, ClickEvent, Context, ElementId, Entity, FontWeight,
     InteractiveElement, IntoElement, MouseButton, ParentElement, RenderOnce, SharedString,
-    StyleRefinement, Styled, Window, div, px,
+    StyleRefinement, Styled, Task, Window, div, px,
 };
 
 use crate::common::button::{Button, ButtonSize, ButtonVariant};
@@ -31,6 +34,9 @@ use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
 use crate::hooks::use_mobile::{Breakpoint, is_mobile};
 use crate::safe_area::SafeAreaInsets;
 use crate::theme::{FONT_FAMILY, SemanticTheme, ThemeConfig, ThemeMode};
+
+/// Default visible lifetime (`10s`) before a toast automatically dismisses.
+pub const TOAST_DURATION: Duration = Duration::from_secs(10);
 
 /// Semantic status variant matching `ToastIcon` in `toast.tsx`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -64,6 +70,7 @@ pub struct ToastRecord {
     pub toast_type: ToastType,
     pub title: SharedString,
     pub description: Option<SharedString>,
+    pub duration: Option<Duration>,
     pub action_label: Option<SharedString>,
     pub on_action: Option<Rc<dyn Fn(&ClickEvent, &mut Window, &mut App) + 'static>>,
 }
@@ -75,6 +82,7 @@ impl ToastRecord {
             toast_type: ToastType::Default,
             title: title.into(),
             description: None,
+            duration: Some(TOAST_DURATION),
             action_label: None,
             on_action: None,
         }
@@ -87,6 +95,11 @@ impl ToastRecord {
 
     pub fn description(mut self, description: impl Into<SharedString>) -> Self {
         self.description = Some(description.into());
+        self
+    }
+
+    pub fn duration(mut self, duration: Option<Duration>) -> Self {
+        self.duration = duration;
         self
     }
 
@@ -107,6 +120,7 @@ pub struct ToastManager {
     next_id: u64,
     items: Vec<ToastRecord>,
     max_visible: usize,
+    timers: HashMap<u64, Task<()>>,
 }
 
 impl ToastManager {
@@ -115,6 +129,7 @@ impl ToastManager {
             next_id: 1,
             items: Vec::new(),
             max_visible: 5,
+            timers: HashMap::new(),
         }
     }
 
@@ -134,7 +149,9 @@ impl ToastManager {
         self.items.push(record);
         if self.items.len() > self.max_visible.max(1) {
             let excess = self.items.len() - self.max_visible.max(1);
-            self.items.drain(0..excess);
+            for evicted in self.items.drain(0..excess) {
+                self.timers.remove(&evicted.id);
+            }
         }
         id
     }
@@ -181,10 +198,47 @@ impl ToastManager {
 
     pub fn dismiss(&mut self, id: u64) {
         self.items.retain(|t| t.id != id);
+        self.timers.remove(&id);
     }
 
     pub fn clear(&mut self) {
         self.items.clear();
+        self.timers.clear();
+    }
+
+    pub fn has_unarmed_timers(&self) -> bool {
+        self.items
+            .iter()
+            .any(|t| t.duration.is_some() && !self.timers.contains_key(&t.id))
+    }
+
+    /// Arms a background executor auto-dismiss timer for every active toast with a `duration`.
+    pub fn arm_timers(&mut self, cx: &mut Context<Self>) {
+        self.timers
+            .retain(|id, _| self.items.iter().any(|t| t.id == *id));
+
+        let pending: Vec<(u64, Duration)> = self
+            .items
+            .iter()
+            .filter_map(|t| {
+                let dur = t.duration?;
+                (!self.timers.contains_key(&t.id)).then_some((t.id, dur))
+            })
+            .collect();
+
+        for (id, duration) in pending {
+            let task = cx.spawn(async move |this, cx| {
+                cx.background_executor().timer(duration).await;
+                let _ = this.update(cx, |m, cx| {
+                    let before = m.items.len();
+                    m.items.retain(|t| t.id != id);
+                    if m.items.len() != before {
+                        cx.notify();
+                    }
+                });
+            });
+            self.timers.insert(id, task);
+        }
     }
 }
 
@@ -762,6 +816,9 @@ impl ParentElement for Toaster {
 
 impl RenderOnce for Toaster {
     fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.manager.read(cx).has_unarmed_timers() {
+            self.manager.update(cx, |m, cx| m.arm_timers(cx));
+        }
         let theme = resolve_theme(self.theme.as_ref(), cx);
         let records: Vec<ToastRecord> = self.manager.read(cx).toasts().to_vec();
 
@@ -853,5 +910,31 @@ mod tests {
             ToastPlacement::from_width(1440.0),
             ToastPlacement::BottomRight
         );
+    }
+
+    #[test]
+    fn toast_default_duration_is_ten_seconds_and_manager_tracks_items() {
+        assert_eq!(TOAST_DURATION, Duration::from_secs(10));
+
+        let mut mgr = ToastManager::new().max_visible(2);
+        let first = mgr.success("Saved", None);
+        let second = mgr.error("Failed", None);
+        assert_eq!(mgr.toasts().len(), 2);
+        assert_eq!(mgr.toasts()[0].duration, Some(Duration::from_secs(10)));
+        assert!(mgr.has_unarmed_timers());
+
+        let third = mgr.info("Updated", None);
+        assert_eq!(mgr.toasts().len(), 2);
+        assert_eq!(mgr.toasts()[0].id, second);
+        assert_eq!(mgr.toasts()[1].id, third);
+        assert_ne!(first, second);
+
+        mgr.dismiss(second);
+        assert_eq!(mgr.toasts().len(), 1);
+        assert_eq!(mgr.toasts()[0].id, third);
+
+        mgr.clear();
+        assert!(mgr.toasts().is_empty());
+        assert!(!mgr.has_unarmed_timers());
     }
 }

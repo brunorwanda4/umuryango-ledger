@@ -159,6 +159,7 @@ pub struct AppState {
     pub is_busy: bool,
     pub current_screen: Screen,
     pub toast_message: Option<(String, bool)>,
+    pub toast_id: u64,
     pub show_quick_entry: bool,
     pub active_modal: Option<ActiveModal>,
     pub entity_form: EntityFormState,
@@ -237,6 +238,7 @@ impl Default for AppState {
             is_busy: false,
             current_screen: Screen::Auth,
             toast_message: None,
+            toast_id: 0,
             show_quick_entry: false,
             active_modal: None,
             entity_form: EntityFormState::default(),
@@ -583,6 +585,7 @@ impl AppState {
     }
 
     pub fn set_toast(&mut self, message: String, is_error: bool) {
+        self.toast_id = self.toast_id.wrapping_add(1);
         self.toast_message = Some((message, is_error));
     }
 
@@ -803,6 +806,23 @@ mod tests {
         assert!(state.dashboard_period.is_none());
         assert_eq!(state.current_screen, Screen::Auth);
         assert_eq!(state.onboarding_step, OnboardingStep::Choose);
+        assert_eq!(state.toast_id, 0);
+    }
+
+    #[test]
+    fn test_set_toast_increments_id_and_clear_resets_message() {
+        let mut state = AppState::default();
+        state.set_toast("First".to_string(), false);
+        assert_eq!(state.toast_id, 1);
+        assert_eq!(state.toast_message, Some(("First".to_string(), false)));
+
+        state.set_toast("Second".to_string(), true);
+        assert_eq!(state.toast_id, 2);
+        assert_eq!(state.toast_message, Some(("Second".to_string(), true)));
+
+        state.clear_toast();
+        assert_eq!(state.toast_id, 2);
+        assert!(state.toast_message.is_none());
     }
 
     #[test]
