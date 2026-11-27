@@ -2,8 +2,8 @@
 //! `web/src/components/ui/alert-dialog.tsx`.
 //!
 //! Matches `--preset b1oaDsAa` (`base-sera`):
-//! - `AlertDialogContent`: `Default` (`max-w-xs sm:max-w-md`) | `Sm` (`max-w-xs`),
-//!   `gap-6 rounded-none bg-popover p-6 shadow-md ring-1 ring-foreground/10`
+//! - `AlertDialogContent`: `Default` (`max-w-md`) | `Sm` (`max-w-sm`),
+//!   `gap-5 rounded-none border border-border bg-popover p-6 shadow-md`
 //! - `AlertDialogMedia`: `size-16 items-center justify-center rounded-none bg-muted`
 //! - `AlertDialogTitle`: `text-lg font-semibold uppercase`
 //! - `AlertDialogDescription`: `mt-0.5 text-sm leading-relaxed text-muted-foreground`
@@ -64,7 +64,7 @@ pub type AlertDialogTitle = DialogTitle;
 /// Muted body copy (`AlertDialogDescription` in `alert-dialog.tsx`).
 pub type AlertDialogDescription = DialogDescription;
 
-///Centered confirmation popup (`AlertDialogContent` in `alert-dialog.tsx`).
+/// Centered confirmation/form popup (`AlertDialogContent` in `alert-dialog.tsx`).
 #[derive(IntoElement)]
 pub struct AlertDialogContent {
     id: ElementId,
@@ -123,11 +123,12 @@ impl RenderOnce for AlertDialogContent {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = resolve_theme(self.theme.as_ref(), cx);
         let tokens = PresetTokens::from_theme(&theme);
-        let mobile = is_mobile(window);
-        let max_w = match (self.size, mobile) {
-            (AlertDialogSize::Sm, _) | (AlertDialogSize::Default, true) => px(320.0),
-            (AlertDialogSize::Default, false) => px(448.0),
+        let viewport_w = window.viewport_size().width;
+        let target_max = match self.size {
+            AlertDialogSize::Sm => px(360.0),
+            AlertDialogSize::Default => px(448.0),
         };
+        let dialog_w = (viewport_w - px(32.0)).max(px(260.0)).min(target_max);
         let on_esc = self.on_escape;
 
         div()
@@ -136,10 +137,12 @@ impl RenderOnce for AlertDialogContent {
             .relative()
             .flex()
             .flex_col()
-            .w_full()
-            .max_w(max_w)
-            .gap(px(24.0))
+            .w(dialog_w)
+            .max_w(dialog_w)
+            .gap(px(20.0))
             .rounded(PresetRadius::NONE)
+            .border_1()
+            .border_color(tokens.border)
             .bg(tokens.popover)
             .p(px(24.0))
             .font_family(FONT_FAMILY)
@@ -293,13 +296,14 @@ impl ParentElement for AlertDialogHeader {
 
 impl RenderOnce for AlertDialogHeader {
     fn render(self, window: &mut Window, _cx: &mut App) -> impl IntoElement {
-        let centered = is_mobile(window) || matches!(self.size, AlertDialogSize::Sm);
+        let centered_media = is_mobile(window) || matches!(self.size, AlertDialogSize::Sm);
 
         if let Some(media) = self.media {
-            if centered {
+            if centered_media {
                 div()
                     .flex()
                     .flex_col()
+                    .w_full()
                     .items_center()
                     .gap(px(8.0))
                     .child(media)
@@ -309,6 +313,7 @@ impl RenderOnce for AlertDialogHeader {
                 div()
                     .flex()
                     .flex_row()
+                    .w_full()
                     .items_start()
                     .gap(px(24.0))
                     .child(media.mb(px(0.0)))
@@ -327,9 +332,9 @@ impl RenderOnce for AlertDialogHeader {
             div()
                 .flex()
                 .flex_col()
-                .gap(px(8.0))
-                .cx_when(centered, |d| d.items_center())
-                .cx_when(!centered, |d| d.items_start())
+                .w_full()
+                .items_start()
+                .gap(px(6.0))
                 .refine_style(&self.style)
                 .children(self.children)
         }
@@ -378,16 +383,16 @@ impl ParentElement for AlertDialogFooter {
 }
 
 impl RenderOnce for AlertDialogFooter {
-    fn render(self, window: &mut Window, _cx: &mut App) -> impl IntoElement {
-        let mobile = is_mobile(window);
-        let is_sm = matches!(self.size, AlertDialogSize::Sm);
-
+    fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
         div()
             .flex()
-            .gap(px(8.0))
-            .cx_when(is_sm, |d| d.flex_row().w_full())
-            .cx_when(!is_sm && mobile, |d| d.flex_col_reverse())
-            .cx_when(!is_sm && !mobile, |d| d.flex_row().justify_end())
+            .flex_row()
+            .flex_wrap()
+            .items_center()
+            .justify_end()
+            .w_full()
+            .pt(px(4.0))
+            .gap(px(10.0))
             .refine_style(&self.style)
             .children(self.children)
     }
@@ -574,6 +579,7 @@ pub struct AlertDialog {
     content: Option<AlertDialogContent>,
     open: Option<bool>,
     default_open: bool,
+    dismiss_on_backdrop: bool,
     on_open_change: Option<Rc<dyn Fn(&bool, &mut Window, &mut App) + 'static>>,
     style: StyleRefinement,
 }
@@ -586,6 +592,7 @@ impl AlertDialog {
             content: None,
             open: None,
             default_open: false,
+            dismiss_on_backdrop: false,
             on_open_change: None,
             style: StyleRefinement::default(),
         }
@@ -608,6 +615,11 @@ impl AlertDialog {
 
     pub fn default_open(mut self, default_open: bool) -> Self {
         self.default_open = default_open;
+        self
+    }
+
+    pub fn dismiss_on_backdrop(mut self, dismiss: bool) -> Self {
+        self.dismiss_on_backdrop = dismiss;
         self
     }
 
@@ -637,7 +649,10 @@ impl RenderOnce for AlertDialog {
         );
         let is_open = self.open.unwrap_or_else(|| *state.read(cx));
 
-        let mut root = div().id(self.id.clone()).refine_style(&self.style);
+        let mut root = div()
+            .id(self.id.clone())
+            .cx_when(self.trigger.is_none(), |d| d.absolute().size_0())
+            .refine_style(&self.style);
 
         if let Some(trig) = self.trigger {
             let state_open = state.clone();
@@ -665,8 +680,8 @@ impl RenderOnce for AlertDialog {
 
         if is_open && let Some(mut content) = self.content {
             let existing_esc = content.on_escape.take();
-            let state_esc = state;
-            let on_change_esc = self.on_open_change;
+            let state_esc = state.clone();
+            let on_change_esc = self.on_open_change.clone();
 
             content = content.on_escape(move |window, cx| {
                 if let Some(prev) = &existing_esc {
@@ -683,10 +698,30 @@ impl RenderOnce for AlertDialog {
                 }
             });
 
-            let overlay = AlertDialogOverlay::new(ElementId::Name(
+            let mut overlay = AlertDialogOverlay::new(ElementId::Name(
                 format!("{}-alert-overlay", self.id).into(),
             ));
-            root = root.child(AlertDialogPortal::new().child(overlay.child(content)));
+            if self.dismiss_on_backdrop {
+                let state_bd = state;
+                let on_change_bd = self.on_open_change;
+                overlay = overlay.on_click(move |_ev, window, cx| {
+                    if !is_controlled {
+                        state_bd.update(cx, |v, cx| {
+                            *v = false;
+                            cx.notify();
+                        });
+                    }
+                    if let Some(cb) = &on_change_bd {
+                        cb(&false, window, cx);
+                    }
+                });
+            }
+
+            root = root.child(
+                AlertDialogPortal::new()
+                    .priority(20)
+                    .child(overlay.child(content)),
+            );
         }
 
         root

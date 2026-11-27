@@ -84,10 +84,8 @@ impl MoneyCategoryForm {
         let is_open = state.active_category_dialog.as_deref() == Some(dialog_key.as_str());
         let locale = state.locale;
 
-        let selected_radio_idx = match state.category_form_kind {
-            CategoryKind::Income => 0usize,
-            CategoryKind::Expense => 1usize,
-        };
+        let is_income = state.category_form_kind == CategoryKind::Income;
+        let selected_radio_idx = if is_income { 0usize } else { 1usize };
 
         let view_open = cx.entity().clone();
         let dialog_key_for_open = dialog_key.clone();
@@ -128,16 +126,47 @@ impl MoneyCategoryForm {
                             .child(Label::new(t(locale, "categories.type_label")).theme(theme))
                             .child(
                                 RadioGroupContainer::horizontal(format!("{dialog_key}-kind-radio"))
+                                    .gap(px(10.0))
                                     .selected_index(Some(selected_radio_idx))
                                     .item(
                                         RadioGroupItem::new(format!("{dialog_key}-kind-income"))
                                             .label(t(locale, "categories.income"))
-                                            .primary_accent(true),
+                                            .primary_accent(true)
+                                            .flex_1()
+                                            .min_w(px(168.0))
+                                            .px(px(12.0))
+                                            .py(px(10.0))
+                                            .border_1()
+                                            .border_color(if is_income {
+                                                theme.primary
+                                            } else {
+                                                theme.border_subtle
+                                            })
+                                            .bg(if is_income {
+                                                theme.primary.opacity(0.10)
+                                            } else {
+                                                theme.bg_canvas
+                                            }),
                                     )
                                     .item(
                                         RadioGroupItem::new(format!("{dialog_key}-kind-expense"))
                                             .label(t(locale, "categories.expense"))
-                                            .primary_accent(true),
+                                            .primary_accent(true)
+                                            .flex_1()
+                                            .min_w(px(168.0))
+                                            .px(px(12.0))
+                                            .py(px(10.0))
+                                            .border_1()
+                                            .border_color(if !is_income {
+                                                theme.primary
+                                            } else {
+                                                theme.border_subtle
+                                            })
+                                            .bg(if !is_income {
+                                                theme.primary.opacity(0.10)
+                                            } else {
+                                                theme.bg_canvas
+                                            }),
                                     )
                                     .theme(theme)
                                     .on_change(move |idx, _window, cx| {
@@ -197,6 +226,7 @@ impl MoneyCategoryForm {
         div().id(elem_id.clone()).child(
             AlertDialog::new(format!("{dialog_key}-dialog"))
                 .open(is_open)
+                .dismiss_on_backdrop(true)
                 .on_open_change(move |next_open, window, cx| {
                     let key = dialog_key_for_open.clone();
                     view_open.update(cx, |this, cx| {

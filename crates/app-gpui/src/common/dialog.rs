@@ -1,7 +1,7 @@
 //! Modal dialog primitives ported from `web/src/components/ui/dialog.tsx`.
 //!
 //! Matches `--preset b1oaDsAa` (`base-sera`):
-//! - `DialogOverlay`: `inset-0 bg-black/20` occluding backdrop
+//! - `DialogOverlay`: `inset-0 bg-black/65` occluding backdrop
 //! - `DialogContent`: `w-full max-w-[calc(100%-2rem)] sm:max-w-md gap-6 rounded-none bg-popover p-6 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10`
 //!   with optional `show_close_button` (`Button` `Ghost` `IconSm` `bg-secondary` at `top-5 right-5` with `AppIcon::Close`)
 //! - `DialogHeader`: `flex flex-col gap-2`
@@ -16,7 +16,7 @@ pub use gpui_kit::component::dialog::Dialog as KitDialog;
 use gpui_kit::{
     AnyElement, App, ClickEvent, ElementId, FontWeight, InteractiveElement, IntoElement,
     KeyDownEvent, MouseButton, ParentElement, RenderOnce, SharedString, StatefulInteractiveElement,
-    StyleRefinement, Styled, Window, deferred, div, hsla, px, relative,
+    StyleRefinement, Styled, Window, anchored, deferred, div, hsla, point, px, relative,
 };
 
 use crate::common::button::{Button, ButtonSize, ButtonVariant};
@@ -107,7 +107,10 @@ impl RenderOnce for DialogTrigger {
     }
 }
 
-/// Deferred GPUI overlay layer (`DialogPortal` in `dialog.tsx`).
+/// Full-viewport deferred GPUI overlay layer (`DialogPortal` in `dialog.tsx`).
+///
+/// Uses `anchored()` at window origin `(0, 0)` with explicit viewport dimensions so nested
+/// inline triggers never constrain modal width or height.
 #[derive(IntoElement)]
 pub struct DialogPortal {
     priority: usize,
@@ -141,8 +144,18 @@ impl ParentElement for DialogPortal {
 }
 
 impl RenderOnce for DialogPortal {
-    fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
-        deferred(div().absolute().inset_0().children(self.children)).with_priority(self.priority)
+    fn render(self, window: &mut Window, _cx: &mut App) -> impl IntoElement {
+        let viewport = window.viewport_size();
+        deferred(
+            anchored().position(point(px(0.0), px(0.0))).child(
+                div()
+                    .relative()
+                    .w(viewport.width)
+                    .h(viewport.height)
+                    .children(self.children),
+            ),
+        )
+        .with_priority(self.priority)
     }
 }
 
@@ -280,7 +293,7 @@ impl RenderOnce for DialogOverlay {
             .items_center()
             .justify_center()
             .p(px(16.0))
-            .bg(hsla(0.0, 0.0, 0.0, 0.20))
+            .bg(hsla(0.0, 0.0, 0.0, 0.65))
             .refine_style(&self.style)
             .children(self.children);
 
@@ -347,13 +360,8 @@ impl RenderOnce for DialogContent {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = resolve_theme(self.theme.as_ref(), cx);
         let tokens = PresetTokens::from_theme(&theme);
-        let mobile = is_mobile(window);
         let viewport_w = window.viewport_size().width;
-        let max_w = if mobile {
-            (viewport_w - px(32.0)).max(px(260.0))
-        } else {
-            px(448.0)
-        };
+        let dialog_w = (viewport_w - px(32.0)).max(px(260.0)).min(px(448.0));
 
         let close_btn_id = ElementId::Name(format!("{}-close-btn", self.id).into());
         let on_close_btn = self.on_close.clone();
@@ -365,10 +373,12 @@ impl RenderOnce for DialogContent {
             .relative()
             .flex()
             .flex_col()
-            .w_full()
-            .max_w(max_w)
+            .w(dialog_w)
+            .max_w(dialog_w)
             .gap(px(24.0))
             .rounded(PresetRadius::NONE)
+            .border_1()
+            .border_color(tokens.border)
             .bg(tokens.popover)
             .p(px(24.0))
             .font_family(FONT_FAMILY)
@@ -450,6 +460,7 @@ impl RenderOnce for DialogHeader {
         div()
             .flex()
             .flex_col()
+            .w_full()
             .gap(px(8.0))
             .refine_style(&self.style)
             .children(self.children)
@@ -524,6 +535,7 @@ impl RenderOnce for DialogFooter {
 
         let mut footer = div()
             .flex()
+            .w_full()
             .gap(px(8.0))
             .cx_when(mobile, |d| d.flex_col_reverse())
             .cx_when(!mobile, |d| d.flex_row().justify_end())
@@ -589,9 +601,10 @@ impl RenderOnce for DialogTitle {
         let tokens = PresetTokens::from_theme(&theme);
 
         let mut el = div()
+            .w_full()
             .font_family(FONT_FAMILY)
             .text_lg()
-            .line_height(relative(1.0))
+            .line_height(relative(1.2))
             .font_weight(FontWeight::SEMIBOLD)
             .text_color(tokens.popover_foreground);
 
@@ -646,10 +659,11 @@ impl RenderOnce for DialogDescription {
         let tokens = PresetTokens::from_theme(&theme);
 
         let mut el = div()
+            .w_full()
             .mt(px(2.0))
             .font_family(FONT_FAMILY)
             .text_sm()
-            .line_height(relative(1.625))
+            .line_height(relative(1.5))
             .text_color(tokens.muted_foreground);
 
         if let Some(text) = self.text {
@@ -738,7 +752,10 @@ impl RenderOnce for Dialog {
         );
         let is_open = self.open.unwrap_or_else(|| *state.read(cx));
 
-        let mut root = div().id(self.id.clone()).refine_style(&self.style);
+        let mut root = div()
+            .id(self.id.clone())
+            .cx_when(self.trigger.is_none(), |d| d.absolute().size_0())
+            .refine_style(&self.style);
 
         if let Some(trig) = self.trigger {
             let state_open = state.clone();
