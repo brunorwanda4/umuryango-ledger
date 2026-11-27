@@ -20,8 +20,8 @@ use std::sync::{Arc, Mutex};
 
 use api_bridge::ApiBridge;
 use common::{
-    TOAST_DURATION, Toast, ToastClose, ToastContent, ToastIcon, ToastPortal, ToastTitle, ToastType,
-    ToastViewport,
+    DialogPortal, TOAST_DURATION, Toast, ToastClose, ToastContent, ToastIcon, ToastPortal,
+    ToastTitle, ToastType, ToastViewport,
 };
 use components::entity_modal_inputs::EntityModalInputs;
 use components::entity_modals::EntityModalDialog;
@@ -29,8 +29,8 @@ use components::navbar::NavbarInputs;
 use components::quick_entry::{QuickEntryDialog, QuickEntryForm};
 use components::quick_entry_inputs::QuickEntryInputs;
 use gpui_kit::{
-    Context, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent, ParentElement, Render,
-    Styled, Subscription, Task, Window, div, px,
+    Context, FocusHandle, InteractiveElement, IntoElement, KeyDownEvent, MouseButton,
+    ParentElement, Render, StatefulInteractiveElement, Styled, Subscription, Task, Window, div, px,
 };
 pub use safe_area::SafeAreaInsets;
 use screens::auth_inputs::AuthInputs;
@@ -59,6 +59,7 @@ pub struct RootView {
     pub quick_entry_inputs: QuickEntryInputs,
     pub entity_modal_inputs: EntityModalInputs,
     protected_focus: FocusHandle,
+    is_mobile_viewport: bool,
     toast_scheduled_id: u64,
     _toast_timer_task: Option<Task<()>>,
     _viewport_sub: Subscription,
@@ -110,14 +111,15 @@ impl RootView {
         let entity_modal_inputs = EntityModalInputs::new(window, cx);
         let protected_focus = cx.focus_handle();
 
-        if hooks::use_mobile::is_mobile(window) {
+        let initial_mobile = hooks::use_mobile::is_mobile(window);
+        if initial_mobile {
             state.sidebar_open = false;
         }
         let mut last_bucket = (
             (hooks::use_mobile::viewport_width(window) as i32) / 16,
             (hooks::use_mobile::viewport_height(window) as i32) / 16,
         );
-        let mut last_mobile = hooks::use_mobile::is_mobile(window);
+        let mut last_mobile = initial_mobile;
         let viewport_sub =
             hooks::use_mobile::observe_viewport(window, cx, move |this, metrics, _window, cx| {
                 let next_bucket = (
@@ -133,6 +135,7 @@ impl RootView {
                 }
                 if now_mobile != last_mobile {
                     last_mobile = now_mobile;
+                    this.is_mobile_viewport = now_mobile;
                     if now_mobile && this.state.sidebar_open {
                         this.state.sidebar_open = false;
                     }
@@ -159,6 +162,7 @@ impl RootView {
             quick_entry_inputs,
             entity_modal_inputs,
             protected_focus,
+            is_mobile_viewport: initial_mobile,
             toast_scheduled_id: 0,
             _toast_timer_task: None,
             _viewport_sub: viewport_sub,
@@ -174,6 +178,9 @@ impl RootView {
 
     pub fn select_screen(&mut self, screen: Screen, cx: &mut Context<Self>) {
         self.state.select_screen(screen);
+        if self.is_mobile_viewport {
+            self.state.sidebar_open = false;
+        }
         self.persist_navigation();
         cx.notify();
     }
@@ -282,6 +289,9 @@ impl RootView {
 
     pub fn toggle_notifications(&mut self, cx: &mut Context<Self>) {
         self.state.toggle_notifications_drawer();
+        if self.is_mobile_viewport && self.state.show_notifications_drawer {
+            self.state.sidebar_open = false;
+        }
         cx.notify();
     }
 
@@ -343,6 +353,42 @@ impl RootView {
         cx.notify();
     }
 
+    fn render_mobile_sidebar_drawer(
+        &self,
+        theme: &theme::SemanticTheme,
+        cx: &Context<Self>,
+    ) -> impl IntoElement {
+        DialogPortal::new().priority(15).child(
+            div()
+                .id("mobile-sidebar-backdrop")
+                .occlude()
+                .absolute()
+                .inset_0()
+                .bg(gpui_kit::black().opacity(0.55))
+                .flex()
+                .flex_row()
+                .pt(self.state.safe_area.top_px())
+                .pb(self.state.safe_area.total_bottom_px())
+                .on_click(cx.listener(|this, _, _, cx| {
+                    this.state.sidebar_open = false;
+                    cx.notify();
+                }))
+                .child(
+                    div()
+                        .h_full()
+                        .on_mouse_down(MouseButton::Left, |_, _, cx| {
+                            cx.stop_propagation();
+                        })
+                        .child(components::Sidebar::render(
+                            "app-mobile-sidebar",
+                            &self.state,
+                            theme,
+                            cx,
+                        )),
+                ),
+        )
+    }
+
     fn render_toast(
         &self,
         theme: &theme::SemanticTheme,
@@ -394,6 +440,9 @@ impl RootView {
 impl Render for RootView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.sync_toast_timer(cx);
+        let is_mobile = hooks::use_mobile::is_mobile(window);
+        self.is_mobile_viewport = is_mobile;
+
         let theme = self.state.theme.clone();
         let screen_element = match self.state.current_screen {
             Screen::Auth => screens::AuthScreen::render(
@@ -484,13 +533,12 @@ impl Render for RootView {
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
             .relative()
-            // Desktop Sidebar Navigation (collapsible via navbar trigger or Cmd/Ctrl+B)
+            // Desktop Sidebar Navigation (inline only on >= 768px viewports)
             .children(
-                self.state
-                    .sidebar_open
+                (!is_mobile && self.state.sidebar_open)
                     .then(|| components::Sidebar::render("app-sidebar", &self.state, &theme, cx)),
             )
-            // Protected Content Column: Top Workspace Navbar + Update Banner + Active Screen
+            // Protected Content Column: Top Workspace Navbar + Update Banner + Active Screen + Mobile AppFooter
             .child(
                 div()
                     .flex_1()
@@ -518,7 +566,15 @@ impl Render for RootView {
                             .min_h_0()
                             .overflow_hidden()
                             .child(screen_element),
-                    ),
+                    )
+                    .children(is_mobile.then(|| {
+                        components::AppFooter::render("app-mobile-footer", &self.state, &theme, cx)
+                    })),
+            )
+            // Mobile Slide-Over Sidebar Drawer (opened via "More" tab or top navbar button)
+            .children(
+                (is_mobile && self.state.sidebar_open)
+                    .then(|| self.render_mobile_sidebar_drawer(&theme, cx)),
             )
             // Global Search & Command Palette (Cmd/Ctrl+K)
             .child(components::Navbar::render_command_dialog(

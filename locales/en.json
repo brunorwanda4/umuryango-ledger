@@ -110,6 +110,7 @@
     "switched_to_personal": "Switched to Personal scope"
   },
   "nav": {
+    "home": "Home",
     "dashboard": "Dashboard",
     "money": "Money",
     "transactions": "Transactions",
@@ -127,7 +128,8 @@
     "workspaces_group": "Workspaces",
     "command_navigation": "Navigation",
     "command_actions": "Quick Actions",
-    "command_empty": "No matching results found."
+    "command_empty": "No matching results found.",
+    "more": "More"
   },
   "dashboard": {
     "title": "Dashboard",

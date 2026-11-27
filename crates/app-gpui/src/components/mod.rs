@@ -1,3 +1,4 @@
+pub mod app_footer;
 pub mod entity_modal_inputs;
 pub mod entity_modals;
 pub mod icon;
@@ -11,6 +12,7 @@ pub mod sidebar;
 pub mod tx_row;
 pub mod wallet_card;
 
+pub use app_footer::AppFooter;
 #[allow(unused_imports)]
 pub use entity_modals::EntityModalDialog;
 #[allow(unused_imports)]

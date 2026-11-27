@@ -110,6 +110,7 @@
     "switched_to_personal": "Muri kuri konti bwite (Amafaranga Yanjye)"
   },
   "nav": {
+    "home": "Ahabanza",
     "dashboard": "Incamake",
     "money": "Amafaranga",
     "transactions": "Ibikorwa",
@@ -127,7 +128,8 @@
     "workspaces_group": "Konti z'Umutungo",
     "command_navigation": "Imbonerahamwe",
     "command_actions": "Ibikorwa by'Ako Kanya",
-    "command_empty": "Nta gisubizo kibonetse."
+    "command_empty": "Nta gisubizo kibonetse.",
+    "more": "Ibindi"
   },
   "dashboard": {
     "title": "Incamake",
