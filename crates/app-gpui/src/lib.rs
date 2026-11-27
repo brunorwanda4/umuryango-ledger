@@ -106,7 +106,37 @@ impl RootView {
         let quick_entry_inputs = QuickEntryInputs::new(window, cx);
         let entity_modal_inputs = EntityModalInputs::new(window, cx);
         let protected_focus = cx.focus_handle();
-        let viewport_sub = hooks::use_mobile::notify_on_resize(window, cx);
+
+        if hooks::use_mobile::is_mobile(window) {
+            state.sidebar_open = false;
+        }
+        let mut last_bucket = (hooks::use_mobile::viewport_width(window) as i32) / 16;
+        let mut last_mobile = hooks::use_mobile::is_mobile(window);
+        let viewport_sub =
+            hooks::use_mobile::observe_viewport(window, cx, move |this, metrics, _window, cx| {
+                let next_bucket = (f32::from(metrics.size.width) as i32) / 16;
+                let now_mobile = metrics.is_mobile();
+                let mut changed = false;
+
+                if this.state.safe_area != metrics.safe_area {
+                    this.state.update_safe_area(metrics.safe_area);
+                    changed = true;
+                }
+                if now_mobile != last_mobile {
+                    last_mobile = now_mobile;
+                    if now_mobile && this.state.sidebar_open {
+                        this.state.sidebar_open = false;
+                    }
+                    changed = true;
+                }
+                if next_bucket != last_bucket {
+                    last_bucket = next_bucket;
+                    changed = true;
+                }
+                if changed {
+                    cx.notify();
+                }
+            });
 
         #[allow(unused_mut)]
         let mut view = Self {
@@ -329,7 +359,7 @@ impl RootView {
 }
 
 impl Render for RootView {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.state.theme.clone();
         let screen_element = match self.state.current_screen {
             Screen::Auth => screens::AuthScreen::render(
@@ -348,10 +378,14 @@ impl Render for RootView {
                 cx,
             )
             .into_any_element(),
-            Screen::Dashboard => {
-                screens::DashboardScreen::render("screen-dashboard", &self.state, &theme, cx)
-                    .into_any_element()
-            }
+            Screen::Dashboard => screens::DashboardScreen::render(
+                "screen-dashboard",
+                &self.state,
+                &theme,
+                window,
+                cx,
+            )
+            .into_any_element(),
             Screen::Transactions => {
                 screens::TransactionsScreen::render("screen-txs", &self.state, &theme, cx)
                     .into_any_element()

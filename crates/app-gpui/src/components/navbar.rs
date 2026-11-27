@@ -481,8 +481,7 @@ fn render_search_trigger(
             Kbd::new(search_shortcut_label())
                 .theme(theme)
                 .h(px(20.0))
-                .px(px(6.0))
-                .rounded(px(4.0)),
+                .px(px(6.0)),
         )
 }
 

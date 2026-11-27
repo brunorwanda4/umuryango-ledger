@@ -21,6 +21,7 @@ use crate::db_facade::LocalDatabase;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::db_facade::{CacheRepository, SyncMutation, SyncQueueRepository};
 use crate::safe_area::SafeAreaInsets;
+use crate::screens::dashboard::metrics::DashboardPeriod;
 use crate::theme::{SemanticTheme, ThemeConfig, ThemeMode};
 use crate::updater::AppUpdater;
 
@@ -139,6 +140,7 @@ pub struct AppState {
     pub families_menu_open: bool,
     pub show_command_palette: bool,
     pub command_query: String,
+    pub dashboard_period: Option<DashboardPeriod>,
 
     pub locale: Locale,
     pub theme_mode: ThemeMode,
@@ -216,6 +218,7 @@ impl Default for AppState {
             families_menu_open: false,
             show_command_palette: false,
             command_query: String::new(),
+            dashboard_period: None,
 
             locale: Locale::Rw,
             theme_mode,
@@ -446,6 +449,7 @@ impl AppState {
         self.families_menu_open = false;
         self.show_command_palette = false;
         self.command_query.clear();
+        self.dashboard_period = None;
         self.is_busy = false;
         self.auth_password.clear();
         self.auth_confirm_password.clear();
@@ -502,6 +506,7 @@ impl AppState {
         self.active_family_name = family_name;
         self.active_family_invite_code = invite_code;
         self.active_role = role;
+        self.dashboard_period = None;
         self.wallets.clear();
         self.wallet_custodian_names.clear();
         self.transactions.clear();
@@ -795,6 +800,7 @@ mod tests {
         assert!(state.sidebar_open);
         assert!(!state.families_menu_open);
         assert!(!state.show_command_palette);
+        assert!(state.dashboard_period.is_none());
         assert_eq!(state.current_screen, Screen::Auth);
         assert_eq!(state.onboarding_step, OnboardingStep::Choose);
     }

@@ -13,6 +13,7 @@ use uuid::Uuid;
 
 use crate::RootView;
 use crate::components::quick_entry::{QuickEntryDialog, QuickEntryMode};
+use crate::screens::dashboard::metrics::DashboardPeriod;
 use crate::state::{ActiveModal, EntityFormState};
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -22,6 +23,20 @@ use umuryango_api_client::{
 };
 
 impl RootView {
+    pub fn set_dashboard_period(&mut self, period: DashboardPeriod, cx: &mut Context<Self>) {
+        if self.state.dashboard_period != Some(period) {
+            self.state.dashboard_period = Some(period);
+            cx.notify();
+        }
+    }
+
+    pub fn open_quick_handover(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_quick_entry(window, cx);
+        if self.state.active_scope.is_family() {
+            self.set_quick_entry_mode(QuickEntryMode::Handover, cx);
+        }
+    }
+
     pub fn open_quick_entry(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if self.quick_entry_form.source_wallet_id.is_none() {
             self.quick_entry_form.source_wallet_id =

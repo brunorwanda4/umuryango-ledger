@@ -1,19 +1,54 @@
+//! Responsive Bento Family & Personal Dashboard (`Screen::Dashboard`).
+//!
+//! Composes shared UI and chart primitives (`Card`, `BarChart`, `AreaChart`, `PieChart`,
+//! `ChartContainer`, `Button`, `DropdownMenu`, `Avatar`, `Badge`, `Progress`, `Separator`,
+//! `Table`, `Empty`, `app_icon`) across 4 responsive analytical rows.
+
+#[path = "dashboard/activity_row.rs"]
+pub mod activity_row;
+#[path = "dashboard/bento_row.rs"]
+pub mod bento_row;
+#[path = "dashboard/cashflow_row.rs"]
+pub mod cashflow_row;
+#[path = "dashboard/formatters.rs"]
+pub mod formatters;
+#[path = "dashboard/metrics.rs"]
+pub mod metrics;
+#[path = "dashboard/projects_hero.rs"]
+pub mod projects_hero;
+
 use gpui_kit::prelude::*;
-use gpui_kit::{Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, div, px};
-use rust_decimal::Decimal;
-use rust_decimal::prelude::ToPrimitive;
-use umuryango_i18n::{Translator, terms};
+use gpui_kit::{
+    Context, ElementId, FontWeight, IntoElement, ParentElement, Styled, Window, div, px,
+};
 
 use crate::RootView;
-use crate::common::{
-    Button, ButtonSize, Card, CardAction, CardContent, CardHeader, CardSize, CardTitle, Empty,
-    EmptyDescription, EmptyHeader, EmptyMedia, Progress, ProgressLabel, ProgressValue,
-};
+use crate::common::{Card, CardContent, CardSize, PresetRadius, to_preset_uppercase};
 use crate::components::icon::{AppIcon, IconSize, IconTone, app_icon};
-use crate::components::tx_row::TxRow;
-use crate::components::wallet_card::WalletCard;
-use crate::state::{ActiveModal, AppState};
+use crate::hooks::use_mobile::viewport_width;
+use crate::state::{ActiveModal, AppState, Screen};
 use crate::theme::SemanticTheme;
+
+use self::activity_row::render_activity_row;
+use self::bento_row::render_bento_row;
+use self::cashflow_row::render_cashflow_row;
+use self::metrics::{DESKTOP_SIDEBAR_WIDTH_PX, DashboardLayoutTier, DashboardSnapshot, format_rwf};
+
+#[derive(Debug, Clone, Copy)]
+enum KpiBadgeStyle {
+    PrimarySolid,
+    DeepCrimson,
+    DarkBordered,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum KpiTarget {
+    CustodyWallets,
+    Transactions,
+    ProjectsOrPlans,
+    Loans,
+    MembersOrWallets,
+}
 
 pub struct DashboardScreen;
 
@@ -22,479 +57,277 @@ impl DashboardScreen {
         id: impl Into<ElementId>,
         state: &AppState,
         theme: &SemanticTheme,
+        window: &Window,
         cx: &Context<RootView>,
     ) -> impl IntoElement {
-        let total_balance_str = format!("{} RWF", state.total_balance());
-        let income_str = format!("+{} RWF", state.total_income());
-        let expense_str = format!("-{} RWF", state.total_expenses());
-        let projects_budget_str = format!("{} RWF", state.active_projects_budget());
+        let raw_vw = viewport_width(window);
+        let sidebar_w = if state.sidebar_open {
+            DESKTOP_SIDEBAR_WIDTH_PX
+        } else {
+            0.0
+        };
+        let content_width = if raw_vw > 0.0 {
+            (raw_vw - sidebar_w - state.safe_area.left - state.safe_area.right).max(320.0)
+        } else if gpui_kit::is_mobile() {
+            375.0
+        } else {
+            1200.0
+        };
 
-        let total_balance_label = Translator::t(state.locale, terms::CLOSING_BALANCE, None);
-        let income_label = Translator::t(state.locale, terms::TOTAL_INCOME, None);
-        let expense_label = Translator::t(state.locale, terms::TOTAL_EXPENSES, None);
-        let projects_label = Translator::t(state.locale, terms::ACTIVE_PROJECTS, None);
-        let category_breakdown = state.expense_category_breakdown();
-        let category_colors = [
-            theme.expense_color,
-            theme.accent_primary,
-            theme.income_color,
-            theme.accent_secondary,
-            theme.text_muted,
-            theme.handover_color,
-        ];
+        let tier = DashboardLayoutTier::from_content_width(content_width);
+        let pad = px(tier.outer_padding_px());
+        let gap = px(tier.grid_gap_px());
+        let now = chrono::Utc::now();
+        let snap = DashboardSnapshot::compute(state, now);
 
         div()
             .id(id)
             .flex_1()
             .h_full()
-            .pt(px(24.0))
-            .pb(px(24.0) + state.safe_area.total_bottom_px())
-            .pl(px(24.0) + state.safe_area.left_px())
-            .pr(px(24.0) + state.safe_area.right_px())
             .overflow_y_scroll()
+            .pt(pad)
+            .pb(pad + state.safe_area.total_bottom_px())
+            .pl(pad + state.safe_area.left_px())
+            .pr(pad + state.safe_area.right_px())
             .bg(theme.bg_canvas)
             .font_family(theme.font_family)
-            // Header: Screen Title + Refresh & Quick Log Buttons
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .justify_between()
-                    .items_center()
-                    .mb(px(20.0))
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .child(
-                                div()
-                                    .text_2xl()
-                                    .font_weight(FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(if state.active_scope.is_family() {
-                                        state.active_family_name.clone().unwrap_or_else(|| {
-                                            Translator::t(state.locale, terms::FAMILY_SCOPE, None)
-                                        })
-                                    } else {
-                                        Translator::t(state.locale, terms::PERSONAL_SCOPE, None)
-                                    }),
-                            )
-                            .child(div().text_xs().text_color(theme.text_muted).child(
-                                umuryango_i18n::t(state.locale, "dashboard.overview_subtitle"),
-                            )),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .gap(px(8.0))
-                            .child(
-                                Button::new("dashboard-refresh-btn")
-                                    .outline()
-                                    .size(ButtonSize::Sm)
-                                    .icon_start(AppIcon::SyncPending)
-                                    .label(umuryango_i18n::t(state.locale, "common.refresh"))
-                                    .theme(theme)
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        this.refresh_active_scope(cx);
-                                    })),
-                            )
-                            .child(
-                                Button::new("dashboard-quick-entry-btn")
-                                    .size(ButtonSize::Sm)
-                                    .icon_start(AppIcon::Add)
-                                    .label(umuryango_i18n::t(
-                                        state.locale,
-                                        "dashboard.quick_log_btn",
-                                    ))
-                                    .theme(theme)
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.open_quick_entry(window, cx);
-                                    })),
-                            ),
-                    ),
-            )
-            // Row 1: KPI Cards Grid
-            .child(
-                div()
-                    .grid()
-                    .grid_cols(4)
-                    .gap(px(14.0))
-                    .mb(px(24.0))
-                    .child(Self::render_kpi_card(
-                        "kpi-total-balance",
-                        AppIcon::Dashboard,
-                        IconTone::Income,
-                        &total_balance_label,
-                        &total_balance_str,
-                        theme.income_color,
-                        theme,
-                    ))
-                    .child(Self::render_kpi_card(
-                        "kpi-total-income",
-                        AppIcon::Income,
-                        IconTone::Income,
-                        &income_label,
-                        &income_str,
-                        theme.income_color,
-                        theme,
-                    ))
-                    .child(Self::render_kpi_card(
-                        "kpi-total-expenses",
-                        AppIcon::Expense,
-                        IconTone::Expense,
-                        &expense_label,
-                        &expense_str,
-                        theme.expense_color,
-                        theme,
-                    ))
-                    .child(Self::render_kpi_card(
-                        "kpi-projects-budget",
-                        AppIcon::Projects,
-                        IconTone::AccentPrimary,
-                        &projects_label,
-                        &projects_budget_str,
-                        theme.accent_primary,
-                        theme,
-                    )),
-            )
-            // Row 2: Custody Wallets Grid + Add Wallet Button
-            .child(
-                div()
-                    .mb(px(24.0))
-                    .child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .justify_between()
-                            .items_center()
-                            .mb(px(12.0))
-                            .child(
-                                div()
-                                    .text_base()
-                                    .font_weight(FontWeight::BOLD)
-                                    .text_color(theme.text_primary)
-                                    .child(Translator::t(
-                                        state.locale,
-                                        terms::CASH_CUSTODY_BREAKDOWN,
-                                        None,
-                                    )),
-                            )
-                            .child(
-                                Button::new("dashboard-add-wallet-btn")
-                                    .outline()
-                                    .size(ButtonSize::Xs)
-                                    .icon_start(AppIcon::Add)
-                                    .label(umuryango_i18n::t(state.locale, "wallets.add_wallet"))
-                                    .theme(theme)
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.open_modal(ActiveModal::AddWallet, window, cx);
-                                    })),
-                            ),
-                    )
-                    .child(if state.wallets.is_empty() {
-                        Empty::new()
-                            .bordered(true)
-                            .p(px(24.0))
-                            .bg(theme.bg_surface)
-                            .theme(theme)
-                            .child(
-                                EmptyHeader::new()
-                                    .child(
-                                        EmptyMedia::from_icon(AppIcon::PersonalWallet).theme(theme),
-                                    )
-                                    .child(
-                                        EmptyDescription::new(umuryango_i18n::t(
-                                            state.locale,
-                                            "wallets.no_wallets",
-                                        ))
-                                        .theme(theme),
-                                    ),
-                            )
-                            .into_any_element()
-                    } else {
-                        div()
-                            .grid()
-                            .grid_cols(3)
-                            .gap(px(14.0))
-                            .children(state.wallets.iter().enumerate().map(|(idx, w)| {
-                                let custodian = state.custodian_name_for_wallet(w);
-                                WalletCard::render(
-                                    format!("dash-wallet-{}", idx),
-                                    w,
-                                    custodian.as_deref(),
-                                    state.locale,
-                                    theme,
-                                )
-                            }))
-                            .into_any_element()
-                    }),
-            )
-            // Row 3: Charts Section (Dynamic Inflow/Outflow Bar & Dynamic Expense Breakdown)
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .gap(px(16.0))
-                    .mb(px(24.0))
-                    .child(
-                        Card::new()
-                            .size(CardSize::Sm)
-                            .flex_1()
-                            .gap(px(14.0))
-                            .py(px(18.0))
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .theme(theme)
-                            .child(
-                                CardHeader::new().size(CardSize::Sm).theme(theme).child(
-                                    CardTitle::new(umuryango_i18n::t(
-                                        state.locale,
-                                        "dashboard.inflow_outflow_chart",
-                                    ))
-                                    .text_sm()
-                                    .theme(theme),
-                                ),
-                            )
-                            .child(
-                                CardContent::new()
-                                    .size(CardSize::Sm)
-                                    .flex()
-                                    .flex_col()
-                                    .gap(px(14.0))
-                                    .child(Self::render_chart_bar(
-                                        &Translator::t(state.locale, terms::INCOME, None),
-                                        state.total_income(),
-                                        state.total_income() + state.total_expenses(),
-                                        theme.income_color,
-                                        theme,
-                                    ))
-                                    .child(Self::render_chart_bar(
-                                        &Translator::t(state.locale, terms::EXPENSE, None),
-                                        state.total_expenses(),
-                                        state.total_income() + state.total_expenses(),
-                                        theme.expense_color,
-                                        theme,
-                                    )),
-                            ),
-                    )
-                    .child(
-                        Card::new()
-                            .size(CardSize::Sm)
-                            .flex_1()
-                            .gap(px(14.0))
-                            .py(px(18.0))
-                            .border_1()
-                            .border_color(theme.border_subtle)
-                            .theme(theme)
-                            .child(
-                                CardHeader::new().size(CardSize::Sm).theme(theme).child(
-                                    CardTitle::new(umuryango_i18n::t(
-                                        state.locale,
-                                        "dashboard.categories_chart",
-                                    ))
-                                    .text_sm()
-                                    .theme(theme),
-                                ),
-                            )
-                            .child(CardContent::new().size(CardSize::Sm).child(
-                                if category_breakdown.is_empty() {
-                                    Empty::new()
-                                        .p(px(16.0))
-                                        .theme(theme)
-                                        .child(
-                                            EmptyHeader::new().child(
-                                                EmptyDescription::new(umuryango_i18n::t(
-                                                    state.locale,
-                                                    "dashboard.no_expenses_yet",
-                                                ))
-                                                .theme(theme),
-                                            ),
-                                        )
-                                        .into_any_element()
-                                } else {
-                                    div()
-                                        .flex()
-                                        .flex_col()
-                                        .gap(px(8.0))
-                                        .children(category_breakdown.into_iter().enumerate().map(
-                                            |(idx, (cat, amt, pct))| {
-                                                let color =
-                                                    category_colors[idx % category_colors.len()];
-                                                Self::render_donut_row(
-                                                    &cat,
-                                                    &format!("{}% ({} RWF)", pct, amt),
-                                                    color,
-                                                    theme,
-                                                )
-                                            },
-                                        ))
-                                        .into_any_element()
-                                },
-                            )),
-                    ),
-            )
-            // Row 4: Recent Activity List
             .child(
                 div()
                     .flex()
                     .flex_col()
-                    .gap(px(10.0))
-                    .child(
-                        div()
-                            .text_base()
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(theme.text_primary)
-                            .child(umuryango_i18n::t(state.locale, "dashboard.recent_activity")),
-                    )
-                    .child(div().flex().flex_col().gap(px(8.0)).children(
-                        if state.transactions.is_empty() {
-                            vec![
-                                Empty::new()
-                                    .bordered(true)
-                                    .p(px(24.0))
-                                    .bg(theme.bg_surface)
-                                    .theme(theme)
-                                    .child(
-                                        EmptyHeader::new()
-                                            .child(
-                                                EmptyMedia::from_icon(AppIcon::Transactions)
-                                                    .theme(theme),
-                                            )
-                                            .child(
-                                                EmptyDescription::new(umuryango_i18n::t(
-                                                    state.locale,
-                                                    "dashboard.no_recent_activity",
-                                                ))
-                                                .theme(theme),
-                                            ),
-                                    )
-                                    .into_any_element(),
-                            ]
-                        } else {
-                            state
-                                .transactions
-                                .iter()
-                                .take(6)
-                                .enumerate()
-                                .map(|(idx, tx)| {
-                                    let actor = state.actor_name(tx.authorized_by);
-                                    TxRow::render(
-                                        format!("dash-tx-{}", idx),
-                                        tx,
-                                        actor.as_deref(),
-                                        state.locale,
-                                        theme,
-                                    )
-                                    .into_any_element()
-                                })
-                                .collect()
-                        },
+                    .w_full()
+                    .gap(gap)
+                    .child(Self::render_kpi_row(state, &snap, tier, theme, cx))
+                    .child(render_cashflow_row(
+                        &snap,
+                        tier,
+                        state.locale,
+                        now,
+                        theme,
+                        cx,
+                    ))
+                    .child(render_bento_row(state, &snap, tier, theme, cx))
+                    .child(render_activity_row(
+                        &snap,
+                        tier,
+                        state.locale,
+                        now,
+                        theme,
+                        cx,
                     )),
             )
     }
 
+    fn render_kpi_row(
+        state: &AppState,
+        snap: &DashboardSnapshot,
+        tier: DashboardLayoutTier,
+        theme: &SemanticTheme,
+        cx: &Context<RootView>,
+    ) -> impl IntoElement {
+        let locale = state.locale;
+        let gap = px(tier.grid_gap_px());
+
+        let projects_kpi_label = if snap.is_family {
+            umuryango_i18n::t(locale, "dashboard.kpi_active_projects")
+        } else {
+            umuryango_i18n::t(locale, "dashboard.kpi_active_plans")
+        };
+        let members_kpi_label = if snap.is_family {
+            umuryango_i18n::t(locale, "dashboard.kpi_family_members")
+        } else {
+            umuryango_i18n::t(locale, "dashboard.kpi_active_wallets")
+        };
+
+        div()
+            .grid()
+            .grid_cols(tier.kpi_columns())
+            .gap(gap)
+            .w_full()
+            .child(Self::render_kpi_card(
+                "dash-kpi-total-custody",
+                AppIcon::PersonalWallet,
+                KpiBadgeStyle::PrimarySolid,
+                &umuryango_i18n::t(locale, "dashboard.kpi_total_custody"),
+                &format_rwf(snap.total_custody),
+                KpiTarget::CustodyWallets,
+                snap.is_family,
+                snap.total_wallets_count == 0,
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                "dash-kpi-monthly-inflow",
+                AppIcon::Income,
+                KpiBadgeStyle::DeepCrimson,
+                &umuryango_i18n::t(locale, "dashboard.kpi_monthly_inflow"),
+                &format_rwf(snap.period_inflow),
+                KpiTarget::Transactions,
+                snap.is_family,
+                false,
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                "dash-kpi-active-projects",
+                if snap.is_family {
+                    AppIcon::Projects
+                } else {
+                    AppIcon::FuturePlans
+                },
+                KpiBadgeStyle::PrimarySolid,
+                &projects_kpi_label,
+                &snap.active_projects_or_plans_count.to_string(),
+                KpiTarget::ProjectsOrPlans,
+                snap.is_family,
+                false,
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                "dash-kpi-active-loans",
+                AppIcon::Cash,
+                KpiBadgeStyle::DarkBordered,
+                &umuryango_i18n::t(locale, "dashboard.kpi_active_loans"),
+                &snap.active_loans_count.to_string(),
+                KpiTarget::Loans,
+                snap.is_family,
+                false,
+                theme,
+                cx,
+            ))
+            .child(Self::render_kpi_card(
+                "dash-kpi-family-members",
+                if snap.is_family {
+                    AppIcon::Members
+                } else {
+                    AppIcon::PersonalWallet
+                },
+                KpiBadgeStyle::PrimarySolid,
+                &members_kpi_label,
+                &snap.members_or_wallets_count.to_string(),
+                KpiTarget::MembersOrWallets,
+                snap.is_family,
+                false,
+                theme,
+                cx,
+            ))
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn render_kpi_card(
-        id: impl Into<ElementId>,
+        id: &'static str,
         icon: AppIcon,
-        icon_tone: IconTone,
+        badge_style: KpiBadgeStyle,
         label: &str,
         value: &str,
-        value_color: gpui_kit::Hsla,
+        target: KpiTarget,
+        is_family: bool,
+        wallets_empty: bool,
         theme: &SemanticTheme,
+        cx: &Context<RootView>,
     ) -> impl IntoElement {
-        div().id(id).child(
-            Card::new()
-                .size(CardSize::Sm)
-                .gap(px(8.0))
-                .py(px(16.0))
-                .border_1()
-                .border_color(theme.border_subtle)
-                .theme(theme)
-                .child(
-                    CardHeader::new()
-                        .size(CardSize::Sm)
-                        .px(px(16.0))
-                        .action(CardAction::new().child(app_icon(
-                            icon,
-                            IconSize::Sm,
-                            icon_tone,
-                            theme,
-                        )))
-                        .theme(theme)
-                        .child(
-                            div()
-                                .text_xs()
-                                .font_weight(FontWeight::MEDIUM)
-                                .text_color(theme.text_muted)
-                                .child(label.to_string()),
-                        ),
-                )
-                .child(
-                    CardContent::new().size(CardSize::Sm).px(px(16.0)).child(
-                        div()
-                            .text_xl()
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(value_color)
-                            .child(value.to_string()),
-                    ),
-                ),
-        )
-    }
-
-    fn render_chart_bar(
-        label: &str,
-        amount: Decimal,
-        total: Decimal,
-        bar_color: gpui_kit::Hsla,
-        theme: &SemanticTheme,
-    ) -> impl IntoElement {
-        let pct_f32 = if total > Decimal::ZERO {
-            ((amount / total).to_f32().unwrap_or(0.0).clamp(0.0, 1.0)) * 100.0
+        let is_dark = theme.mode.is_dark();
+        let on_primary = if is_dark {
+            IconTone::Default
         } else {
-            0.0
+            IconTone::OnPrimaryButton
         };
-        let pct = pct_f32.round() as i32;
 
-        Progress::new(pct_f32)
-            .indicator_color(bar_color)
-            .gap(px(6.0))
-            .theme(theme)
-            .child(ProgressLabel::new(format!("{} ({} RWF)", label, amount)).theme(theme))
-            .child(ProgressValue::new(format!("{}%", pct)).theme(theme))
-    }
+        let (badge_bg, badge_border, icon_tone) = match badge_style {
+            KpiBadgeStyle::PrimarySolid => (theme.primary, theme.primary_pressed, on_primary),
+            KpiBadgeStyle::DeepCrimson => (
+                if is_dark {
+                    theme.primary_deep
+                } else {
+                    theme.primary_pressed
+                },
+                theme.primary.opacity(0.60),
+                on_primary,
+            ),
+            KpiBadgeStyle::DarkBordered => (
+                theme.bg_canvas,
+                theme.primary.opacity(0.40),
+                IconTone::Expense,
+            ),
+        };
 
-    fn render_donut_row(
-        category: &str,
-        percent: &str,
-        color: gpui_kit::Hsla,
-        theme: &SemanticTheme,
-    ) -> impl IntoElement + use<> {
         div()
-            .flex()
-            .flex_row()
-            .justify_between()
-            .items_center()
+            .id(id)
+            .h_full()
+            .border_1()
+            .border_color(theme.border_subtle)
+            .cursor_pointer()
+            .hover(|s| s.border_color(theme.primary.opacity(0.65)))
+            .on_click(cx.listener(move |this, _, window, cx| match target {
+                KpiTarget::CustodyWallets => {
+                    if wallets_empty {
+                        this.open_modal(ActiveModal::AddWallet, window, cx);
+                    } else {
+                        this.select_screen(Screen::Reports, cx);
+                    }
+                }
+                KpiTarget::Transactions => this.select_screen(Screen::Transactions, cx),
+                KpiTarget::ProjectsOrPlans => this.select_screen(
+                    if is_family {
+                        Screen::Projects
+                    } else {
+                        Screen::Plans
+                    },
+                    cx,
+                ),
+                KpiTarget::Loans => this.select_screen(Screen::Loans, cx),
+                KpiTarget::MembersOrWallets => {
+                    if is_family {
+                        this.select_screen(Screen::Members, cx);
+                    } else {
+                        this.open_modal(ActiveModal::AddWallet, window, cx);
+                    }
+                }
+            }))
             .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(px(8.0))
-                    .child(div().w(px(10.0)).h(px(10.0)).bg(color))
+                Card::new()
+                    .size(CardSize::Sm)
+                    .h_full()
+                    .py(px(18.0))
+                    .gap(px(0.0))
+                    .theme(theme)
                     .child(
-                        div()
-                            .text_xs()
-                            .text_color(theme.text_primary)
-                            .child(category.to_string()),
+                        CardContent::new().size(CardSize::Sm).px(px(14.0)).child(
+                            div()
+                                .flex()
+                                .flex_col()
+                                .items_center()
+                                .justify_center()
+                                .gap(px(10.0))
+                                .child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .justify_center()
+                                        .size(px(36.0))
+                                        .rounded(PresetRadius::NONE)
+                                        .bg(badge_bg)
+                                        .border_1()
+                                        .border_color(badge_border)
+                                        .child(app_icon(icon, IconSize::Sm, icon_tone, theme)),
+                                )
+                                .child(
+                                    div()
+                                        .text_size(px(10.0))
+                                        .font_weight(FontWeight::SEMIBOLD)
+                                        .text_color(theme.text_muted)
+                                        .child(to_preset_uppercase(label)),
+                                )
+                                .child(
+                                    div()
+                                        .text_lg()
+                                        .font_weight(FontWeight::BOLD)
+                                        .text_color(theme.text_primary)
+                                        .child(value.to_string()),
+                                ),
+                        ),
                     ),
-            )
-            .child(
-                div()
-                    .text_xs()
-                    .font_weight(FontWeight::BOLD)
-                    .text_color(theme.text_muted)
-                    .child(percent.to_string()),
             )
     }
 }
