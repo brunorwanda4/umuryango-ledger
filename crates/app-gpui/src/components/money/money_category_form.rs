@@ -105,12 +105,12 @@ impl MoneyCategoryForm {
         let content = AlertDialogContent::new(format!("{dialog_key}-content"))
             .theme(theme)
             .child(
-                AlertDialogHeader::new()
-                    .child(AlertDialogTitle::new(t(locale, "categories.dialog_title")).theme(theme))
-                    .child(
-                        AlertDialogDescription::new(t(locale, "categories.dialog_desc"))
-                            .theme(theme),
-                    ),
+                AlertDialogHeader::new().child(
+                    AlertDialogTitle::new(t(locale, "categories.dialog_title")).theme(theme),
+                ), // .child(
+                   //     AlertDialogDescription::new(t(locale, "categories.dialog_desc"))
+                   //         .theme(theme),
+                   // ),
             )
             .child(
                 div()
