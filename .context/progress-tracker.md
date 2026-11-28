@@ -140,6 +140,7 @@ This document tracks completed milestones, in-progress tasks, and upcoming roadm
 | **2026-11-27** | `416882c` | `feat(mobile): add Android bottom AppFooter with Money switcher and slide-over sidebar` | `cargo check -p umuryango-app`, `cargo test -p umuryango-i18n -p umuryango-app --lib` |
 | **2026-11-27** | `27c0169` | `feat(money): add custom income and expense category form with DB persistence` | `cargo check --workspace --all-targets`, `cargo check -p umuryango-wasm-bridge --target wasm32-unknown-unknown`, `cargo clippy` (0 warnings in modified files), `cargo test --lib` (58 passed across `i18n`, `core-domain`, `storage-local`, `wasm-bridge`, `app`), `bun run typecheck`, `bun test`, `bun run build` |
 | **2026-11-27** | `475605a` | `fix(ui): anchor DialogPortal to window viewport and refine AlertDialog layout` | `cargo check -p umuryango-app --all-targets` (0 warnings), `cargo test -p umuryango-app --lib` (47 passed) |
+| **2026-11-28** | `25f301d` | `feat(money): redesign transactions screen with KPIs, tabs, charts, and scoped entry modal` | `cargo check --workspace --all-targets` (0 warnings), `cargo test -p umuryango-i18n -p umuryango-app --lib` (53 passed), `bun run typecheck`, `bun test` (4 passed), `bun run build` |
 
 ---
 
