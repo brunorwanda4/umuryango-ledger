@@ -41,6 +41,35 @@ pub enum OnboardingStep {
     JoinFamily,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum MoneyTab {
+    #[default]
+    Overview,
+    Income,
+    Expenses,
+    Categories,
+}
+
+impl MoneyTab {
+    pub const fn to_index(self) -> usize {
+        match self {
+            Self::Overview => 0,
+            Self::Income => 1,
+            Self::Expenses => 2,
+            Self::Categories => 3,
+        }
+    }
+
+    pub const fn from_index(index: usize) -> Self {
+        match index {
+            1 => Self::Income,
+            2 => Self::Expenses,
+            3 => Self::Categories,
+            _ => Self::Overview,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Screen {
     Auth,
@@ -142,6 +171,8 @@ pub struct AppState {
     pub show_command_palette: bool,
     pub command_query: String,
     pub dashboard_period: Option<DashboardPeriod>,
+    pub money_tab: MoneyTab,
+    pub money_share_kind: CategoryKind,
 
     pub locale: Locale,
     pub theme_mode: ThemeMode,
@@ -227,6 +258,8 @@ impl Default for AppState {
             show_command_palette: false,
             command_query: String::new(),
             dashboard_period: None,
+            money_tab: MoneyTab::Overview,
+            money_share_kind: CategoryKind::Expense,
 
             locale: Locale::Rw,
             theme_mode,
@@ -470,6 +503,8 @@ impl AppState {
         self.show_command_palette = false;
         self.command_query.clear();
         self.dashboard_period = None;
+        self.money_tab = MoneyTab::Overview;
+        self.money_share_kind = CategoryKind::Expense;
         self.is_busy = false;
         self.auth_password.clear();
         self.auth_confirm_password.clear();
@@ -530,6 +565,8 @@ impl AppState {
         self.active_family_invite_code = invite_code;
         self.active_role = role;
         self.dashboard_period = None;
+        self.money_tab = MoneyTab::Overview;
+        self.money_share_kind = CategoryKind::Expense;
         self.wallets.clear();
         self.wallet_custodian_names.clear();
         self.categories.clear();
@@ -674,6 +711,15 @@ impl AppState {
             return self.actor_name(cid);
         }
         None
+    }
+
+    /// Resolves a wallet ID to its display name in the active scope.
+    pub fn wallet_name(&self, wallet_id: Uuid) -> String {
+        self.wallets
+            .iter()
+            .find(|w| w.id == wallet_id)
+            .map(|w| w.name.clone())
+            .unwrap_or_else(|| "—".to_string())
     }
 
     /// Resolves a user ID to a real member name (or current user's name).

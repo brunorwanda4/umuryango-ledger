@@ -2,6 +2,7 @@
 //!
 //! Matches `--preset b1oaDsAa` (`base-sera`):
 //! - Trigger: `h-10` (`data-[size=sm]:h-9`) `w-full rounded-none border-b border-b-input bg-transparent py-2 pr-8 pl-0 text-sm focus-visible:border-b-ring aria-invalid:border-b-destructive`
+//!   (or full 4-sided boxed field when `.boxed(true)`)
 //! - Trailing chevron: `app_icon(AppIcon::ChevronDown, IconSize::Sm, IconTone::Muted, theme)`
 //! - Exports `NativeSelect`, `NativeSelectOption`, and `NativeSelectOptGroup` with native GPUI
 //!   floating dropdown overlay (`deferred`) and keyboard navigation.
@@ -85,7 +86,7 @@ enum NativeSelectEntry {
     Group(NativeSelectOptGroup),
 }
 
-/// Underline select control matching `NativeSelect` in `web/src/components/ui/native-select.tsx`.
+/// Select control matching `NativeSelect` in `web/src/components/ui/native-select.tsx`.
 #[derive(IntoElement)]
 pub struct NativeSelect {
     id: ElementId,
@@ -93,6 +94,7 @@ pub struct NativeSelect {
     selected_value: Option<SharedString>,
     placeholder: Option<SharedString>,
     size: NativeSelectSize,
+    boxed: bool,
     disabled: bool,
     invalid: bool,
     focus_handle: Option<FocusHandle>,
@@ -109,6 +111,7 @@ impl NativeSelect {
             selected_value: None,
             placeholder: None,
             size: NativeSelectSize::Default,
+            boxed: false,
             disabled: false,
             invalid: false,
             focus_handle: None,
@@ -156,6 +159,12 @@ impl NativeSelect {
 
     pub fn sm(self) -> Self {
         self.size(NativeSelectSize::Sm)
+    }
+
+    /// Renders a 4-sided bordered input container (`bg-canvas`, `px-3`) for modal forms.
+    pub fn boxed(mut self, boxed: bool) -> Self {
+        self.boxed = boxed;
+        self
     }
 
     pub fn disabled(mut self, disabled: bool) -> Self {
@@ -224,7 +233,7 @@ impl RenderOnce for NativeSelect {
             .focus_handle
             .as_ref()
             .is_some_and(|fh| fh.is_focused(window));
-        let border_bottom = if self.invalid {
+        let border_color = if self.invalid {
             tokens.destructive
         } else if is_focused || is_open {
             tokens.ring
@@ -261,12 +270,20 @@ impl RenderOnce for NativeSelect {
             .w_full()
             .min_w_0()
             .py(px(8.0))
-            .pl(px(0.0))
-            .pr(px(4.0))
             .gap(px(8.0))
             .rounded(PresetRadius::NONE)
-            .border_b_1()
-            .border_color(border_bottom)
+            .cx_when(self.boxed, |d| {
+                d.px(px(12.0))
+                    .border_1()
+                    .border_color(border_color)
+                    .bg(theme.bg_canvas)
+            })
+            .cx_when(!self.boxed, |d| {
+                d.pl(px(0.0))
+                    .pr(px(4.0))
+                    .border_b_1()
+                    .border_color(border_color)
+            })
             .font_family(FONT_FAMILY)
             .text_sm()
             .text_color(text_color)
@@ -341,17 +358,21 @@ impl RenderOnce for NativeSelect {
             .child(trigger);
 
         if is_open && !self.disabled {
+            let menu_id = ElementId::Name(format!("{}-native-select-menu", self.id).into());
             let mut menu = div()
+                .occlude()
                 .absolute()
                 .top(height + px(4.0))
                 .left_0()
                 .right_0()
                 .min_w(px(160.0))
                 .max_h(px(260.0))
-                .id(ElementId::Name("native-select-menu".into()))
+                .id(menu_id)
                 .overflow_y_scroll()
                 .py(px(4.0))
                 .rounded(PresetRadius::NONE)
+                .border_1()
+                .border_color(tokens.border)
                 .bg(tokens.popover)
                 .text_color(tokens.popover_foreground)
                 .shadow(overlay_surface_shadow(&theme))
@@ -406,7 +427,7 @@ impl RenderOnce for NativeSelect {
                 }
             }
 
-            wrapper = wrapper.child(deferred(menu).with_priority(1));
+            wrapper = wrapper.child(deferred(menu).with_priority(30));
         }
 
         wrapper
@@ -428,7 +449,7 @@ fn render_option_row(
 
     let mut row = div()
         .id(ElementId::NamedInteger(
-            "native-select-opt".into(),
+            "native-select-option".into(),
             idx as u64,
         ))
         .flex()

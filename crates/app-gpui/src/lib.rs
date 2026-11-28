@@ -479,6 +479,7 @@ impl Render for RootView {
                 &self.state,
                 &self.money_category_inputs,
                 &theme,
+                window,
                 cx,
             )
             .into_any_element(),
@@ -603,7 +604,7 @@ impl Render for RootView {
             } else {
                 None
             })
-            // Quick Entry Modal Dialog Overlay (DialogOverlay + SheetContent)
+            // Quick Entry Modal Dialog Overlay (DialogPortal + DialogOverlay + DialogContent)
             .children(if self.state.show_quick_entry {
                 let wallets = self.state.active_wallets();
                 let is_family = self.state.active_scope.is_family();

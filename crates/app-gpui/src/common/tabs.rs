@@ -2,8 +2,8 @@
 //!
 //! Matches `--preset b1oaDsAa` (`base-sera`):
 //! - `Tabs`: `Horizontal` (`flex-col`) or `Vertical` (`flex-row`) orientation, controlled or uncontrolled
-//! - `TabsList`: `TabsListVariant::Default` (`bg-muted p-1 h-10`) | `TabsListVariant::Line` (`gap-1 bg-transparent`)
-//! - `TabsTrigger`: `px-4 py-1.5 text-xs font-semibold uppercase`, active `bg-background` (`Default`) or `2px` indicator bar (`Line`)
+//! - `TabsList`: `TabsListVariant::Default` (`bg-muted p-1 h-10`) | `TabsListVariant::Line` (`gap-1 bg-transparent border-b`)
+//! - `TabsTrigger`: `px-4 py-1.5 text-xs font-semibold uppercase`, active `bg-background` (`Default`) or `2px` primary red indicator bar (`Line`)
 //! - `TabsContent`: `flex-1 text-sm`.
 
 use std::rc::Rc;
@@ -155,9 +155,10 @@ impl RenderOnce for Tabs {
         let active = self.active_index.unwrap_or_else(|| *state.read(cx));
 
         let is_horizontal = matches!(self.orientation, TabsOrientation::Horizontal);
+        let is_line = matches!(self.list_variant, TabsListVariant::Line);
         let mut root = div()
             .flex()
-            .gap(px(8.0)) // gap-2
+            .gap(if is_line { px(16.0) } else { px(8.0) })
             .cx_when(is_horizontal, |d| d.flex_col())
             .cx_when(!is_horizontal, |d| d.flex_row().items_start())
             .refine_style(&self.style);
@@ -295,12 +296,21 @@ impl RenderOnce for TabsList {
 
         div()
             .flex()
-            .p(px(4.0)) // p-1
             .rounded(PresetRadius::NONE)
             .bg(bg)
             .text_color(tokens.muted_foreground)
-            .cx_when(is_line, |d| d.gap(px(4.0)))
-            .cx_when(is_horizontal, |d| {
+            .cx_when(!is_line, |d| d.p(px(4.0)))
+            .cx_when(is_line && is_horizontal, |d| {
+                d.w_full()
+                    .flex_row()
+                    .flex_wrap()
+                    .items_center()
+                    .justify_start()
+                    .gap(px(4.0))
+                    .border_b_1()
+                    .border_color(tokens.border)
+            })
+            .cx_when(!is_line && is_horizontal, |d| {
                 d.flex_row()
                     .items_center()
                     .justify_center()
@@ -469,17 +479,20 @@ impl RenderOnce for TabsTrigger {
             .items_center()
             .gap(px(8.0))
             .px(px(16.0))
-            .py(px(6.0))
+            .py(if is_line { px(10.0) } else { px(6.0) })
             .rounded(PresetRadius::NONE)
-            .border_1()
-            .border_color(border)
+            .cx_when(!is_line, |d| d.border_1().border_color(border))
             .bg(bg)
             .font_family(FONT_FAMILY)
             .text_xs()
-            .font_weight(FontWeight::SEMIBOLD)
+            .font_weight(if self.active && is_line {
+                FontWeight::BOLD
+            } else {
+                FontWeight::SEMIBOLD
+            })
             .text_color(fg)
             .whitespace_nowrap()
-            .cx_when(is_horizontal, |d| d.h_full().justify_center())
+            .cx_when(!is_line && is_horizontal, |d| d.h_full().justify_center())
             .cx_when(!is_horizontal, |d| d.w_full().justify_start().py(px(8.0)))
             .preset_ring(is_focused, false, &theme)
             .preset_disabled(self.disabled)
@@ -499,9 +512,9 @@ impl RenderOnce for TabsTrigger {
                     .absolute()
                     .left_0()
                     .right_0()
-                    .bottom(px(-5.0))
+                    .bottom(px(-1.0))
                     .h(px(2.0))
-                    .bg(tokens.foreground)
+                    .bg(tokens.primary)
             } else {
                 div()
                     .absolute()
@@ -509,7 +522,7 @@ impl RenderOnce for TabsTrigger {
                     .bottom_0()
                     .right(px(-4.0))
                     .w(px(2.0))
-                    .bg(tokens.foreground)
+                    .bg(tokens.primary)
             };
             tab = tab.child(indicator);
         }

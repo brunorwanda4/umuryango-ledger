@@ -6,9 +6,9 @@ use std::str::FromStr;
 
 use gpui_kit::{Context, Window};
 use rust_decimal::Decimal;
-use umuryango_core_domain::models::FamilyRole;
 #[cfg(not(target_arch = "wasm32"))]
 use umuryango_core_domain::models::TransactionType;
+use umuryango_core_domain::models::{CategoryKind, FamilyRole};
 use uuid::Uuid;
 
 use crate::RootView;
@@ -33,23 +33,55 @@ impl RootView {
     pub fn open_quick_handover(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.open_quick_entry(window, cx);
         if self.state.active_scope.is_family() {
-            self.set_quick_entry_mode(QuickEntryMode::Handover, cx);
+            self.quick_entry_form.locked_mode = true;
+            self.set_quick_entry_mode_with_window(QuickEntryMode::Handover, window, cx);
         }
     }
 
+    pub fn open_money_entry(
+        &mut self,
+        mode: QuickEntryMode,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.open_quick_entry(window, cx);
+        self.quick_entry_form.locked_mode = true;
+        self.set_quick_entry_mode_with_window(mode, window, cx);
+    }
+
     pub fn open_quick_entry(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if self.quick_entry_form.source_wallet_id.is_none() {
+        self.quick_entry_form.locked_mode = false;
+        let valid_src = self
+            .quick_entry_form
+            .source_wallet_id
+            .is_some_and(|id| self.state.active_wallets().iter().any(|w| w.id == id));
+        if !valid_src {
             self.quick_entry_form.source_wallet_id =
                 self.state.active_wallets().first().map(|w| w.id);
         }
-        if self.quick_entry_form.destination_wallet_id.is_none() {
+        let valid_dst = self
+            .quick_entry_form
+            .destination_wallet_id
+            .is_some_and(|id| self.state.active_wallets().iter().any(|w| w.id == id));
+        if !valid_dst {
             self.quick_entry_form.destination_wallet_id =
                 self.state.active_wallets().get(1).map(|w| w.id);
         }
+        if self.quick_entry_form.authorized_by.is_none() {
+            self.quick_entry_form.authorized_by = self
+                .state
+                .family_members
+                .first()
+                .map(|m| m.user_id)
+                .or(Some(self.state.user_id));
+        }
+
+        self.sync_quick_entry_category_for_mode(self.quick_entry_form.mode);
         self.quick_entry_form.amount_input.clear();
         self.quick_entry_form.description.clear();
         self.quick_entry_form.paid_to.clear();
         self.quick_entry_inputs.reset(window, cx);
+        self.sync_quick_entry_placeholder(window, cx);
         self.state.show_quick_entry = true;
         cx.notify();
     }
@@ -61,6 +93,7 @@ impl RootView {
 
     pub fn set_quick_entry_mode(&mut self, mode: QuickEntryMode, cx: &mut Context<Self>) {
         self.quick_entry_form.mode = mode;
+        self.sync_quick_entry_category_for_mode(mode);
         if mode == QuickEntryMode::Handover && self.quick_entry_form.destination_wallet_id.is_none()
         {
             self.quick_entry_form.destination_wallet_id = self
@@ -71,6 +104,43 @@ impl RootView {
                 .map(|w| w.id);
         }
         cx.notify();
+    }
+
+    pub fn set_quick_entry_mode_with_window(
+        &mut self,
+        mode: QuickEntryMode,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.set_quick_entry_mode(mode, cx);
+        self.sync_quick_entry_placeholder(window, cx);
+    }
+
+    fn sync_quick_entry_category_for_mode(&mut self, mode: QuickEntryMode) {
+        let kind = match mode {
+            QuickEntryMode::Income => CategoryKind::Income,
+            QuickEntryMode::Expense | QuickEntryMode::Handover => CategoryKind::Expense,
+        };
+        let options = QuickEntryDialog::categories_for_kind(&self.state, kind);
+        if !options
+            .iter()
+            .any(|c| c.eq_ignore_ascii_case(&self.quick_entry_form.category))
+            && let Some(first) = options.into_iter().next()
+        {
+            self.quick_entry_form.category = first;
+        }
+    }
+
+    fn sync_quick_entry_placeholder(&self, window: &mut Window, cx: &mut Context<Self>) {
+        let key = match self.quick_entry_form.mode {
+            QuickEntryMode::Income => "money_page.modal_income_desc_placeholder",
+            QuickEntryMode::Expense | QuickEntryMode::Handover => {
+                "money_page.modal_expense_desc_placeholder"
+            }
+        };
+        let ph = umuryango_i18n::t(self.state.locale, key);
+        self.quick_entry_inputs
+            .set_description_placeholder(ph, window, cx);
     }
 
     pub fn set_quick_entry_amount_preset(

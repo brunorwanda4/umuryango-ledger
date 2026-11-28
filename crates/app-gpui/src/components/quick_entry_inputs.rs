@@ -1,7 +1,7 @@
 //! Editable input entities for the Quick Entry Transaction dialog.
 
 use gpui_kit::component::input::{InputEvent, InputState};
-use gpui_kit::{AppContext, Context, Entity, Subscription, Window};
+use gpui_kit::{AppContext, Context, Entity, SharedString, Subscription, Window};
 
 use crate::RootView;
 
@@ -14,7 +14,7 @@ pub struct QuickEntryInputs {
 
 impl QuickEntryInputs {
     pub fn new(window: &mut Window, cx: &mut Context<RootView>) -> Self {
-        let amount = cx.new(|cx| InputState::new(window, cx).placeholder("10000"));
+        let amount = cx.new(|cx| InputState::new(window, cx).placeholder("45000"));
         let description = cx.new(|cx| InputState::new(window, cx).placeholder("..."));
         let paid_to = cx.new(|cx| InputState::new(window, cx).placeholder("..."));
 
@@ -61,9 +61,23 @@ impl QuickEntryInputs {
             .update(cx, |input, cx| input.set_value(val, window, cx));
     }
 
+    pub fn set_description_placeholder(
+        &self,
+        placeholder: impl Into<SharedString>,
+        window: &mut Window,
+        cx: &mut Context<RootView>,
+    ) {
+        let ph: SharedString = placeholder.into();
+        self.description.update(cx, |input, cx| {
+            input.set_placeholder(ph, window, cx);
+        });
+    }
+
     pub fn reset(&self, window: &mut Window, cx: &mut Context<RootView>) {
-        self.amount
-            .update(cx, |input, cx| input.set_value("", window, cx));
+        self.amount.update(cx, |input, cx| {
+            input.set_value("", window, cx);
+            input.focus(window, cx);
+        });
         self.description
             .update(cx, |input, cx| input.set_value("", window, cx));
         self.paid_to

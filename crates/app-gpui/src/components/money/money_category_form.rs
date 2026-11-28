@@ -17,9 +17,9 @@ use umuryango_api_client::CreateCategoryRequest;
 
 use crate::RootView;
 use crate::common::{
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, Button, ButtonSize,
-    Field, Label, RadioGroupContainer, RadioGroupItem, text_field,
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter,
+    AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, Button, ButtonSize, Field, Label,
+    RadioGroupContainer, RadioGroupItem, text_field,
 };
 use crate::components::icon::AppIcon;
 use crate::components::quick_entry::QuickEntryMode;
@@ -98,7 +98,7 @@ impl MoneyCategoryForm {
                 .outline()
                 .size(ButtonSize::Sm)
                 .icon_start(AppIcon::Add)
-                .label(t(locale, "categories.create_btn"))
+                .label(t(locale, "money_page.add_category_btn"))
                 .theme(theme),
         );
 
